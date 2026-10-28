@@ -9,12 +9,15 @@ export type TransferBundle = {
   collection: { id: string; name: string; units: Collection["units"]; exchangeRates: Collection["exchangeRates"]; sharedObjects?: Collection["sharedObjects"]; formats: { id: string; name: string; color: string; objectModel?: boolean; fields: { id: string; name: string; kind: FieldKind; unit?: string | null; options?: string[] | null; targetObjectFormatId?: string | null; multiple?: boolean | null; variableName?: string | null; referenceMode?: "CURRENT" | "SNAPSHOT" | null }[] }[] };
   entries: TransferEntry[];
   links?: { fromSourceId: string; toSourceId: string; label: string }[];
+  relations?: { fromSourceId: string; toSourceId: string; kind: 'ASSOCIATION' | 'PARENT' | 'COMPONENT'; label: string; quantity?: string | null; unit?: string | null; snapshotValue?: string | null; snapshotUnit?: string | null; snapshotFieldId?: string | null }[];
 };
 
 export async function exportCollection(collection: Collection): Promise<TransferBundle> {
   const entries: TransferEntry[] = [];
   const links: { fromSourceId: string; toSourceId: string; label: string }[] = [];
   const seenLinks = new Set<string>();
+  const relations: NonNullable<TransferBundle['relations']> = [];
+  const seenRelations = new Set<string>();
   let cursor: string | undefined;
   do {
     const page = await api.entriesPage(collection.id, { after: cursor });
@@ -33,6 +36,10 @@ export async function exportCollection(collection: Collection): Promise<Transfer
         seenLinks.add(link.id);
         links.push({ fromSourceId: link.fromEntryId, toSourceId: link.toEntryId, label: link.label });
       }
+      for (const relation of await api.relations(collection.id, entry.id)) if (!seenRelations.has(relation.id)) {
+        seenRelations.add(relation.id);
+        relations.push({ fromSourceId: relation.fromEntryId, toSourceId: relation.toEntryId, kind: relation.kind, label: relation.label, quantity: relation.quantity, unit: relation.unit, snapshotValue: relation.snapshotValue, snapshotUnit: relation.snapshotUnit, snapshotFieldId: relation.snapshotFieldId });
+      }
     }
     cursor = page.nextCursor ?? undefined;
   } while (cursor);
@@ -40,7 +47,7 @@ export async function exportCollection(collection: Collection): Promise<Transfer
     brainyExportVersion: 1,
     exportedAt: new Date().toISOString(),
     collection: { id: collection.id, name: collection.name, units: collection.units ?? [], exchangeRates: collection.exchangeRates ?? [], sharedObjects: collection.sharedObjects ?? [], formats: collection.formats.map((format) => ({ id: format.id, name: format.name, color: format.color, objectModel: format.objectModel ?? false, fields: format.fields.map((field) => ({ ...field })) })) },
-    entries, links,
+    entries, links, relations,
   };
 }
 
@@ -114,6 +121,8 @@ export function parseTransfer(raw: unknown): TransferBundle {
   }
   bundle.links ??= [];
   if (!Array.isArray(bundle.links) || bundle.links.some((link) => !entryIds.has(link.fromSourceId) || !entryIds.has(link.toSourceId) || link.fromSourceId === link.toSourceId || typeof link.label !== "string" || link.label.length > 120)) throw new Error("Invalid entry links in Brainy file");
+  bundle.relations ??= [];
+  if (!Array.isArray(bundle.relations) || bundle.relations.some((relation) => !entryIds.has(relation.fromSourceId) || !entryIds.has(relation.toSourceId) || relation.fromSourceId === relation.toSourceId || !['ASSOCIATION', 'PARENT', 'COMPONENT'].includes(relation.kind) || typeof relation.label !== 'string' || relation.label.length > 120 || (relation.kind === 'COMPONENT' && (!relation.quantity || !relation.unit)))) throw new Error('Invalid relations in Brainy file');
   return bundle;
 }
 
@@ -170,6 +179,7 @@ export async function importCollection(bundle: TransferBundle, target: Collectio
     const links = bundle.entries.filter((entry) => entry.sourceObjectId).map((entry) => ({ sourceId: entry.id, sourceObjectId: entry.sourceObjectId! }));
     for (let index = 0; index < links.length; index += 50) await api.linkImportedObjects(target.id, importKey, links.slice(index, index + 50));
     for (let index = 0; index < (bundle.links?.length ?? 0); index += 50) await api.linkImportedEntries(target.id, importKey, bundle.links!.slice(index, index + 50));
+    for (let index = 0; index < (bundle.relations?.length ?? 0); index += 50) await api.importRelations(target.id, importKey, bundle.relations!.slice(index, index + 50).map((relation) => { const source = bundle.entries.find((entry) => entry.id === relation.toSourceId); return { ...relation, quantity: relation.quantity ?? undefined, unit: relation.unit?.startsWith('local:') ? `local:${unitMapping.get(relation.unit.slice(6)) ?? 'missing'}` : relation.unit ?? undefined, snapshotValue: relation.snapshotValue ?? undefined, snapshotUnit: relation.snapshotUnit?.startsWith('local:') ? `local:${unitMapping.get(relation.snapshotUnit.slice(6)) ?? 'missing'}` : relation.snapshotUnit ?? undefined, snapshotFieldId: relation.snapshotFieldId && source ? mapping.get(source.formatId)?.fields.get(relation.snapshotFieldId) : undefined }; }));
   }
   return { valid, created, skipped, errors };
 }

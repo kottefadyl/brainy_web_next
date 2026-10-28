@@ -22,6 +22,7 @@ export type StockPreview = { kind: string; productName: string; baseQuantity: st
 export type ForecastInput = { formatId: string; fieldId: string; dateFieldId: string; frequency: "DAY" | "MONTH"; method: "MEAN" | "LINEAR"; measureKind: "EVENT" | "SNAPSHOT" | "RATE"; from?: string; to?: string; horizon: number; holdout: number };
 export type ForecastResult = { method: string; frequency: string; sourceFrom: string; sourceTo: string; trainingCount: number; holdoutCount: number; holdoutMae: string; uncertainty: string; unit?: string; dimension?: string; observations: { date: string; estimate: string; lower: string; upper: string; observed?: string }[]; validation: { date: string; estimate: string; lower: string; upper: string; observed?: string }[]; forecast: { date: string; estimate: string; lower: string; upper: string; observed?: string }[] };
 export type EntryLink = { id: string; collectionId: string; fromEntryId: string; toEntryId: string; label: string; createdAt: string; deletedAt?: string | null };
+export type EntryRelation = { id: string; collectionId: string; fromEntryId: string; toEntryId: string; kind: 'ASSOCIATION' | 'PARENT' | 'COMPONENT'; label: string; quantity?: string | null; unit?: string | null; snapshotValue?: string | null; snapshotUnit?: string | null; snapshotFieldId?: string | null; createdAt: string };
 export type EntryReminder = { id: string; entryId: string; fieldId: string; viewId?: string | null; minutesBefore: number; channels: string[]; timeZone: string; timeOfDay?: string | null; state: string; nextAt?: string | null; occurrenceAt?: string | null; attempts: number; failure?: string | null };
 export type SharedObjectGrant = { id: string; sourceCollectionId: string; sourceFormatId: string; sourceFormatVersion: number; objectId: string; sourceName: string; objectName: string; propertyFieldIds: string[]; mode: "CURRENT" | "SNAPSHOT"; snapshot: { fieldId: string; name: string; kind: FieldKind; value: string; unitSnapshot?: UnitSnapshot | null }[]; createdAt: string; revokedAt?: string | null };
 export type CollectionRole = "OWNER" | "EDITOR" | "READER";
@@ -30,6 +31,7 @@ export type AuditLog = { id: string; collectionId: string; userId: string; actio
 export type Collection = { id: string; name: string; fields: Field[]; formats: CollectionFormat[]; units: CollectionUnit[]; exchangeRates: ExchangeRate[]; sharedObjects: SharedObjectGrant[]; savedViews: SavedView[]; formulas: Formula[]; stockRules?: StockRule[]; allowNegativeStock?: boolean; members?: CollectionMember[] };
 export type Entry = {
   id: string;
+  offlinePending?: boolean;
   formatId?: string | null;
   values: { fieldId: string; value: string; unitSnapshot?: UnitSnapshot | null; objectIds?: string[] | null; objectSnapshots?: { objectId: string; capturedAt: string; properties: { fieldId: string; name: string; kind: FieldKind; value: string; unitSnapshot?: UnitSnapshot | null }[] }[] | null; measureValue?: { status?: string; uncertainty?: string; uncertaintyType?: string; quality?: string; instrument?: string; observedAt?: string; recordedAt?: string; revisedAt?: string; revisionNote?: string } | null }[];
   createdAt: string;

@@ -36,7 +36,8 @@ export async function POST(request: NextRequest) {
   if (origin && origin !== request.nextUrl.origin) {
     return NextResponse.json({ errors: [{ message: "Invalid origin" }] }, { status: 403, headers: noStore });
   }
-  if (Number(request.headers.get("content-length") ?? 0) > 12_582_912) {
+  const backupRequest = request.nextUrl.searchParams.get("backup") === "1" && !!request.cookies.get(sessionName)?.value;
+  if (Number(request.headers.get("content-length") ?? 0) > (backupRequest ? 60_000_000 : 12_582_912)) {
     return NextResponse.json({ errors: [{ message: "Request too large" }] }, { status: 413, headers: noStore });
   }
   let body: { query?: unknown; variables?: unknown };
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
   if (typeof body?.query !== "string" || body.query.length > 50000) {
     return NextResponse.json({ errors: [{ message: "Invalid query" }] }, { status: 400, headers: noStore });
   }
-  if (JSON.stringify(body.variables ?? {}).length > 11_000_000) {
+  if (JSON.stringify(body.variables ?? {}).length > (backupRequest && body.query.includes("restoreWorkspaceBackup") ? 55_000_000 : 11_000_000)) {
     return NextResponse.json({ errors: [{ message: "Request too large" }] }, { status: 413, headers: noStore });
   }
 
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({ query: body.query, variables: body.variables ?? {} }),
       cache: "no-store",
-      signal: AbortSignal.timeout(12000),
+      signal: AbortSignal.timeout(backupRequest ? 120000 : 12000),
     });
     const payload = await upstream.json() as Record<string, unknown>;
     const token = findSessionToken(payload.data);

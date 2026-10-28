@@ -11,6 +11,9 @@ import InsightsDialog from "./insights-dialog";
 import StockPanel from "./stock-panel";
 import StarterDialog from "./starter-dialog";
 import EntryLinksDialog from "./entry-links-dialog";
+import OfflineSyncPanel from "./offline-sync-panel";
+import WorkspaceBackupPanel from "./workspace-backup-panel";
+import { queueEntry, reviseQueuedEntry } from "../lib/offline-queue";
 import QuickCaptureDialog from "./quick-capture-dialog";
 import QuickEntryDialog from "./quick-entry-dialog";
 import { bookText, downloadTransfer, exportCollection, importCollection, parseTransfer, transferCsv, transferMapping, type TransferBundle } from "../lib/transfer";
@@ -419,7 +422,7 @@ function ObjectReferencePicker({ collection, field, language, value, entryId, on
   return <div className="input-label object-reference-picker"><span>{field.name} · {fieldKindLabel(language, "OBJECT_REF")}</span><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={language === "fr" ? "Rechercher un objet" : "Search for an object"} /><div className="object-reference-results">{page?.entries.map((item) => { const name = item.values.find((entryValue) => entryValue.fieldId === titleId)?.value ?? item.id; return <button type="button" key={item.id} className={selected.includes(item.id) ? "selected" : ""} aria-pressed={selected.includes(item.id)} onClick={() => choose(item.id)}>{name} {selected.includes(item.id) ? "✓" : ""}</button>; })}</div>{page?.nextCursor && <button type="button" onClick={() => api.objectsPage(collection.id, field.targetObjectFormatId!, { after: page.nextCursor!, search: search || undefined }).then((next) => setPage({ entries: [...page.entries, ...next.entries], nextCursor: next.nextCursor, hasMore: next.hasMore })).catch((cause) => setError(errorMessage(cause, language)))}>{language === "fr" ? "Voir plus" : "Load more"}</button>}{selected.length > 0 && <div>{language === "fr" ? "Sélection" : "Selected"}: {selected.map((id) => page?.entries.find((item) => item.id === id)?.values.find((item) => item.fieldId === titleId)?.value ?? known[id] ?? id).join(", ")} <button type="button" onClick={() => onChange("")}>{language === "fr" ? "Effacer" : "Clear"}</button></div>}{error && <span role="alert">{error}</span>}</div>;
 }
 
-function EntryEditor({ collection, entry, initialFormatId, language, onClose, onSaved }: { collection: Collection; entry?: Entry; initialFormatId?: string; language: Language; onClose: () => void; onSaved: (entry: Entry) => void }) {
+function EntryEditor({ collection, entry, initialFormatId, language, userId, onClose, onSaved }: { collection: Collection; entry?: Entry; initialFormatId?: string; language: Language; userId: string; onClose: () => void; onSaved: (entry: Entry) => void }) {
   const [values, setValues] = useState<Record<string, string>>(entry ? valuesByField(entry) : {});
   const [files, setFiles] = useState<Record<string, File>>({});
   const [formatId, setFormatId] = useState(entry?.formatId ?? initialFormatId ?? collection.formats[0].id);
@@ -455,8 +458,15 @@ function EntryEditor({ collection, entry, initialFormatId, language, onClose, on
       }
       if (field.kind === "DURATION" && !/^\d{1,6}:[0-5]\d$/.test(item.value)) return setError(t(language, "invalidDuration"));
     }
+    const mutationId = crypto.randomUUID();
     setBusy(true);
     try {
+      if (entry?.offlinePending) {
+        if (Object.keys(files).length) throw new Error(language === "fr" ? "Les pièces jointes nécessitent une connexion." : "Attachments need a connection.");
+        reviseQueuedEntry(userId, entry.id, clean);
+        onSaved({ ...entry, values: clean, updatedAt: new Date().toISOString() });
+        return;
+      }
       for (const item of clean) {
         const field = format.fields.find((candidate) => candidate.id === item.fieldId)!;
         if (field.kind !== "LINK") continue;
@@ -466,9 +476,17 @@ function EntryEditor({ collection, entry, initialFormatId, language, onClose, on
         if (matches.length) { setDuplicate({ key, count: matches.length }); return; }
       }
       const payload = await Promise.all(clean.map(async (item) => files[item.fieldId] ? { ...item, attachmentBase64: await fileBase64(files[item.fieldId]), attachmentMimeType: files[item.fieldId].type || "application/octet-stream" } : item));
-      onSaved(await api.saveEntry(collection.id, payload, entry?.id, format.id));
+      onSaved(await api.saveEntry(collection.id, payload, entry?.id, format.id, { clientMutationId: mutationId, expectedUpdatedAt: entry?.updatedAt }));
     }
-    catch (error) { setError(errorMessage(error, language)); }
+    catch (error) {
+      const networkFailure = !navigator.onLine || error instanceof ApiError && /Could not reach|temporarily unavailable/i.test(error.message);
+      if (networkFailure && Object.keys(files).length === 0 && !clean.some((value) => format.fields.find((field) => field.id === value.fieldId)?.kind === "OBJECT_REF")) {
+        try {
+          queueEntry(userId, { id: mutationId, collectionId: collection.id, entryId: entry?.id, formatId: format.id, values: clean, expectedUpdatedAt: entry?.updatedAt, createdAt: new Date().toISOString(), status: "pending" });
+          onSaved({ id: entry?.id ?? `offline:${mutationId}`, formatId: format.id, values: clean, createdAt: entry?.createdAt ?? new Date().toISOString(), updatedAt: new Date().toISOString(), offlinePending: true });
+        } catch (cause) { setError(errorMessage(cause, language)); }
+      } else setError(errorMessage(error, language));
+    }
     finally { setBusy(false); }
   }
 
@@ -523,7 +541,7 @@ function CopyToCollection({ source, targets, objectId, formatId, move = false, l
       <label className="input-label">{language === "fr" ? "Collection cible" : "Target collection"}<select value={targetId} onChange={(event) => { setTargetId(event.target.value); setPreview(null); setError(""); }}><option value="">—</option>{targets.filter((item) => item.id !== source.id).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
       {formatId && !link && <label className="object-choice"><input type="checkbox" checked={withEntries} onChange={(event) => { setWithEntries(event.target.checked); setPreview(null); }} />{language === "fr" ? "Copier aussi les entrées et objets référencés" : "Also copy entries and referenced objects"}</label>}
       {link && <p className="modal-intro">{language === "fr" ? "La cible garde sa propre version. Elle choisira quand accepter les changements de la source." : "The target keeps its own version and chooses when to accept source changes."}</p>}
-      {preview && <section className="copy-preview"><p>{preview.entries} {language === "fr" ? "entrée(s), dont" : "entries, including"} {preview.objects} {language === "fr" ? "objet(s)" : "objects"}</p><p>{language === "fr" ? "Formats de données" : "Data formats"}: {preview.dataFormats.join(", ")}</p>{preview.units.length > 0 && <p>{language === "fr" ? "Unités" : "Units"}: {preview.units.join(", ")}</p>}{preview.formulas.length > 0 && <p>{language === "fr" ? "Formules copiées" : "Copied formulas"}: {preview.formulas.join(", ")}</p>}{preview.stockMovementCount > 0 && <p role="note">{language === "fr" ? `${preview.stockMovementCount} mouvement(s) de stock restent dans la collection source. La copie ne crée aucun stock dans la cible.` : `${preview.stockMovementCount} stock movements remain in the source collection. Copying creates no stock in the target.`}</p>}{preview.conflicts.map((item) => <p role="alert" key={item}>{item}</p>)}</section>}
+      {preview && <section className="copy-preview"><p>{preview.entries} {language === "fr" ? "entrée(s), dont" : "entries, including"} {preview.objects} {language === "fr" ? "objet(s)" : "objects"}</p><p>{preview.relations} {language === "fr" ? "relation(s)" : "relations"}</p><p>{language === "fr" ? "Formats de données" : "Data formats"}: {preview.dataFormats.join(", ")}</p>{preview.units.length > 0 && <p>{language === "fr" ? "Unités" : "Units"}: {preview.units.join(", ")}</p>}{preview.formulas.length > 0 && <p>{language === "fr" ? "Formules copiées" : "Copied formulas"}: {preview.formulas.join(", ")}</p>}{preview.stockMovementCount > 0 && <p role="note">{language === "fr" ? `${preview.stockMovementCount} mouvement(s) de stock restent dans la collection source. La copie ne crée aucun stock dans la cible.` : `${preview.stockMovementCount} stock movements remain in the source collection. Copying creates no stock in the target.`}</p>}{preview.conflicts.map((item) => <p role="alert" key={item}>{item}</p>)}</section>}
       {error && <div className="form-error" role="alert">{error}</div>}
       <div className="modal-actions"><Button variant="secondary" onClick={onClose}>{t(language, "cancel")}</Button><Button disabled={busy || !preview?.allowed} onClick={copy}>{link ? language === "fr" ? "Lier" : "Link" : move ? language === "fr" ? "Déplacer" : "Move" : language === "fr" ? "Copier" : "Copy"}</Button></div>
     </div>
@@ -565,6 +583,8 @@ function ShareObjectToCollection({ source, targets, object, language, onClose, o
   const [targetId, setTargetId] = useState("");
   const [propertyIds, setPropertyIds] = useState<string[]>([title.id]);
   const [mode, setMode] = useState<"CURRENT" | "SNAPSHOT">("CURRENT");
+  const [relationCount, setRelationCount] = useState(0);
+  useEffect(() => { let live = true; api.relations(source.id, object.id).then((items) => { if (live) setRelationCount(items.length); }).catch(() => {}); return () => { live = false; }; }, [source.id, object.id]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const conflict = targets.find((item) => item.id === targetId)?.sharedObjects.some((item) => item.objectId === object.id && !item.revokedAt);
@@ -581,7 +601,7 @@ function ShareObjectToCollection({ source, targets, object, language, onClose, o
       <label className="input-label">{language === "fr" ? "Collection cible" : "Target collection"}<select value={targetId} onChange={(event) => setTargetId(event.target.value)}><option value="">—</option>{targets.filter((item) => item.id !== source.id).map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
       <fieldset className="share-properties"><legend>{language === "fr" ? "Caractéristiques autorisées" : "Allowed properties"}</legend>{format.fields.filter((item) => item.kind !== "OBJECT_REF" && item.kind !== "ATTACHMENT").map((item) => <label key={item.id}><input type="checkbox" checked={propertyIds.includes(item.id)} disabled={item.id === title.id} onChange={(event) => setPropertyIds((current) => event.target.checked ? [...current, item.id] : current.filter((id) => id !== item.id))} />{item.name}</label>)}</fieldset>
       <label className="input-label">{language === "fr" ? "Valeurs accessibles" : "Accessible values"}<select value={mode} onChange={(event) => setMode(event.target.value as "CURRENT" | "SNAPSHOT")}><option value="CURRENT">{language === "fr" ? "Actuelles jusqu’à révocation" : "Current until revoked"}</option><option value="SNAPSHOT">{language === "fr" ? "Figées au partage" : "Snapshot when shared"}</option></select></label>
-      <p className="modal-intro">{language === "fr" ? "Le partage donne accès aux caractéristiques choisies. Le stock et ses mouvements restent dans la collection source." : "Sharing grants access to the chosen properties. Stock and its movements remain in the source collection."}</p>
+      <p className="modal-intro">{language === "fr" ? `Le partage donne accès aux caractéristiques choisies. ${relationCount} relation(s) et les mouvements de stock restent dans la collection source.` : `Sharing grants access to the chosen properties. ${relationCount} relations and stock movements remain in the source collection.`}</p>
       {conflict && <p role="alert">{language === "fr" ? "Cet objet est déjà lié à cette collection." : "This object is already linked to this collection."}</p>}
       {error && <div className="form-error" role="alert">{error}</div>}
       <div className="modal-actions"><Button variant="secondary" onClick={onClose}>{t(language, "cancel")}</Button><Button disabled={busy || !targetId || !!conflict} onClick={share}>{language === "fr" ? "Partager par lien" : "Share by link"}</Button></div>
@@ -1162,7 +1182,9 @@ export default function BrainyApp() {
             <InsightsDialog key={selected.id} collection={selected} language={language} onClose={() => setActiveSection("collection")} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} onOpenEntry={async (id) => { try { const entry = entries.find((item) => item.id === id) ?? await api.entry(selected.id, id); setDialog({ kind: "entry", entry }); } catch (cause) { setDialogError(String(cause)); } }} />
           </section>}
           {selected && activeSection === "stock" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{language === "fr" ? "Collection" : "Collection"}</button><StockPanel key={selected.id} collection={selected} language={language} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} /></section>}
-          {!selected && !loadingCollections ? <div className="empty-state first-empty"><div className="empty-art"><FolderHeart size={52} strokeWidth={1.4} /></div><h2>{t(language, "noCollections")}</h2><p>{t(language, "noCollectionsDetail")}</p><Button onClick={() => setDialog({ kind: "starter" })}><Plus size={18} /> {t(language, "createCollection")}</Button></div> : selected && activeSection === "collection" && <>
+          {!selected && !loadingCollections ? <div className="empty-state first-empty"><div className="empty-art"><FolderHeart size={52} strokeWidth={1.4} /></div><h2>{t(language, "noCollections")}</h2><p>{t(language, "noCollectionsDetail")}</p><Button onClick={() => setDialog({ kind: "starter" })}><Plus size={18} /> {t(language, "createCollection")}</Button><OfflineSyncPanel userId={user.id} collections={collections} language={language} onSynced={() => { void refresh(); }} /><WorkspaceBackupPanel language={language} onRestored={() => { void refresh(); }} /></div> : selected && activeSection === "collection" && <>
+            <OfflineSyncPanel userId={user.id} collections={collections} language={language} onSynced={() => { void refresh(); }} />
+            <WorkspaceBackupPanel language={language} onRestored={() => { void refresh(); }} />
             <section className="collection-hero"><div className="collection-hero-main"><div className="collection-icon"><FolderHeart size={27} /></div><div><span className="eyebrow">{t(language, "collection")}</span><h2>{selected.name}</h2><div className="collection-meta"><span><FileText size={15} /> {entries.length} {t(language, "entries")}</span><span>{selected.formats.length} {t(language, selected.formats.length === 1 ? "format" : "formats")}</span></div></div></div><div className="collection-hero-actions"><Button variant="secondary" onClick={() => { setRename(selected.name); setDialogError(""); setDialog({ kind: "rename" }); }}><Pencil size={16} /> {t(language, "rename")}</Button><Button variant="subtle" className="hero-delete" onClick={() => { setDialogError(""); setDialog({ kind: "deleteCollection" }); }}><Trash2 size={17} /> {t(language, "delete")}</Button></div></section>
             <nav className="collection-hub" aria-label={language === "fr" ? "Outils de la collection" : "Collection tools"}>
               <button type="button" className="collection-hub-card" onClick={() => setActiveSection("stock")}><span className="collection-hub-icon"><Boxes size={22} /></span><span className="collection-hub-copy"><strong>{language === "fr" ? "Stock" : "Stock"}</strong><small>{language === "fr" ? "Positions et mouvements validés" : "Positions and confirmed movements"}</small></span><ArrowRight className="collection-hub-arrow" size={18} /></button>
@@ -1211,7 +1233,7 @@ export default function BrainyApp() {
       {dialog?.kind === "addFormat" && selected && <CollectionEditor key={selected.id} collection={selected} language={language} onClose={() => setDialog(null)} onSaved={(updated) => { setCollections((current) => current.map((item) => item.id === updated.id ? updated : item)); setDialog(null); }} />}
       {dialog?.kind === "editFormat" && selected && <CollectionEditor key={`${selected.id}-${dialog.formatId}`} collection={selected} editingFormat={selected.formats.find((item) => item.id === dialog.formatId)} language={language} onClose={() => setDialog(null)} onSaved={(updated) => { setCollections((current) => current.map((item) => item.id === updated.id ? updated : item)); setDialog(null); }} />}
       {dialog?.kind === "formatColor" && selected && <FormatColorEditor key={`${selected.id}-${dialog.formatId}`} collection={selected} formatId={dialog.formatId} language={language} onClose={() => setDialog(null)} onSaved={(updated) => { setCollections((current) => current.map((item) => item.id === updated.id ? updated : item)); setDialog(null); }} />}
-      {dialog?.kind === "entry" && selected && <EntryEditor key={dialog.entry?.id ?? dialog.formatId ?? "new"} collection={selected} entry={dialog.entry} initialFormatId={dialog.formatId} language={language} onClose={() => setDialog(null)} onSaved={() => { setDialog(null); void refresh(); }} />}
+      {dialog?.kind === "entry" && selected && <EntryEditor key={dialog.entry?.id ?? dialog.formatId ?? "new"} collection={selected} entry={dialog.entry} initialFormatId={dialog.formatId} language={language} userId={user.id} onClose={() => setDialog(null)} onSaved={(saved) => { setDialog(null); if (saved.offlinePending) { setEntries((current) => [saved, ...current.filter((item) => item.id !== saved.id)]); setNotice(language === "fr" ? "Entrée conservée sur cet appareil, en attente de synchronisation" : "Entry kept on this device, waiting to sync"); } else void refresh(); }} />}
       {dialog?.kind === "objects" && selected && <ObjectLibrary collection={selected} language={language} onClose={() => setDialog(null)} onCollection={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} onCreate={(formatId) => setDialog({ kind: "entry", formatId })} onEdit={(entry) => setDialog({ kind: "entry", entry })} onCopyTo={(objectId) => setDialog({ kind: "copyObject", objectId })} onMoveTo={(objectId) => setDialog({ kind: "moveObject", objectId })} onShareTo={(object) => setDialog({ kind: "shareObject", object })} onChanged={() => { void refresh(); }} />}
       {dialog?.kind === "copyObject" && selected && <CopyToCollection source={selected} targets={collections} objectId={dialog.objectId} language={language} onClose={() => setDialog(null)} onCopied={() => { setDialog(null); void api.collections().then(setCollections); }} />}
       {dialog?.kind === "moveObject" && selected && <CopyToCollection source={selected} targets={collections} objectId={dialog.objectId} move language={language} onClose={() => setDialog(null)} onCopied={() => { setDialog(null); void refresh(); }} />}

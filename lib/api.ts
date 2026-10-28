@@ -1,4 +1,4 @@
-import type { Collection, CollectionUnit, Entry, EntryFilter, EntryPage, User, FieldKind, Language, ProfileInput, SharedObjectGrant, SavedView, EntryReminder, AnalysisInput, AnalysisResult, EntryLink, StockPosition, StockMovement, StockMovementInput, StockPreview, ForecastInput, ForecastResult, CollectionRole, AuditLog } from "./brainy";
+import type { Collection, CollectionUnit, Entry, EntryFilter, EntryPage, User, FieldKind, Language, ProfileInput, SharedObjectGrant, SavedView, EntryReminder, AnalysisInput, AnalysisResult, EntryLink, EntryRelation, StockPosition, StockMovement, StockMovementInput, StockPreview, ForecastInput, ForecastResult, CollectionRole, AuditLog } from "./brainy";
 
 type GraphQLError = { message?: string; extensions?: { code?: string } };
 
@@ -8,10 +8,10 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(query: string, variables: Record<string, unknown> = {}): Promise<T> {
+async function request<T>(query: string, variables: Record<string, unknown> = {}, backup = false): Promise<T> {
   let response: Response;
   try {
-    response = await fetch("/api/graphql", {
+    response = await fetch(backup ? "/api/graphql?backup=1" : "/api/graphql", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
@@ -38,6 +38,31 @@ const entryFields = "id formatId sourceObjectId recurrence { startFieldId endFie
 const userFields = "id name email profession job fieldOfStudy interests hobbies profileCompleted";
 
 export const api = {
+  async workspaceBackup(): Promise<string> { return (await request<{ workspaceBackup: string }>(`query { workspaceBackup }`, {}, true)).workspaceBackup; },
+  async restoreWorkspaceBackup(archive: string, dryRun: boolean): Promise<{ version: number; collections: number; entries: number; relations: number; stockMovements: number; conflicts: string[]; allowed: boolean; restored: boolean }> {
+    return (await request<{ restoreWorkspaceBackup: { version: number; collections: number; entries: number; relations: number; stockMovements: number; conflicts: string[]; allowed: boolean; restored: boolean } }>(`mutation($archive:String!,$dryRun:Boolean!){restoreWorkspaceBackup(archive:$archive,dryRun:$dryRun){version collections entries relations stockMovements conflicts allowed restored}}`, { archive, dryRun }, true)).restoreWorkspaceBackup;
+  },
+  async relations(collectionId: string, entryId: string): Promise<EntryRelation[]> {
+    return (await request<{ collectionRelations: EntryRelation[] }>(`query($collectionId:String!,$entryId:String!){collectionRelations(collectionId:$collectionId,entryId:$entryId){id collectionId fromEntryId toEntryId kind label quantity unit snapshotValue snapshotUnit snapshotFieldId createdAt}}`, { collectionId, entryId })).collectionRelations;
+  },
+  async createRelation(collectionId: string, fromEntryId: string, toEntryId: string, kind: EntryRelation['kind'], label: string, quantity?: string, unit?: string, snapshotFieldId?: string): Promise<EntryRelation> {
+    return (await request<{ createCollectionRelation: EntryRelation }>(`mutation($collectionId:String!,$fromEntryId:String!,$toEntryId:String!,$kind:RelationKind!,$label:String,$quantity:String,$unit:String,$snapshotFieldId:String){createCollectionRelation(collectionId:$collectionId,fromEntryId:$fromEntryId,toEntryId:$toEntryId,kind:$kind,label:$label,quantity:$quantity,unit:$unit,snapshotFieldId:$snapshotFieldId){id collectionId fromEntryId toEntryId kind label quantity unit snapshotValue snapshotUnit createdAt}}`, { collectionId, fromEntryId, toEntryId, kind, label, quantity, unit, snapshotFieldId })).createCollectionRelation;
+  },
+  async removeRelation(collectionId: string, relationId: string): Promise<void> {
+    await request(`mutation($collectionId:String!,$relationId:String!){removeCollectionRelation(collectionId:$collectionId,relationId:$relationId)}`, { collectionId, relationId });
+  },
+  async relationTotal(collectionId: string, rootId: string, kind: 'PARENT' | 'COMPONENT', fieldName: string): Promise<{ value: string; unit?: string; nodes: number }> {
+    return (await request<{ collectionRelationTotal: { value: string; unit?: string; nodes: number } }>(`query($collectionId:String!,$rootId:String!,$kind:RelationKind!,$fieldName:String!){collectionRelationTotal(collectionId:$collectionId,rootId:$rootId,kind:$kind,fieldName:$fieldName){value unit nodes}}`, { collectionId, rootId, kind, fieldName })).collectionRelationTotal;
+  },
+  async relationImpact(collectionId: string, entryId: string, replacementId?: string): Promise<{ relations: EntryRelation[]; replacementAllowed: boolean }> {
+    return (await request<{ collectionRelationImpact: { relations: EntryRelation[]; replacementAllowed: boolean } }>(`query($collectionId:String!,$entryId:String!,$replacementId:String){collectionRelationImpact(collectionId:$collectionId,entryId:$entryId,replacementId:$replacementId){replacementAllowed relations{id fromEntryId toEntryId kind label quantity unit}}}`, { collectionId, entryId, replacementId })).collectionRelationImpact;
+  },
+  async detachRelations(collectionId: string, entryId: string, replacementId?: string): Promise<void> {
+    await request(`mutation($collectionId:String!,$entryId:String!,$replacementId:String){detachCollectionRelations(collectionId:$collectionId,entryId:$entryId,replacementId:$replacementId)}`, { collectionId, entryId, replacementId });
+  },
+  async importRelations(collectionId: string, importKey: string, rows: { fromSourceId: string; toSourceId: string; kind: EntryRelation['kind']; label: string; quantity?: string; unit?: string; snapshotValue?: string; snapshotUnit?: string; snapshotFieldId?: string }[]): Promise<void> {
+    await request(`mutation($collectionId:String!,$importKey:String!,$rows:[ImportedRelationInput!]!){importCollectionRelations(collectionId:$collectionId,importKey:$importKey,rows:$rows)}`, { collectionId, importKey, rows });
+  },
   async stockPositions(collectionId: string): Promise<StockPosition[]> { return (await request<{ stockPositions: StockPosition[] }>(`query($collectionId:String!) { stockPositions(collectionId:$collectionId) { productId productName location lot quantity } }`, { collectionId })).stockPositions; },
   async stockMovements(collectionId: string): Promise<StockMovement[]> { return (await request<{ stockMovements: StockMovement[] }>(`query($collectionId:String!) { stockMovements(collectionId:$collectionId) { id kind productId productName baseQuantity fromLocation toLocation lot occurredAt createdAt reason sourceEntryId } }`, { collectionId })).stockMovements; },
   async stockDailyReport(collectionId: string, productId: string, from: string, to: string, timeZone: string): Promise<{ date: string; opening: string; incoming: string; outgoing: string; closing: string; movements: { id: string; kind: string; baseQuantity: string }[] }[]> { return (await request<{ stockDailyReport: { date: string; opening: string; incoming: string; outgoing: string; closing: string; movements: { id: string; kind: string; baseQuantity: string }[] }[] }>(`query($collectionId:String!,$productId:String!,$from:String!,$to:String!,$timeZone:String!) { stockDailyReport(collectionId:$collectionId,productId:$productId,from:$from,to:$to,timeZone:$timeZone) { date opening incoming outgoing closing movements { id kind baseQuantity } } }`, { collectionId, productId, from, to, timeZone })).stockDailyReport; },
@@ -241,14 +266,14 @@ export const api = {
   async entryObjectReferences(entryId: string): Promise<{ objectId: string; fieldId: string; mode: string; missing: boolean; name?: string; capturedAt?: string; properties: { fieldId: string; name: string; kind: FieldKind; value: string; unitSnapshot?: Entry["values"][number]["unitSnapshot"] }[] }[]> {
     return (await request<{ entryObjectReferences: { objectId: string; fieldId: string; mode: string; missing: boolean; name?: string; capturedAt?: string; properties: { fieldId: string; name: string; kind: FieldKind; value: string; unitSnapshot?: Entry["values"][number]["unitSnapshot"] }[] }[] }>(`query References($entryId: String!) { entryObjectReferences(entryId: $entryId) { objectId fieldId mode missing name capturedAt properties { fieldId name kind value unitSnapshot { id version symbol dimension factor root objectFormatId } } } }`, { entryId })).entryObjectReferences;
   },
-  async objectCopyPreview(objectId: string, targetCollectionId: string): Promise<{ sourceName: string; targetName: string; dataFormats: string[]; units: string[]; formulas: string[]; objects: number; entries: number; conflicts: string[]; allowed: boolean; stockMovementCount: number }> {
-    return (await request<{ objectCopyPreview: { sourceName: string; targetName: string; dataFormats: string[]; units: string[]; formulas: string[]; objects: number; entries: number; conflicts: string[]; allowed: boolean; stockMovementCount: number } }>(`query CopyPreview($objectId: String!, $targetCollectionId: String!) { objectCopyPreview(objectId: $objectId, targetCollectionId: $targetCollectionId) { sourceName targetName dataFormats units formulas objects entries conflicts allowed stockMovementCount } }`, { objectId, targetCollectionId })).objectCopyPreview;
+  async objectCopyPreview(objectId: string, targetCollectionId: string): Promise<{ sourceName: string; targetName: string; dataFormats: string[]; units: string[]; formulas: string[]; objects: number; entries: number; relations: number; conflicts: string[]; allowed: boolean; stockMovementCount: number }> {
+    return (await request<{ objectCopyPreview: { sourceName: string; targetName: string; dataFormats: string[]; units: string[]; formulas: string[]; objects: number; entries: number; relations: number; conflicts: string[]; allowed: boolean; stockMovementCount: number } }>(`query CopyPreview($objectId: String!, $targetCollectionId: String!) { objectCopyPreview(objectId: $objectId, targetCollectionId: $targetCollectionId) { sourceName targetName dataFormats units formulas objects entries relations conflicts allowed stockMovementCount } }`, { objectId, targetCollectionId })).objectCopyPreview;
   },
   async copyObject(objectId: string, targetCollectionId: string): Promise<string> {
     return (await request<{ copyCollectionObject: { objectId: string } }>(`mutation CopyObject($objectId: String!, $targetCollectionId: String!) { copyCollectionObject(objectId: $objectId, targetCollectionId: $targetCollectionId) { objectId } }`, { objectId, targetCollectionId })).copyCollectionObject.objectId;
   },
-  async objectMovePreview(objectId: string, targetCollectionId: string): Promise<{ sourceName: string; targetName: string; dataFormats: string[]; units: string[]; formulas: string[]; objects: number; entries: number; conflicts: string[]; allowed: boolean; stockMovementCount: number; inboundReferences: number; activeShares: number }> {
-    return (await request<{ objectMovePreview: { sourceName: string; targetName: string; dataFormats: string[]; units: string[]; formulas: string[]; objects: number; entries: number; conflicts: string[]; allowed: boolean; stockMovementCount: number; inboundReferences: number; activeShares: number } }>(`query MovePreview($objectId: String!, $targetCollectionId: String!) { objectMovePreview(objectId: $objectId, targetCollectionId: $targetCollectionId) { sourceName targetName dataFormats units formulas objects entries conflicts allowed stockMovementCount inboundReferences activeShares } }`, { objectId, targetCollectionId })).objectMovePreview;
+  async objectMovePreview(objectId: string, targetCollectionId: string): Promise<{ sourceName: string; targetName: string; dataFormats: string[]; units: string[]; formulas: string[]; objects: number; entries: number; relations: number; conflicts: string[]; allowed: boolean; stockMovementCount: number; inboundReferences: number; activeShares: number }> {
+    return (await request<{ objectMovePreview: { sourceName: string; targetName: string; dataFormats: string[]; units: string[]; formulas: string[]; objects: number; entries: number; relations: number; conflicts: string[]; allowed: boolean; stockMovementCount: number; inboundReferences: number; activeShares: number } }>(`query MovePreview($objectId: String!, $targetCollectionId: String!) { objectMovePreview(objectId: $objectId, targetCollectionId: $targetCollectionId) { sourceName targetName dataFormats units formulas objects entries relations conflicts allowed stockMovementCount inboundReferences activeShares } }`, { objectId, targetCollectionId })).objectMovePreview;
   },
   async moveObject(objectId: string, targetCollectionId: string): Promise<{ objectId: string; operationId: string }> {
     return (await request<{ moveCollectionObject: { objectId: string; operationId: string } }>(`mutation MoveObject($objectId: String!, $targetCollectionId: String!) { moveCollectionObject(objectId: $objectId, targetCollectionId: $targetCollectionId) { objectId operationId } }`, { objectId, targetCollectionId })).moveCollectionObject;
@@ -259,8 +284,8 @@ export const api = {
   async revokeObjectShare(targetCollectionId: string, grantId: string): Promise<void> {
     await request<{ revokeCollectionObjectShare: boolean }>(`mutation RevokeObjectShare($targetCollectionId: String!, $grantId: String!) { revokeCollectionObjectShare(targetCollectionId: $targetCollectionId, grantId: $grantId) }`, { targetCollectionId, grantId });
   },
-  async dataFormatCopyPreview(formatId: string, targetCollectionId: string, withEntries: boolean): Promise<{ sourceName: string; targetName: string; dataFormats: string[]; units: string[]; formulas: string[]; objects: number; entries: number; conflicts: string[]; allowed: boolean; stockMovementCount: number }> {
-    return (await request<{ dataFormatCopyPreview: { sourceName: string; targetName: string; dataFormats: string[]; units: string[]; formulas: string[]; objects: number; entries: number; conflicts: string[]; allowed: boolean; stockMovementCount: number } }>(`query FormatCopyPreview($formatId: String!, $targetCollectionId: String!, $withEntries: Boolean!) { dataFormatCopyPreview(formatId: $formatId, targetCollectionId: $targetCollectionId, withEntries: $withEntries) { sourceName targetName dataFormats units formulas objects entries conflicts allowed stockMovementCount } }`, { formatId, targetCollectionId, withEntries })).dataFormatCopyPreview;
+  async dataFormatCopyPreview(formatId: string, targetCollectionId: string, withEntries: boolean): Promise<{ sourceName: string; targetName: string; dataFormats: string[]; units: string[]; formulas: string[]; objects: number; entries: number; relations: number; conflicts: string[]; allowed: boolean; stockMovementCount: number }> {
+    return (await request<{ dataFormatCopyPreview: { sourceName: string; targetName: string; dataFormats: string[]; units: string[]; formulas: string[]; objects: number; entries: number; relations: number; conflicts: string[]; allowed: boolean; stockMovementCount: number } }>(`query FormatCopyPreview($formatId: String!, $targetCollectionId: String!, $withEntries: Boolean!) { dataFormatCopyPreview(formatId: $formatId, targetCollectionId: $targetCollectionId, withEntries: $withEntries) { sourceName targetName dataFormats units formulas objects entries relations conflicts allowed stockMovementCount } }`, { formatId, targetCollectionId, withEntries })).dataFormatCopyPreview;
   },
   async copyDataFormat(formatId: string, targetCollectionId: string, withEntries: boolean): Promise<string> {
     return (await request<{ copyCollectionDataFormat: { dataFormatId: string } }>(`mutation CopyFormat($formatId: String!, $targetCollectionId: String!, $withEntries: Boolean!) { copyCollectionDataFormat(formatId: $formatId, targetCollectionId: $targetCollectionId, withEntries: $withEntries) { dataFormatId } }`, { formatId, targetCollectionId, withEntries })).copyCollectionDataFormat.dataFormatId;
@@ -283,12 +308,12 @@ export const api = {
   async useObject(objectId: string, targetFormatId: string, targetFieldId: string): Promise<Entry> {
     return (await request<{ useCollectionObject: Entry }>(`mutation Use($objectId: String!, $targetFormatId: String!, $targetFieldId: String!) { useCollectionObject(objectId: $objectId, targetFormatId: $targetFormatId, targetFieldId: $targetFieldId) { ${entryFields} } }`, { objectId, targetFormatId, targetFieldId })).useCollectionObject;
   },
-  async saveEntry(collectionId: string, values: { fieldId: string; value: string; attachmentBase64?: string; attachmentMimeType?: string }[], entryId?: string, formatId?: string): Promise<Entry> {
+  async saveEntry(collectionId: string, values: { fieldId: string; value: string; attachmentBase64?: string; attachmentMimeType?: string }[], entryId?: string, formatId?: string, sync?: { clientMutationId?: string; expectedUpdatedAt?: string }): Promise<Entry> {
     const key = entryId ? "updateEntry" : "createEntry";
     const query = entryId
       ? `mutation UpdateEntry($id: String!, $input: SaveEntryInput!) { updateEntry(id: $id, input: $input) { ${entryFields} } }`
       : `mutation CreateEntry($id: String!, $input: SaveEntryInput!) { createEntry(collectionId: $id, input: $input) { ${entryFields} } }`;
-    const data = await request<Record<string, Entry>>(query, { id: entryId ?? collectionId, input: { values, formatId } });
+    const data = await request<Record<string, Entry>>(query, { id: entryId ?? collectionId, input: { values, formatId, ...sync } });
     return data[key];
   },
   async entryAttachment(entryId: string, fieldId: string): Promise<{ fileName: string; mimeType: string; size: number; base64: string }> {
