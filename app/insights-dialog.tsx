@@ -66,6 +66,10 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
   const [dateFieldId, setDateFieldId] = useState(dateFields[0]?.id ?? "");
   const [groupFieldId, setGroupFieldId] = useState("");
   const [groupDepth, setGroupDepth] = useState(2);
+  const zoneFormats = collection.formats.filter((candidate) => candidate.fields.some((field) => field.kind === "ZONE"));
+  const [zoneFormatId, setZoneFormatId] = useState(zoneFormats[0]?.id ?? "");
+  const [zoneFieldId, setZoneFieldId] = useState("");
+  const zoneFields = collection.formats.find((candidate) => candidate.id === zoneFormatId)?.fields.filter((field) => field.kind === "ZONE") ?? [];
   const [secondaryGroupBy, setSecondaryGroupBy] = useState<NonNullable<AnalysisInput["secondaryGroupBy"]>>("CATEGORY");
   const [secondaryGroupFieldId, setSecondaryGroupFieldId] = useState("");
   const [percentile, setPercentile] = useState("50");
@@ -93,7 +97,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
   const [busy, setBusy] = useState(false);
 
   const groupFields = useMemo(() => format?.fields.filter((field) =>
-    groupBy === "OBJECT" ? field.kind === "OBJECT_REF" : field.kind === "SELECT" || field.kind === "TEXT" || field.kind === "CODE",
+    groupBy === "OBJECT" ? field.kind === "OBJECT_REF" : groupBy === "ZONE" ? field.kind === "POSITION" : field.kind === "SELECT" || field.kind === "TEXT" || field.kind === "CODE",
   ) ?? [], [format, groupBy]);
   const secondaryGroupFields = useMemo(() => format?.fields.filter((field) =>
     secondaryGroupBy === "OBJECT" ? field.kind === "OBJECT_REF" : field.kind === "SELECT" || field.kind === "TEXT" || field.kind === "CODE",
@@ -160,7 +164,9 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
       measureKind,
       groupBy,
       dateFieldId: activeDate,
-      groupFieldId: groupBy === "CATEGORY" || groupBy === "OBJECT" ? activeGroup : undefined,
+      groupFieldId: groupBy === "CATEGORY" || groupBy === "OBJECT" || groupBy === "ZONE" ? activeGroup : undefined,
+      zoneFormatId: groupBy === "ZONE" ? zoneFormatId || zoneFormats[0]?.id : undefined,
+      zoneFieldId: groupBy === "ZONE" ? zoneFieldId || zoneFields[0]?.id : undefined,
       groupDepth: groupBy === "CATEGORY" && format?.fields.some((field) => field.id === activeGroup && field.kind === "CODE") ? groupDepth : undefined,
       language,
       secondaryGroupBy: operation === "CROSSTAB" ? secondaryGroupBy : undefined,
@@ -330,13 +336,14 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
           <label>{fr ? "Mesure" : "Measure"}<select value={measure} onChange={(event) => setMeasure(event.target.value)}>{sources.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
           <label>{fr ? "Calcul" : "Calculation"}
             <select value={operation} onChange={(event) => setOperation(event.target.value as AnalysisOperationId)}>
-              {OPERATIONS.map((item) => <option key={item.id} value={item.id}>{fr ? item.fr : item.en}</option>)}
+              {OPERATIONS.filter((item) => groupBy !== "ZONE" || item.id === "COUNT").map((item) => <option key={item.id} value={item.id}>{fr ? item.fr : item.en}</option>)}
             </select>
           </label>
-          <label>{fr ? "Nature" : "Meaning"}<select value={measureKind} onChange={(event) => setMeasureKind(event.target.value as AnalysisInput["measureKind"])}><option value="EVENT">{fr ? "Événements" : "Events"}</option><option value="SNAPSHOT">{fr ? "Mesures instantanées" : "Point-in-time"}</option><option value="RATE">{fr ? "Taux" : "Rates"}</option></select></label>
-          <label>{fr ? "Regrouper" : "Group by"}<select value={groupBy} onChange={(event) => setGroupBy(event.target.value as AnalysisInput["groupBy"])}><option value="NONE">{fr ? "Aucun" : "None"}</option><option value="DAY">{fr ? "Jour" : "Day"}</option><option value="MONTH">{fr ? "Mois" : "Month"}</option><option value="CATEGORY">{fr ? "Catégorie" : "Category"}</option><option value="OBJECT">{fr ? "Objet" : "Object"}</option></select></label>
+          <label>{fr ? "Nature" : "Meaning"}<select value={measureKind} disabled={groupBy === "ZONE"} onChange={(event) => setMeasureKind(event.target.value as AnalysisInput["measureKind"])}><option value="EVENT">{fr ? "Événements" : "Events"}</option><option value="SNAPSHOT">{fr ? "Mesures instantanées" : "Point-in-time"}</option><option value="RATE">{fr ? "Taux" : "Rates"}</option></select></label>
+          <label>{fr ? "Regrouper" : "Group by"}<select value={groupBy} onChange={(event) => { const choice = event.target.value as AnalysisInput["groupBy"]; setGroupBy(choice); if (choice === "ZONE") { setOperation("COUNT"); setMeasureKind("EVENT"); } }}><option value="NONE">{fr ? "Aucun" : "None"}</option><option value="DAY">{fr ? "Jour" : "Day"}</option><option value="MONTH">{fr ? "Mois" : "Month"}</option><option value="CATEGORY">{fr ? "Catégorie" : "Category"}</option><option value="OBJECT">{fr ? "Objet" : "Object"}</option>{zoneFormats.length > 0 && format?.fields.some((field) => field.kind === "POSITION") && <option value="ZONE">{fr ? "Zone" : "Zone"}</option>}</select></label>
           {dateFields.length > 0 && <label>{fr ? "Champ date" : "Date field"}<select value={dateFieldId} onChange={(event) => setDateFieldId(event.target.value)}>{dateFields.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
-          {(groupBy === "CATEGORY" || groupBy === "OBJECT") && <label>{fr ? "Champ groupe" : "Group field"}<select value={groupFieldId} onChange={(event) => setGroupFieldId(event.target.value)}>{groupFields.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
+          {(groupBy === "CATEGORY" || groupBy === "OBJECT" || groupBy === "ZONE") && <label>{groupBy === "ZONE" ? fr ? "Champ position" : "Position field" : fr ? "Champ groupe" : "Group field"}<select value={groupFieldId} onChange={(event) => setGroupFieldId(event.target.value)}>{groupFields.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
+          {groupBy === "ZONE" && <><label>{fr ? "Format de données des zones" : "Zone data format"}<select value={zoneFormatId} onChange={(event) => { setZoneFormatId(event.target.value); setZoneFieldId(""); }}>{zoneFormats.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>{fr ? "Champ zone" : "Zone field"}<select value={zoneFieldId} onChange={(event) => setZoneFieldId(event.target.value)}>{zoneFields.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></>}
           {groupBy === "CATEGORY" && format?.fields.some((field) => field.id === (groupFieldId || groupFields[0]?.id) && field.kind === "CODE") && <label>{fr ? "Niveau de regroupement" : "Grouping level"}<select value={groupDepth} onChange={(event) => setGroupDepth(Number(event.target.value))}><option value={0}>{fr ? "Racine" : "Root"}</option><option value={1}>{fr ? "Intermédiaire" : "Middle"}</option><option value={2}>{fr ? "Code précis" : "Exact code"}</option></select></label>}
           {operation === "CROSSTAB" && <>
             <label>{fr ? "Second axe (colonnes)" : "Secondary group (columns)"}

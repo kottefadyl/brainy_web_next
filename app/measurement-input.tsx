@@ -37,11 +37,11 @@ export default function MeasurementInput({
 }: Props) {
   const fr = language === "fr";
   const [status, setStatus] = useState<"MEASURED" | "ESTIMATED" | "CALCULATED" | "ABSENT">(
-    (measureValue?.status as any) || "MEASURED"
+    (measureValue?.status as MeasureValueState["status"] | undefined) || "MEASURED"
   );
   const [uncertainty, setUncertainty] = useState(measureValue?.uncertainty || "");
   const [uncertaintyType, setUncertaintyType] = useState<"ABSOLUTE" | "RELATIVE">(
-    (measureValue?.uncertaintyType as any) || "ABSOLUTE"
+    (measureValue?.uncertaintyType as NonNullable<MeasureValueState["uncertaintyType"]> | undefined) || "ABSOLUTE"
   );
   const [quality, setQuality] = useState(measureValue?.quality || "");
   const [instrument, setInstrument] = useState(measureValue?.instrument || "");
@@ -90,7 +90,7 @@ export default function MeasurementInput({
         <select
           value={status}
           onChange={(e) => {
-            const nextStatus = e.target.value as any;
+            const nextStatus = e.target.value as MeasureValueState["status"];
             setStatus(nextStatus);
             update(value, nextStatus);
           }}
@@ -124,7 +124,7 @@ export default function MeasurementInput({
               <select
                 value={uncertaintyType}
                 onChange={(e) => {
-                  const t = e.target.value as any;
+                  const t = e.target.value as NonNullable<MeasureValueState["uncertaintyType"]>;
                   setUncertaintyType(t);
                   update(value, status, uncertainty, t);
                 }}
