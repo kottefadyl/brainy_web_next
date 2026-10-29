@@ -94,6 +94,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
   const [forecastHorizon, setForecastHorizon] = useState(3);
   const [forecastResult, setForecastResult] = useState<ForecastResult | null>(null);
   const [error, setError] = useState("");
+  const [backgroundNotice, setBackgroundNotice] = useState("");
   const [busy, setBusy] = useState(false);
 
   const groupFields = useMemo(() => format?.fields.filter((field) =>
@@ -200,6 +201,16 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
     }
   }
 
+  async function queueAnalysis(kind: "RECALCULATE" | "CHART") {
+    if (!format) return;
+    setBusy(true); setError(""); setBackgroundNotice("");
+    try {
+      await api.startBackgroundJob(collection.id, kind, analysisInput());
+      setBackgroundNotice(fr ? "Traitement lancé. Suivez sa progression dans « Traitements en arrière-plan » de la collection." : "Task started. Track it in the collection’s Background tasks panel.");
+    } catch (cause) { setError(String(cause)); }
+    finally { setBusy(false); }
+  }
+
   async function runQuickChart() {
     if (!quickChartOption) return;
     const nextGroupBy: AnalysisInput["groupBy"] = quickChartOption.date
@@ -250,6 +261,18 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
     } finally {
       setBusy(false);
     }
+  }
+
+  async function queueForecast() {
+    const activeMeasure = measure || sources[0]?.id || "";
+    const activeDate = dateFieldId || dateFields[0]?.id || "";
+    if (!format || !activeMeasure || activeMeasure.startsWith("formula:") || !activeDate) return;
+    setBusy(true); setError(""); setBackgroundNotice("");
+    try {
+      await api.startBackgroundJob(collection.id, "FORECAST", { formatId: format.id, fieldId: activeMeasure, dateFieldId: activeDate, frequency: forecastFrequency, method: forecastMethod, measureKind, from: from || undefined, to: to || undefined, horizon: forecastHorizon, holdout: 2 });
+      setBackgroundNotice(fr ? "Prévision lancée. Suivez-la dans « Traitements en arrière-plan » de la collection." : "Forecast started. Track it in the collection’s Background tasks panel.");
+    } catch (cause) { setError(String(cause)); }
+    finally { setBusy(false); }
   }
 
   async function loadMore(group: string, comparison = false) {
@@ -404,6 +427,8 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
         {filters.length > 0 && <p>{filters.map((item, index) => <button key={index} type="button" onClick={() => setFilters(filters.filter((_, idx) => idx !== index))}>{format?.fields.find((field) => field.id === item.fieldId)?.name} {item.operator} {item.value} ×</button>)}</p>}
         <div className="insights-actions">
           <button type="button" className="btn primary" disabled={busy} onClick={runAnalysis}>{fr ? "Calculer" : "Calculate"}</button>
+          <button type="button" className="btn secondary" disabled={busy} onClick={() => void queueAnalysis("RECALCULATE")}>{fr ? "Recalculer en arrière-plan" : "Recalculate in background"}</button>
+          <button type="button" className="btn secondary" disabled={busy} onClick={() => void queueAnalysis("CHART")}>{fr ? "Préparer un graphique" : "Prepare chart"}</button>
           {quickChartOption && <button type="button" className="insights-quick" disabled={busy} onClick={runQuickChart}>{fr ? "Graphique rapide" : "Quick chart"}</button>}
         </div>
       </section>
@@ -417,6 +442,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
           <label>{fr ? "Horizon" : "Horizon"}<select value={forecastHorizon} onChange={(event) => setForecastHorizon(Number(event.target.value))}>{[1, 2, 3, 6, 12].map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
         </div>
         <button type="button" className="btn secondary" disabled={busy || !measure || measure.startsWith("formula:") || !(dateFieldId || dateFields[0]?.id)} onClick={runForecast}>{fr ? "Estimer" : "Estimate"}</button>
+        <button type="button" className="btn secondary" disabled={busy || !measure || measure.startsWith("formula:") || !(dateFieldId || dateFields[0]?.id)} onClick={() => void queueForecast()}>{fr ? "Estimer en arrière-plan" : "Estimate in background"}</button>
         {forecastResult && <div className="forecast-results">
           <p>{fr ? "Sources" : "Sources"} : {forecastResult.sourceFrom} → {forecastResult.sourceTo} ({forecastResult.trainingCount} {fr ? "périodes d'apprentissage" : "training periods"}, {forecastResult.holdoutCount} {fr ? "périodes tenues à l'écart" : "held-out periods"}).</p>
           <p>{fr ? "Erreur moyenne sur la période tenue à l'écart" : "Mean error on held-out period"} : <strong>{forecastResult.holdoutMae} {forecastResult.unit}</strong> · {fr ? "Incertitude" : "Uncertainty"} : ±{forecastResult.uncertainty}</p>
@@ -428,6 +454,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
       </section>
 
       {error && <p className="error" role="alert">{error}</p>}
+      {backgroundNotice && <p role="status">{backgroundNotice}</p>}
       {result ? (
         <section ref={resultsRef} className="insights-section insights-results">
           <h3>{fr ? "Résultats" : "Results"} ({result.unit ?? (fr ? "sans unité" : "no unit")}) · v{result.operationVersion}</h3>

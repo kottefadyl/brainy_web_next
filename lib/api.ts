@@ -1,5 +1,8 @@
 import type { Collection, CollectionUnit, Entry, EntryFilter, EntryPage, User, FieldKind, Language, ProfileInput, SharedObjectGrant, SavedView, EntryReminder, AnalysisInput, AnalysisResult, EntryLink, EntryRelation, StockPosition, StockMovement, StockMovementInput, StockPreview, ForecastInput, ForecastResult, CollectionRole, AuditLog, ClassificationCode, GeoPage } from "./brainy";
 
+export type BackgroundJob = { id: string; collectionId: string; requestKey: string; kind: string; state: string; total: number; processed: number; createdCount: number; skippedCount: number; errorCount: number; logs: { row: number; message: string }[]; result?: string | null; failure?: string | null; createdAt: string; updatedAt: string };
+const backgroundJobFields = "id collectionId requestKey kind state total processed createdCount skippedCount errorCount logs { row message } failure createdAt updatedAt";
+
 type GraphQLError = { message?: string; extensions?: { code?: string } };
 
 export class ApiError extends Error {
@@ -38,6 +41,21 @@ const entryFields = "id formatId sourceObjectId recurrence { startFieldId endFie
 const userFields = "id name email profession job fieldOfStudy interests hobbies profileCompleted";
 
 export const api = {
+  async backgroundJobs(collectionId: string): Promise<BackgroundJob[]> {
+    return (await request<{ backgroundJobs: BackgroundJob[] }>(`query($collectionId:String!){backgroundJobs(collectionId:$collectionId){${backgroundJobFields}}}`, { collectionId })).backgroundJobs;
+  },
+  async backgroundJob(jobId: string): Promise<BackgroundJob> {
+    return (await request<{ backgroundJob: BackgroundJob }>(`query($jobId:String!){backgroundJob(jobId:$jobId){${backgroundJobFields} result}}`, { jobId })).backgroundJob;
+  },
+  async startBackgroundJob(collectionId: string, kind: "IMPORT" | "EXPORT" | "RECALCULATE" | "CHART" | "FORECAST", payload: object, requestKey = crypto.randomUUID()): Promise<BackgroundJob> {
+    return (await request<{ startBackgroundJob: BackgroundJob }>(`mutation($collectionId:String!,$input:StartBackgroundJobInput!){startBackgroundJob(collectionId:$collectionId,input:$input){${backgroundJobFields}}}`, { collectionId, input: { kind, payload: JSON.stringify(payload), requestKey } })).startBackgroundJob;
+  },
+  async cancelBackgroundJob(jobId: string): Promise<BackgroundJob> {
+    return (await request<{ cancelBackgroundJob: BackgroundJob }>(`mutation($jobId:String!){cancelBackgroundJob(jobId:$jobId){${backgroundJobFields}}}`, { jobId })).cancelBackgroundJob;
+  },
+  async resumeBackgroundJob(jobId: string): Promise<BackgroundJob> {
+    return (await request<{ resumeBackgroundJob: BackgroundJob }>(`mutation($jobId:String!){resumeBackgroundJob(jobId:$jobId){${backgroundJobFields}}}`, { jobId })).resumeBackgroundJob;
+  },
   async saveClassification(collectionId: string, name: string, codes: ClassificationCode[], listId?: string, expectedVersion?: number): Promise<Collection> {
     return (await request<{ saveClassification: Collection }>(`mutation($collectionId:String!,$name:String!,$codes:[ClassificationCodeInput!]!,$listId:String,$expectedVersion:Int){saveClassification(collectionId:$collectionId,name:$name,codes:$codes,listId:$listId,expectedVersion:$expectedVersion){${collectionFields}}}`, { collectionId, name, codes: codes.map(({ code, labelEn, labelFr, parentCode, active, mergedInto }) => ({ code, labelEn, labelFr, parentCode, active, mergedInto })), listId, expectedVersion })).saveClassification;
   },
