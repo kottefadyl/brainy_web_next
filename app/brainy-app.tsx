@@ -1012,6 +1012,8 @@ export default function BrainyApp() {
   const [activeSection, setActiveSection] = useState<"collection" | "insights" | "stock" | "classifications" | "map">("collection");
   const [entries, setEntries] = useState<Entry[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [pageAfter, setPageAfter] = useState<string | null>(null);
+  const [previousPages, setPreviousPages] = useState<(string | null)[]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [search, setSearch] = useState("");
@@ -1084,6 +1086,8 @@ export default function BrainyApp() {
       setLoadingEntries(true);
       setEntries([]);
       setNextCursor(null);
+      setPageAfter(null);
+      setPreviousPages([]);
       api.entriesPage(selectedId, selectedViewId ? { viewId: selectedViewId } : { search: search || undefined, formatId: filterFormatId || undefined, filters: filterFieldId && filterValue ? [{ fieldId: filterFieldId, operator: filterOperator, value: filterValue }] : undefined })
         .then((result) => { if (!cancelled && generation === entryGeneration.current) { setEntries(result.entries); setNextCursor(result.nextCursor ?? null); setLoadError(null); } })
         .catch((error) => { if (!cancelled) { if (error instanceof ApiError && error.unauthenticated) setUser(null); else setLoadError(error); } })
@@ -1101,7 +1105,7 @@ export default function BrainyApp() {
       setCollections(result);
       const id = result.some((item) => item.id === selectedId) ? selectedId : result[0]?.id;
       setSelectedId(id ?? null);
-      if (id) { const generation = ++entryGeneration.current; setLoadingEntries(true); const page = await api.entriesPage(id, pageOptions()); if (generation === entryGeneration.current) { setEntries(page.entries); setNextCursor(page.nextCursor ?? null); setCalendarRefresh((current) => current + 1); } }
+      if (id) { const generation = ++entryGeneration.current; setLoadingEntries(true); const page = await api.entriesPage(id, pageOptions()); if (generation === entryGeneration.current) { setEntries(page.entries); setNextCursor(page.nextCursor ?? null); setPageAfter(null); setPreviousPages([]); setCalendarRefresh((current) => current + 1); } }
     } catch (error) { setLoadError(error); }
     finally { setLoadingCollections(false); setLoadingEntries(false); }
   }
@@ -1112,7 +1116,25 @@ export default function BrainyApp() {
     try {
       const page = await api.entriesPage(selectedId, { ...pageOptions(), after: nextCursor });
       if (generation === entryGeneration.current) {
-        setEntries((current) => [...current, ...page.entries.filter((entry) => !current.some((item) => item.id === entry.id))]);
+        setPreviousPages((current) => [...current, pageAfter]);
+        setPageAfter(nextCursor);
+        setEntries(page.entries);
+        setNextCursor(page.nextCursor ?? null);
+      }
+    } catch (error) { setLoadError(error); }
+    finally { setLoadingMore(false); }
+  }
+  async function loadPreviousEntries() {
+    if (!selectedId || previousPages.length === 0 || loadingMore) return;
+    const generation = entryGeneration.current;
+    const after = previousPages[previousPages.length - 1];
+    setLoadingMore(true);
+    try {
+      const page = await api.entriesPage(selectedId, { ...pageOptions(), after: after ?? undefined });
+      if (generation === entryGeneration.current) {
+        setPreviousPages((current) => current.slice(0, -1));
+        setPageAfter(after);
+        setEntries(page.entries);
         setNextCursor(page.nextCursor ?? null);
       }
     } catch (error) { setLoadError(error); }
@@ -1217,7 +1239,7 @@ export default function BrainyApp() {
                 <div className="format-card-fields">{format.fields.map((field) => <span key={field.id} className="format-tag">{field.name}<small>{fieldKindLabel(language, field.kind)}{field.unit ? ` · ${field.unit}` : ""}</small></span>)}</div>
               </div>)}</div>
             </section>
-            <div className="entries-heading"><div><span className="section-overline">{t(language, "savedEntries")}</span><h2>{t(language, "entries")} <span>{entries.length}{nextCursor ? "+" : ""}</span></h2></div><Button variant="secondary" onClick={() => setQuickEntry(true)}>{language === "fr" ? "Saisie rapide" : "Quick entry"}</Button><Button onClick={() => setDialog({ kind: "entry" })}><Plus size={19} /> {t(language, "newEntry")}</Button></div>
+            <div className="entries-heading"><div><span className="section-overline">{t(language, "savedEntries")}</span><h2>{t(language, "entries")} <span>Page {previousPages.length + 1} · {entries.length}{nextCursor ? "+" : ""}</span></h2></div><Button variant="secondary" onClick={() => setQuickEntry(true)}>{language === "fr" ? "Saisie rapide" : "Quick entry"}</Button><Button onClick={() => setDialog({ kind: "entry" })}><Plus size={19} /> {t(language, "newEntry")}</Button></div>
             <div className="saved-view-bar">
               <label>{language === "fr" ? "Vue" : "View"}<select value={selectedViewId} onChange={(event) => setSelectedViewId(event.target.value)}><option value="">{language === "fr" ? "Liste par défaut" : "Default list"}</option>{selected.savedViews?.map((view) => <option key={view.id} value={view.id}>{view.name}</option>)}</select></label>
               <Button variant="secondary" onClick={() => setDialog({ kind: "view" })}><Plus size={16} />{language === "fr" ? "Enregistrer une vue" : "Save a view"}</Button>
@@ -1231,7 +1253,7 @@ export default function BrainyApp() {
             </div>}
             {selectedView?.layout === "CALENDAR" ? <CalendarView collection={selected} view={selectedView} language={language} refreshToken={calendarRefresh} onEdit={(entry) => setDialog({ kind: "entry", entry })} onReminder={(entry) => setDialog({ kind: "reminder", entry })} /> : loadingEntries ? <div className="entries-loading"><div className="boot-spinner" />{t(language, "loading")}</div> : entries.length ? <>
               {selectedView?.layout === "TASKS" ? <div className="task-list">{entries.map((entry) => { const titleField = selected.formats.find((item) => item.id === entry.formatId)?.fields.find((field) => field.kind === "TITLE"); const done = entry.values.find((item) => item.fieldId === selectedView.taskDoneFieldId)?.value === "true"; const due = entry.values.find((item) => item.fieldId === selectedView.taskDueFieldId)?.value; const priority = entry.values.find((item) => item.fieldId === selectedView.taskPriorityFieldId)?.value; return <div key={entry.id} className="task-row"><label><input type="checkbox" checked={done} onChange={async (event) => { try { const updated = await api.setTaskCompleted(selected.id, selectedView.id, entry.id, event.target.checked); setEntries((current) => current.map((item) => item.id === updated.id ? updated : item)); } catch (cause) { setLoadError(cause); } }} /><span className={done ? "done" : ""}>{entry.values.find((item) => item.fieldId === titleField?.id)?.value ?? selected.formats.find((item) => item.id === entry.formatId)?.name}</span></label>{priority && <small>{priority}</small>}{due && <time>{due.slice(0, 16).replace("T", " ")}</time>}<button type="button" onClick={() => setDialog({ kind: "reminder", entry })}><Bell size={15} /> {language === "fr" ? "Rappel" : "Reminder"}</button><button type="button" onClick={() => setDialog({ kind: "entry", entry })}>{t(language, "edit")}</button></div>; })}</div> : selectedView?.layout === "TABLE" ? <div className="saved-view-table-wrap"><table className="saved-view-table"><thead><tr><th>{language === "fr" ? "Format de données" : "Data format"}</th><th>{language === "fr" ? "Créée" : "Created"}</th>{selectedView.columnFieldIds.map((fieldId) => <th key={fieldId}>{selected.formats.flatMap((format) => format.fields).find((field) => field.id === fieldId)?.name ?? fieldId}</th>)}<th>{language === "fr" ? "Action" : "Action"}</th></tr></thead><tbody>{entries.map((entry) => <tr key={entry.id}><td>{selected.formats.find((format) => format.id === entry.formatId)?.name}</td><td>{dateTime(entry.createdAt, language)}</td>{selectedView.columnFieldIds.map((fieldId) => { const format = selected.formats.find((item) => item.id === entry.formatId); const field = format?.fields.find((item) => item.id === fieldId); const value = entry.values.find((item) => item.fieldId === fieldId); return <td key={fieldId}>{field && value ? formatFieldValue(field, value.value, language, value.unitSnapshot) : "—"}</td>; })}<td><button type="button" onClick={() => setDialog({ kind: "entry", entry })}>{t(language, "edit")}</button></td></tr>)}</tbody></table></div> : selectedView?.groupByFormat ? selected.formats.filter((format) => entries.some((entry) => entry.formatId === format.id)).map((format) => <section key={format.id} className="saved-view-group"><h3>{format.name}</h3><div className={selectedView.layout === "LIST" ? "entry-grid saved-view-list" : "entry-grid"}>{entries.filter((entry) => entry.formatId === format.id).map((entry) => <EntryCard key={entry.id} entry={entry} collection={selected} language={language} onEdit={() => setDialog({ kind: "entry", entry })} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteEntry", entry }); }} onCopy={() => copy(entry)} onLinks={() => setDialog({ kind: "entryLinks", entry })} onReminder={selected.formats.find((item) => item.id === entry.formatId)?.fields.some((field) => ["DATE", "DATETIME"].includes(field.kind) && entry.values.some((value) => value.fieldId === field.id)) ? () => setDialog({ kind: "reminder", entry }) : undefined} />)}</div></section>) : <div className={selectedView?.layout === "LIST" ? "entry-grid saved-view-list" : "entry-grid"}>{entries.map((entry) => <EntryCard key={entry.id} entry={entry} collection={selected} language={language} onEdit={() => setDialog({ kind: "entry", entry })} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteEntry", entry }); }} onCopy={() => copy(entry)} onLinks={() => setDialog({ kind: "entryLinks", entry })} onReminder={selected.formats.find((item) => item.id === entry.formatId)?.fields.some((field) => ["DATE", "DATETIME"].includes(field.kind) && entry.values.some((value) => value.fieldId === field.id)) ? () => setDialog({ kind: "reminder", entry }) : undefined} />)}</div>}
-              {nextCursor && <div className="more-entries"><Button variant="secondary" onClick={loadMoreEntries} disabled={loadingMore}>{loadingMore ? t(language, "loading") : t(language, "loadMore")}</Button></div>}
+              {(nextCursor || previousPages.length > 0) && <div className="more-entries">{previousPages.length > 0 && <Button variant="secondary" onClick={loadPreviousEntries} disabled={loadingMore}>{language === "fr" ? "Page précédente" : "Previous page"}</Button>}{nextCursor && <Button variant="secondary" onClick={loadMoreEntries} disabled={loadingMore}>{loadingMore ? t(language, "loading") : language === "fr" ? "Page suivante" : "Next page"}</Button>}</div>}
             </> : <div className="empty-state entries-empty"><div className="empty-art"><BookOpen size={46} strokeWidth={1.4} /></div><h2>{search || filterFormatId || selectedView ? t(language, "noMatches") : t(language, "noEntries")}</h2><p>{search || filterFormatId || selectedView ? "" : t(language, "noEntriesDetail")}</p>{!search && !filterFormatId && !selectedView && <Button variant="secondary" onClick={() => setDialog({ kind: "entry" })}><Plus size={17} /> {t(language, "writeEntry")}</Button>}</div>}
           </>}
         </div>
