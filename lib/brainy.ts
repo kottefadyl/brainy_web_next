@@ -12,7 +12,9 @@ export type GeoPage = { points: GeoPoint[]; nextCursor?: string | null; hasMore:
 export type CollectionUnit = { id: string; name: string; symbol: string; dimension: string; baseUnitId?: string | null; factor: string; objectFormatId?: string | null; version: number };
 export type ExchangeRate = { id: string; from: string; to: string; rate: string; effectiveAt: string };
 export type UnitSnapshot = { id: string; version: number; symbol: string; dimension: string; factor: string; root: string; objectFormatId?: string | null };
-export type CollectionFormat = { id: string; name: string; color: string; version?: number | null; objectModel?: boolean; copiedFromFormatId?: string | null; linkedSource?: { sourceCollectionId: string; sourceFormatId: string; acceptedVersion: number; targetVersion: number } | null; fields: Field[] };
+export type WorkflowDefinition = { stateFieldId: string; initialState: string; transitions: { from: string; to: string; minimumRole: CollectionRole }[]; requirements: { state: string; fieldIds: string[] }[] };
+export type EntryWorkflow = { assigneeUserId?: string | null; dueAt?: string | null; reminderMinutesBefore?: number | null; history: { kind: string; from: string; to: string; actorUserId: string; at: string; assigneeUserId?: string | null; dueAt?: string | null }[] };
+export type CollectionFormat = { id: string; name: string; color: string; version?: number | null; objectModel?: boolean; copiedFromFormatId?: string | null; linkedSource?: { sourceCollectionId: string; sourceFormatId: string; acceptedVersion: number; targetVersion: number } | null; workflow?: WorkflowDefinition | null; fields: Field[] };
 export type SavedView = { id: string; name: string; layout: "LIST" | "TABLE" | "CARDS" | "TASKS" | "CALENDAR"; formatIds: string[]; columnFieldIds: string[]; search: string; filterFieldId?: string | null; filterOperator?: EntryFilter["operator"] | null; filterValue?: string | null; sort: "NEWEST" | "OLDEST" | "MANUAL"; manualOrderFieldIds?: string[]; groupByFormat: boolean; taskDoneFieldId?: string | null; taskDueFieldId?: string | null; taskCompletedFieldId?: string | null; taskPriorityFieldId?: string | null; calendarStartFieldId?: string | null; calendarEndFieldId?: string | null; calendarTimeZone?: string | null };
 export type Formula = { id: string; name: string; formatId: string; expression: string; version: number; dependencies: string[] };
 export type AnalysisOperationId = "COUNT" | "SUM" | "AVERAGE" | "MIN" | "MAX" | "MEDIAN" | "PERCENTILE" | "VARIANCE" | "STDDEV" | "RANGE" | "RATE_PER_N" | "CROSSTAB" | "CUMULATIVE" | "MOVING_AVERAGE" | "SUCCESSIVE_DIFF" | "SUCCESSIVE_VARIATION" | "LINEAR_TREND";
@@ -32,7 +34,7 @@ export type SharedObjectGrant = { id: string; sourceCollectionId: string; source
 export type CollectionRole = "OWNER" | "EDITOR" | "READER";
 export type CollectionMember = { userId: string; email: string; name: string; role: CollectionRole; addedAt: string; sharedFieldIds?: string[] };
 export type AuditLog = { id: string; collectionId: string; userId: string; action: string; details?: string | null; occurredAt: string };
-export type Collection = { id: string; name: string; fields: Field[]; formats: CollectionFormat[]; codeLists: ClassificationList[]; units: CollectionUnit[]; exchangeRates: ExchangeRate[]; sharedObjects: SharedObjectGrant[]; savedViews: SavedView[]; formulas: Formula[]; stockRules?: StockRule[]; allowNegativeStock?: boolean; members?: CollectionMember[] };
+export type Collection = { id: string; name: string; ownerId?: string; fields: Field[]; formats: CollectionFormat[]; codeLists: ClassificationList[]; units: CollectionUnit[]; exchangeRates: ExchangeRate[]; sharedObjects: SharedObjectGrant[]; savedViews: SavedView[]; formulas: Formula[]; stockRules?: StockRule[]; allowNegativeStock?: boolean; members?: CollectionMember[] };
 export type Entry = {
   id: string;
   offlinePending?: boolean;
@@ -42,6 +44,7 @@ export type Entry = {
   updatedAt: string;
   sourceObjectId?: string | null;
   recurrence?: { startFieldId: string; endFieldId: string; timeZone: string; frequency: "DAILY" | "WEEKLY" | "MONTHLY"; interval: number; untilDate?: string | null; excludedDates: string[] } | null;
+  workflow?: EntryWorkflow | null;
   revisions?: { at: string; formatVersion: number; values: { fieldId: string; value: string; unitSnapshot?: UnitSnapshot | null }[] }[];
 };
 export type EntryPage = { entries: Entry[]; nextCursor?: string | null; hasMore: boolean };
@@ -642,6 +645,23 @@ export function translateError(error: unknown, language: Language): string {
   if (message.includes("needs a date, time") || message.includes("needs a valid date and time")) return t(language, "invalidDateTime");
   if (message.includes("Add at least one interest or hobby")) return t(language, "profileInterestRule");
   if (language === "fr") {
+    const workflowErrors: [string, string][] = [
+      ["This transition is not allowed", "Cette transition n’est pas autorisée."],
+      ["Change the state with a workflow transition", "Changez l’état avec une transition du flux."],
+      ["This entry changed elsewhere", "Cette entrée a été modifiée ailleurs. Actualisez et réessayez."],
+      ["Start this entry in the initial state", "Commencez cette entrée dans l’état initial."],
+      ["Fill in a valid state on every existing entry", "Renseignez un état valide sur chaque entrée existante avant d’activer le flux."],
+      ["Keep the workflow state field", "Conservez le champ d’état et ses choix pendant que le flux est actif."],
+      ["Only a collection owner can perform this action", "Seul le propriétaire de la collection peut effectuer cette action."],
+      ["Read-only members cannot modify collection data", "Les membres en lecture seule ne peuvent pas modifier la collection."],
+      ["Assign to the owner or an editor", "Assignez l’entrée au propriétaire ou à un éditeur ayant accès à ce format de données."],
+      ["Choose a valid due date and time", "Choisissez une échéance valide."],
+      ["Choose a reminder advance", "Choisissez un délai de rappel entre 0 et 43 200 minutes."],
+      ["This entry has no workflow", "Cette entrée n’a pas de flux d’états."],
+    ];
+    for (const [source, translated] of workflowErrors) if (message.includes(source)) return translated;
+    const required = message.match(/Fill in (.+) before entering (.+)/);
+    if (required) return `Renseignez ${required[1]} avant de passer à ${required[2]}.`;
     if (message.includes("An object data format needs a title field")) return "Un format de données d’objet a besoin d’un champ titre.";
     if (message.includes("Give this object a name")) return "Donnez un nom à cet objet.";
     if (message.includes("Object model not found")) return "Ce modèle d’objet est introuvable.";

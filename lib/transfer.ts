@@ -1,12 +1,12 @@
 import { api } from "./api";
-import { formatFieldValue, type Collection, type FieldKind, type Language, type UnitSnapshot } from "./brainy";
+import { formatFieldValue, type Collection, type Entry, type FieldKind, type Language, type UnitSnapshot } from "./brainy";
 
 export type TransferValue = { fieldId: string; value: string; unitSnapshot?: UnitSnapshot | null; attachmentBase64?: string; attachmentMimeType?: string };
-export type TransferEntry = { id: string; formatId: string; sourceObjectId?: string | null; createdAt: string; updatedAt: string; values: TransferValue[] };
+export type TransferEntry = { id: string; formatId: string; sourceObjectId?: string | null; createdAt: string; updatedAt: string; values: TransferValue[]; workflowHistory?: NonNullable<Entry["workflow"]>["history"] };
 export type TransferBundle = {
   brainyExportVersion: 1;
   exportedAt: string;
-  collection: { id: string; name: string; units: Collection["units"]; exchangeRates: Collection["exchangeRates"]; codeLists?: Collection["codeLists"]; sharedObjects?: Collection["sharedObjects"]; formats: { id: string; name: string; color: string; objectModel?: boolean; fields: { id: string; name: string; kind: FieldKind; unit?: string | null; options?: string[] | null; codeListId?: string | null; targetObjectFormatId?: string | null; multiple?: boolean | null; variableName?: string | null; referenceMode?: "CURRENT" | "SNAPSHOT" | null }[] }[] };
+  collection: { id: string; name: string; units: Collection["units"]; exchangeRates: Collection["exchangeRates"]; codeLists?: Collection["codeLists"]; sharedObjects?: Collection["sharedObjects"]; formats: { id: string; name: string; color: string; objectModel?: boolean; workflow?: Collection["formats"][number]["workflow"]; fields: { id: string; name: string; kind: FieldKind; unit?: string | null; options?: string[] | null; codeListId?: string | null; targetObjectFormatId?: string | null; multiple?: boolean | null; variableName?: string | null; referenceMode?: "CURRENT" | "SNAPSHOT" | null }[] }[] };
   entries: TransferEntry[];
   links?: { fromSourceId: string; toSourceId: string; label: string }[];
   relations?: { fromSourceId: string; toSourceId: string; kind: 'ASSOCIATION' | 'PARENT' | 'COMPONENT'; label: string; quantity?: string | null; unit?: string | null; snapshotValue?: string | null; snapshotUnit?: string | null; snapshotFieldId?: string | null }[];
@@ -31,7 +31,7 @@ export async function exportCollection(collection: Collection): Promise<Transfer
           values.push({ ...value, attachmentBase64: attachment.base64, attachmentMimeType: attachment.mimeType });
         } else values.push(value);
       }
-      entries.push({ id: entry.id, formatId: format.id, ...(entry.sourceObjectId ? { sourceObjectId: entry.sourceObjectId } : {}), createdAt: entry.createdAt, updatedAt: entry.updatedAt, values });
+      entries.push({ id: entry.id, formatId: format.id, ...(entry.sourceObjectId ? { sourceObjectId: entry.sourceObjectId } : {}), createdAt: entry.createdAt, updatedAt: entry.updatedAt, values, ...(entry.workflow?.history?.length ? { workflowHistory: entry.workflow.history } : {}) });
       for (const link of await api.entryLinks(collection.id, entry.id)) if (!seenLinks.has(link.id)) {
         seenLinks.add(link.id);
         links.push({ fromSourceId: link.fromEntryId, toSourceId: link.toEntryId, label: link.label });
@@ -46,7 +46,7 @@ export async function exportCollection(collection: Collection): Promise<Transfer
   return {
     brainyExportVersion: 1,
     exportedAt: new Date().toISOString(),
-    collection: { id: collection.id, name: collection.name, units: collection.units ?? [], exchangeRates: collection.exchangeRates ?? [], codeLists: collection.codeLists ?? [], sharedObjects: collection.sharedObjects ?? [], formats: collection.formats.map((format) => ({ id: format.id, name: format.name, color: format.color, objectModel: format.objectModel ?? false, fields: format.fields.map((field) => ({ ...field })) })) },
+    collection: { id: collection.id, name: collection.name, units: collection.units ?? [], exchangeRates: collection.exchangeRates ?? [], codeLists: collection.codeLists ?? [], sharedObjects: collection.sharedObjects ?? [], formats: collection.formats.map((format) => ({ id: format.id, name: format.name, color: format.color, objectModel: format.objectModel ?? false, workflow: format.workflow, fields: format.fields.map((field) => ({ ...field })) })) },
     entries, links, relations,
   };
 }
@@ -144,6 +144,7 @@ export function transferMapping(bundle: TransferBundle, target: Collection): Map
       if (!targetField) throw new Error(`Missing compatible field: ${source.name} → ${field.name}`);
       fields.set(field.id, targetField.id);
     }
+    if (source.workflow && (!targetFormat.workflow || fields.get(source.workflow.stateFieldId) !== targetFormat.workflow.stateFieldId || source.workflow.initialState !== targetFormat.workflow.initialState)) throw new Error(`Incompatible workflow: ${source.name}`);
     mapping.set(source.id, { formatId: targetFormat.id, fields });
   }
   return mapping;
@@ -163,6 +164,7 @@ export async function importCollection(bundle: TransferBundle, target: Collectio
       createdAt: new Date(entry.createdAt).toISOString(),
       updatedAt: new Date(entry.updatedAt).toISOString(),
       values: entry.values.map((value) => ({ ...value, fieldId: targetFormat.fields.get(value.fieldId)!, ...(value.unitSnapshot && unitMapping.has(value.unitSnapshot.id) ? { unitSnapshot: { ...value.unitSnapshot, id: unitMapping.get(value.unitSnapshot.id)!, root: unitMapping.get(value.unitSnapshot.root) ?? value.unitSnapshot.root } } : {}) })),
+      workflowHistory: entry.workflowHistory,
     }));
     for (let index = 0; index < rows.length;) {
       const batch: typeof rows = [];
