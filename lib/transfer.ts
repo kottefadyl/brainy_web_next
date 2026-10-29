@@ -6,7 +6,7 @@ export type TransferEntry = { id: string; formatId: string; sourceObjectId?: str
 export type TransferBundle = {
   brainyExportVersion: 1;
   exportedAt: string;
-  collection: { id: string; name: string; units: Collection["units"]; exchangeRates: Collection["exchangeRates"]; sharedObjects?: Collection["sharedObjects"]; formats: { id: string; name: string; color: string; objectModel?: boolean; fields: { id: string; name: string; kind: FieldKind; unit?: string | null; options?: string[] | null; targetObjectFormatId?: string | null; multiple?: boolean | null; variableName?: string | null; referenceMode?: "CURRENT" | "SNAPSHOT" | null }[] }[] };
+  collection: { id: string; name: string; units: Collection["units"]; exchangeRates: Collection["exchangeRates"]; codeLists?: Collection["codeLists"]; sharedObjects?: Collection["sharedObjects"]; formats: { id: string; name: string; color: string; objectModel?: boolean; fields: { id: string; name: string; kind: FieldKind; unit?: string | null; options?: string[] | null; codeListId?: string | null; targetObjectFormatId?: string | null; multiple?: boolean | null; variableName?: string | null; referenceMode?: "CURRENT" | "SNAPSHOT" | null }[] }[] };
   entries: TransferEntry[];
   links?: { fromSourceId: string; toSourceId: string; label: string }[];
   relations?: { fromSourceId: string; toSourceId: string; kind: 'ASSOCIATION' | 'PARENT' | 'COMPONENT'; label: string; quantity?: string | null; unit?: string | null; snapshotValue?: string | null; snapshotUnit?: string | null; snapshotFieldId?: string | null }[];
@@ -46,7 +46,7 @@ export async function exportCollection(collection: Collection): Promise<Transfer
   return {
     brainyExportVersion: 1,
     exportedAt: new Date().toISOString(),
-    collection: { id: collection.id, name: collection.name, units: collection.units ?? [], exchangeRates: collection.exchangeRates ?? [], sharedObjects: collection.sharedObjects ?? [], formats: collection.formats.map((format) => ({ id: format.id, name: format.name, color: format.color, objectModel: format.objectModel ?? false, fields: format.fields.map((field) => ({ ...field })) })) },
+    collection: { id: collection.id, name: collection.name, units: collection.units ?? [], exchangeRates: collection.exchangeRates ?? [], codeLists: collection.codeLists ?? [], sharedObjects: collection.sharedObjects ?? [], formats: collection.formats.map((format) => ({ id: format.id, name: format.name, color: format.color, objectModel: format.objectModel ?? false, fields: format.fields.map((field) => ({ ...field })) })) },
     entries, links, relations,
   };
 }
@@ -89,7 +89,9 @@ export function parseTransfer(raw: unknown): TransferBundle {
   const formatIds = new Set<string>();
   bundle.collection.units ??= [];
   bundle.collection.exchangeRates ??= [];
+  bundle.collection.codeLists ??= [];
   if (!Array.isArray(bundle.collection.units) || !Array.isArray(bundle.collection.exchangeRates)) throw new Error("Invalid unit catalog in Brainy file");
+  if (!Array.isArray(bundle.collection.codeLists) || bundle.collection.codeLists.some((list) => !list.id || !list.name || !Array.isArray(list.codes))) throw new Error("Invalid code lists in Brainy file");
   const unitIds = new Set<string>();
   for (const unit of bundle.collection.units) {
     if (!unit || typeof unit.id !== "string" || !unit.id || unitIds.has(unit.id) || typeof unit.name !== "string" || typeof unit.symbol !== "string" || typeof unit.dimension !== "string" || typeof unit.factor !== "string") throw new Error("Invalid unit in Brainy file");
@@ -102,6 +104,7 @@ export function parseTransfer(raw: unknown): TransferBundle {
     for (const field of format.fields) {
       if (typeof field.id !== "string" || !field.id || fieldIds.has(field.id) || typeof field.name !== "string" || typeof field.kind !== "string" || (field.options != null && !Array.isArray(field.options))) throw new Error("Invalid field in Brainy file");
       fieldIds.add(field.id);
+      if (field.kind === "CODE" && !bundle.collection.codeLists.some((list) => list.id === field.codeListId)) throw new Error("Missing code list in Brainy file");
     }
   }
   const entryIds = new Set<string>();
@@ -129,6 +132,7 @@ export function parseTransfer(raw: unknown): TransferBundle {
 export function transferMapping(bundle: TransferBundle, target: Collection): Map<string, { formatId: string; fields: Map<string, string> }> {
   const mapping = new Map<string, { formatId: string; fields: Map<string, string> }>();
   const unitMapping = new Map(bundle.collection.units.map((unit) => [unit.id, target.units.find((item) => item.name.toLocaleLowerCase() === unit.name.toLocaleLowerCase() && item.symbol === unit.symbol && item.dimension === unit.dimension)?.id]));
+  const codeMapping = new Map((bundle.collection.codeLists ?? []).map((list) => [list.id, target.codeLists.find((item) => item.name.toLocaleLowerCase() === list.name.toLocaleLowerCase() && list.codes.every((code) => item.codes.some((candidate) => candidate.code === code.code)))?.id]));
   for (const source of bundle.collection.formats) {
     const targetFormat = target.formats.find((item) => item.name.toLocaleLowerCase() === source.name.toLocaleLowerCase());
     if (!targetFormat) throw new Error(`Missing data format: ${source.name}`);
@@ -136,7 +140,7 @@ export function transferMapping(bundle: TransferBundle, target: Collection): Map
     const fields = new Map<string, string>();
     for (const field of source.fields) {
       const expectedUnit = field.unit?.startsWith("local:") ? `local:${unitMapping.get(field.unit.slice(6)) ?? "missing"}` : field.unit;
-      const targetField = targetFormat.fields.find((item) => item.name.toLocaleLowerCase() === field.name.toLocaleLowerCase() && item.kind === field.kind && (item.unit ?? "") === (expectedUnit ?? ""));
+      const targetField = targetFormat.fields.find((item) => item.name.toLocaleLowerCase() === field.name.toLocaleLowerCase() && item.kind === field.kind && (item.unit ?? "") === (expectedUnit ?? "") && (field.kind !== "CODE" || item.codeListId === codeMapping.get(field.codeListId ?? "")));
       if (!targetField) throw new Error(`Missing compatible field: ${source.name} → ${field.name}`);
       fields.set(field.id, targetField.id);
     }

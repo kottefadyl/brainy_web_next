@@ -1,10 +1,14 @@
 export type Language = "en" | "fr";
-export type FieldKind = "TITLE" | "DATE" | "NUMBER" | "TIME" | "LINK" | "CHARACTER" | "TEXT" | "BOOLEAN" | "SELECT" | "MULTI_SELECT" | "DATETIME" | "DURATION" | "LONG_TEXT" | "ATTACHMENT" | "OBJECT_REF" | "MEASURE";
+export type FieldKind = "TITLE" | "DATE" | "NUMBER" | "TIME" | "LINK" | "CHARACTER" | "TEXT" | "BOOLEAN" | "SELECT" | "MULTI_SELECT" | "DATETIME" | "DURATION" | "LONG_TEXT" | "ATTACHMENT" | "OBJECT_REF" | "MEASURE" | "CODE" | "POSITION" | "ZONE";
 
 export type User = { id: string; name: string; email: string; profession?: string | null; job?: string | null; fieldOfStudy?: string | null; interests: string[]; hobbies: string[]; profileCompleted: boolean };
 export type ProfileInput = { name: string; profession: string; job: string; fieldOfStudy: string; interests: string[]; hobbies: string[] };
 export const formatColors = ["#EEF5FF", "#EDF9F3", "#FFF5EB", "#F4F0FF", "#FFF0F4", "#EAF8FA", "#FBF7E9", "#F1F8ED", "#F8F0FA", "#F1F5FA", "#FFF7F1", "#EFF8FF", "#FDEFF7", "#EDF7FF", "#F7FBEA", "#FFF0E8", "#EFEFFD", "#E9F8F4", "#FBF1E8", "#F0F8F9", "#FFF2EF", "#F4F8E8", "#F1F2FF", "#EFFAF0"] as const;
-export type Field = { id: string; name: string; kind: FieldKind; unit?: string | null; options?: string[] | null; targetObjectFormatId?: string | null; multiple?: boolean | null; variableName?: string | null; referenceMode?: "CURRENT" | "SNAPSHOT" | null; sourceFieldId?: string | null };
+export type Field = { id: string; name: string; kind: FieldKind; unit?: string | null; options?: string[] | null; codeListId?: string | null; targetObjectFormatId?: string | null; multiple?: boolean | null; variableName?: string | null; referenceMode?: "CURRENT" | "SNAPSHOT" | null; sourceFieldId?: string | null };
+export type ClassificationCode = { code: string; labelEn: string; labelFr: string; parentCode?: string | null; active: boolean; mergedInto?: string | null };
+export type ClassificationList = { id: string; name: string; version: number; codes: ClassificationCode[] };
+export type GeoPoint = { entryId: string; name: string; latitude: number; longitude: number; accuracy?: number | null };
+export type GeoPage = { points: GeoPoint[]; nextCursor?: string | null; hasMore: boolean };
 export type CollectionUnit = { id: string; name: string; symbol: string; dimension: string; baseUnitId?: string | null; factor: string; objectFormatId?: string | null; version: number };
 export type ExchangeRate = { id: string; from: string; to: string; rate: string; effectiveAt: string };
 export type UnitSnapshot = { id: string; version: number; symbol: string; dimension: string; factor: string; root: string; objectFormatId?: string | null };
@@ -12,7 +16,7 @@ export type CollectionFormat = { id: string; name: string; color: string; versio
 export type SavedView = { id: string; name: string; layout: "LIST" | "TABLE" | "CARDS" | "TASKS" | "CALENDAR"; formatIds: string[]; columnFieldIds: string[]; search: string; filterFieldId?: string | null; filterOperator?: EntryFilter["operator"] | null; filterValue?: string | null; sort: "NEWEST" | "OLDEST" | "MANUAL"; manualOrderFieldIds?: string[]; groupByFormat: boolean; taskDoneFieldId?: string | null; taskDueFieldId?: string | null; taskCompletedFieldId?: string | null; taskPriorityFieldId?: string | null; calendarStartFieldId?: string | null; calendarEndFieldId?: string | null; calendarTimeZone?: string | null };
 export type Formula = { id: string; name: string; formatId: string; expression: string; version: number; dependencies: string[] };
 export type AnalysisOperationId = "COUNT" | "SUM" | "AVERAGE" | "MIN" | "MAX" | "MEDIAN" | "PERCENTILE" | "VARIANCE" | "STDDEV" | "RANGE" | "RATE_PER_N" | "CROSSTAB" | "CUMULATIVE" | "MOVING_AVERAGE" | "SUCCESSIVE_DIFF" | "SUCCESSIVE_VARIATION" | "LINEAR_TREND";
-export type AnalysisInput = { formatId: string; fieldId?: string; formulaId?: string; dateFieldId?: string; groupFieldId?: string; groupBy: "NONE" | "DAY" | "MONTH" | "CATEGORY" | "OBJECT"; secondaryGroupBy?: "NONE" | "DAY" | "MONTH" | "CATEGORY" | "OBJECT"; secondaryGroupFieldId?: string; operation: AnalysisOperationId; measureKind: "EVENT" | "SNAPSHOT" | "RATE"; percentile?: number; rateBase?: number; denominatorFieldId?: string; denominatorValue?: string; weightFieldId?: string; windowSize?: number; counterResetFieldId?: string; from?: string; to?: string; comparisonFrom?: string; comparisonTo?: string; filters?: EntryFilter[]; sourceGroup?: string; sourceOffset?: number };
+export type AnalysisInput = { formatId: string; fieldId?: string; formulaId?: string; dateFieldId?: string; groupFieldId?: string; groupBy: "NONE" | "DAY" | "MONTH" | "CATEGORY" | "OBJECT"; secondaryGroupBy?: "NONE" | "DAY" | "MONTH" | "CATEGORY" | "OBJECT"; secondaryGroupFieldId?: string; groupDepth?: number; secondaryGroupDepth?: number; language?: Language; operation: AnalysisOperationId; measureKind: "EVENT" | "SNAPSHOT" | "RATE"; percentile?: number; rateBase?: number; denominatorFieldId?: string; denominatorValue?: string; weightFieldId?: string; windowSize?: number; counterResetFieldId?: string; from?: string; to?: string; comparisonFrom?: string; comparisonTo?: string; filters?: EntryFilter[]; sourceGroup?: string; sourceOffset?: number };
 export type AnalysisResult = { operation: string; operationVersion: number; groupBy: string; secondaryGroupBy?: string; unit?: string; dimension?: string; skippedMissingCount?: number; slope?: string; explanation?: string; hasEstimated?: boolean; propagatedUncertainty?: string; refreshedAt: string; rows: { group: string; label: string; rowKey?: string; columnKey?: string; value: string; count: number; sources: { entryId: string; value: string }[]; sourcesHasMore: boolean }[]; comparisonRows?: { group: string; label: string; rowKey?: string; columnKey?: string; value: string; count: number; sources: { entryId: string; value: string }[]; sourcesHasMore: boolean }[] };
 export type StockRule = { id: string; name: string; formatId: string; kind: string; productFieldId: string; quantityFieldId: string; dateFieldId?: string; priceFieldId?: string; reasonFieldId?: string; fromLocationFieldId?: string; toLocationFieldId?: string; lotFieldId?: string; packageFactor: string; version: number };
 export type StockPosition = { productId: string; productName: string; location: string; lot: string; quantity: string };
@@ -28,7 +32,7 @@ export type SharedObjectGrant = { id: string; sourceCollectionId: string; source
 export type CollectionRole = "OWNER" | "EDITOR" | "READER";
 export type CollectionMember = { userId: string; email: string; name: string; role: CollectionRole; addedAt: string; sharedFieldIds?: string[] };
 export type AuditLog = { id: string; collectionId: string; userId: string; action: string; details?: string | null; occurredAt: string };
-export type Collection = { id: string; name: string; fields: Field[]; formats: CollectionFormat[]; units: CollectionUnit[]; exchangeRates: ExchangeRate[]; sharedObjects: SharedObjectGrant[]; savedViews: SavedView[]; formulas: Formula[]; stockRules?: StockRule[]; allowNegativeStock?: boolean; members?: CollectionMember[] };
+export type Collection = { id: string; name: string; fields: Field[]; formats: CollectionFormat[]; codeLists: ClassificationList[]; units: CollectionUnit[]; exchangeRates: ExchangeRate[]; sharedObjects: SharedObjectGrant[]; savedViews: SavedView[]; formulas: Formula[]; stockRules?: StockRule[]; allowNegativeStock?: boolean; members?: CollectionMember[] };
 export type Entry = {
   id: string;
   offlinePending?: boolean;
@@ -43,7 +47,7 @@ export type Entry = {
 export type EntryPage = { entries: Entry[]; nextCursor?: string | null; hasMore: boolean };
 export type EntryFilter = { fieldId: string; operator: "EQ" | "CONTAINS" | "GT" | "GTE" | "LT" | "LTE"; value: string };
 
-export const fieldKinds: FieldKind[] = ["TITLE", "DATE", "NUMBER", "TIME", "LINK", "CHARACTER", "TEXT", "LONG_TEXT", "BOOLEAN", "SELECT", "MULTI_SELECT", "DATETIME", "DURATION", "ATTACHMENT", "OBJECT_REF", "MEASURE"];
+export const fieldKinds: FieldKind[] = ["TITLE", "DATE", "NUMBER", "TIME", "LINK", "CHARACTER", "TEXT", "LONG_TEXT", "BOOLEAN", "SELECT", "MULTI_SELECT", "DATETIME", "DURATION", "ATTACHMENT", "OBJECT_REF", "MEASURE", "CODE", "POSITION", "ZONE"];
 
 const messages = {
   en: {
@@ -244,6 +248,9 @@ const messages = {
     date: "Date",
     number: "Number",
     measure: "Measure",
+    code: "Code from a list",
+    position: "Position",
+    zone: "Zone",
     time: "Time",
     link: "Link",
     character: "Character",
@@ -471,6 +478,9 @@ const messages = {
     date: "Date",
     number: "Nombre",
     measure: "Mesure",
+    code: "Code d’une liste",
+    position: "Position",
+    zone: "Zone",
     time: "Heure",
     link: "Lien",
     character: "Caractère",
@@ -512,7 +522,7 @@ export function formatDisplayName(format: CollectionFormat, language: Language):
 }
 
 const kindLabels: Record<FieldKind, MessageKey> = {
-  TITLE: "title", DATE: "date", NUMBER: "number", TIME: "time", LINK: "link", CHARACTER: "character", TEXT: "text", LONG_TEXT: "longText", BOOLEAN: "boolean", SELECT: "select", MULTI_SELECT: "multiSelect", DATETIME: "dateTime", DURATION: "duration", ATTACHMENT: "attachment", OBJECT_REF: "objectReference", MEASURE: "measure",
+  TITLE: "title", DATE: "date", NUMBER: "number", TIME: "time", LINK: "link", CHARACTER: "character", TEXT: "text", LONG_TEXT: "longText", BOOLEAN: "boolean", SELECT: "select", MULTI_SELECT: "multiSelect", DATETIME: "dateTime", DURATION: "duration", ATTACHMENT: "attachment", OBJECT_REF: "objectReference", MEASURE: "measure", CODE: "code", POSITION: "position", ZONE: "zone",
 };
 export const fieldKindLabel = (language: Language, kind: FieldKind): string => t(language, kindLabels[kind]);
 
@@ -553,7 +563,13 @@ export function formatNumber(value: string, unit: string | null | undefined, lan
   return ["EUR", "USD", "GBP", "NGN"].includes(unit) ? `${symbol} ${number}` : `${number} ${symbol}`;
 }
 
-export function formatFieldValue(field: Field, value: string, language: Language, snapshot?: UnitSnapshot | null): string {
+export function formatFieldValue(field: Field, value: string, language: Language, snapshot?: UnitSnapshot | null, collection?: Collection): string {
+  if (field.kind === "CODE") {
+    const code = collection?.codeLists?.find((list) => list.id === field.codeListId)?.codes.find((item) => item.code === value);
+    return code ? `${language === "fr" ? code.labelFr : code.labelEn} (${value})${code.active ? "" : language === "fr" ? " · obsolète" : " · obsolete"}` : value;
+  }
+  if (field.kind === "POSITION") { try { const point = JSON.parse(value) as { latitude: number; longitude: number; accuracy?: number }; return `${point.latitude}, ${point.longitude}${point.accuracy === undefined ? "" : ` ±${point.accuracy} m`}`; } catch { return value; } }
+  if (field.kind === "ZONE") { try { const zone = JSON.parse(value) as { type?: string }; return zone.type === "Circle" ? language === "fr" ? "Cercle" : "Circle" : language === "fr" ? "Polygone" : "Polygon"; } catch { return value; } }
   if (field.kind === "NUMBER" || field.kind === "MEASURE") {
     if (snapshot) {
       const number = language === "fr" ? value.replaceAll(".", ",") : value;
@@ -599,7 +615,7 @@ export function entryClipboardText(collection: Collection, entry: Entry, languag
       lines.push(`${field.name}: ${names.join(", ")}`);
       continue;
     }
-    lines.push(`${field.name}: ${formatFieldValue(field, values[field.id].trim(), language, entry.values.find((item) => item.fieldId === field.id)?.unitSnapshot)}`);
+    lines.push(`${field.name}: ${formatFieldValue(field, values[field.id].trim(), language, entry.values.find((item) => item.fieldId === field.id)?.unitSnapshot, collection)}`);
   }
   return lines.join("\n");
 }

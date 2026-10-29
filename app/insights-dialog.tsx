@@ -65,6 +65,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
   const [groupBy, setGroupBy] = useState<AnalysisInput["groupBy"]>("NONE");
   const [dateFieldId, setDateFieldId] = useState(dateFields[0]?.id ?? "");
   const [groupFieldId, setGroupFieldId] = useState("");
+  const [groupDepth, setGroupDepth] = useState(2);
   const [secondaryGroupBy, setSecondaryGroupBy] = useState<NonNullable<AnalysisInput["secondaryGroupBy"]>>("CATEGORY");
   const [secondaryGroupFieldId, setSecondaryGroupFieldId] = useState("");
   const [percentile, setPercentile] = useState("50");
@@ -92,10 +93,10 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
   const [busy, setBusy] = useState(false);
 
   const groupFields = useMemo(() => format?.fields.filter((field) =>
-    groupBy === "OBJECT" ? field.kind === "OBJECT_REF" : field.kind === "SELECT" || field.kind === "TEXT",
+    groupBy === "OBJECT" ? field.kind === "OBJECT_REF" : field.kind === "SELECT" || field.kind === "TEXT" || field.kind === "CODE",
   ) ?? [], [format, groupBy]);
   const secondaryGroupFields = useMemo(() => format?.fields.filter((field) =>
-    secondaryGroupBy === "OBJECT" ? field.kind === "OBJECT_REF" : field.kind === "SELECT" || field.kind === "TEXT",
+    secondaryGroupBy === "OBJECT" ? field.kind === "OBJECT_REF" : field.kind === "SELECT" || field.kind === "TEXT" || field.kind === "CODE",
   ) ?? [], [format, secondaryGroupBy]);
   const selectedFilterField = format?.fields.find((field) => field.id === filterFieldId);
   const quickChartFormat = collection.formats.find((candidate) => candidate.fields.some((field) => field.kind === "NUMBER"));
@@ -160,6 +161,8 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
       groupBy,
       dateFieldId: activeDate,
       groupFieldId: groupBy === "CATEGORY" || groupBy === "OBJECT" ? activeGroup : undefined,
+      groupDepth: groupBy === "CATEGORY" && format?.fields.some((field) => field.id === activeGroup && field.kind === "CODE") ? groupDepth : undefined,
+      language,
       secondaryGroupBy: operation === "CROSSTAB" ? secondaryGroupBy : undefined,
       secondaryGroupFieldId: operation === "CROSSTAB" && (secondaryGroupBy === "CATEGORY" || secondaryGroupBy === "OBJECT") ? activeSecondaryGroup : undefined,
       percentile: operation === "PERCENTILE" ? Number(percentile.replace(",", ".")) : undefined,
@@ -334,6 +337,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
           <label>{fr ? "Regrouper" : "Group by"}<select value={groupBy} onChange={(event) => setGroupBy(event.target.value as AnalysisInput["groupBy"])}><option value="NONE">{fr ? "Aucun" : "None"}</option><option value="DAY">{fr ? "Jour" : "Day"}</option><option value="MONTH">{fr ? "Mois" : "Month"}</option><option value="CATEGORY">{fr ? "Catégorie" : "Category"}</option><option value="OBJECT">{fr ? "Objet" : "Object"}</option></select></label>
           {dateFields.length > 0 && <label>{fr ? "Champ date" : "Date field"}<select value={dateFieldId} onChange={(event) => setDateFieldId(event.target.value)}>{dateFields.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
           {(groupBy === "CATEGORY" || groupBy === "OBJECT") && <label>{fr ? "Champ groupe" : "Group field"}<select value={groupFieldId} onChange={(event) => setGroupFieldId(event.target.value)}>{groupFields.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
+          {groupBy === "CATEGORY" && format?.fields.some((field) => field.id === (groupFieldId || groupFields[0]?.id) && field.kind === "CODE") && <label>{fr ? "Niveau de regroupement" : "Grouping level"}<select value={groupDepth} onChange={(event) => setGroupDepth(Number(event.target.value))}><option value={0}>{fr ? "Racine" : "Root"}</option><option value={1}>{fr ? "Intermédiaire" : "Middle"}</option><option value={2}>{fr ? "Code précis" : "Exact code"}</option></select></label>}
           {operation === "CROSSTAB" && <>
             <label>{fr ? "Second axe (colonnes)" : "Secondary group (columns)"}
               <select value={secondaryGroupBy} onChange={(event) => setSecondaryGroupBy(event.target.value as NonNullable<AnalysisInput["secondaryGroupBy"]>)}>
