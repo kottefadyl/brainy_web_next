@@ -43,6 +43,8 @@ export type Entry = {
   createdAt: string;
   updatedAt: string;
   sourceObjectId?: string | null;
+  contributionLinkId?: string | null;
+  contributionReceivedAt?: string | null;
   recurrence?: { startFieldId: string; endFieldId: string; timeZone: string; frequency: "DAILY" | "WEEKLY" | "MONTHLY"; interval: number; untilDate?: string | null; excludedDates: string[] } | null;
   workflow?: EntryWorkflow | null;
   revisions?: { at: string; formatVersion: number; values: { fieldId: string; value: string; unitSnapshot?: UnitSnapshot | null }[] }[];
@@ -645,6 +647,23 @@ export function translateError(error: unknown, language: Language): string {
   if (message.includes("needs a date, time") || message.includes("needs a valid date and time")) return t(language, "invalidDateTime");
   if (message.includes("Add at least one interest or hobby")) return t(language, "profileInterestRule");
   if (language === "fr") {
+    const contributionErrors: [string, string][] = [
+      ["Contribution link unavailable", "Ce lien de contribution est indisponible ou expiré."],
+      ["Too many submissions or link unavailable", "Trop de réponses ont été envoyées. Réessayez dans une minute ou demandez un nouveau lien."],
+      ["Consent is required", "Votre consentement est nécessaire pour envoyer la réponse."],
+      ["Submission rejected", "Cette réponse a été refusée."],
+      ["Submission is too large or empty", "La réponse est vide ou trop volumineuse."],
+      ["Valid contact email required", "Saisissez une adresse e-mail de contact valide."],
+      ["Invalid public field", "Un champ de cette réponse n’est plus disponible. Rechargez le formulaire."],
+      ["Choose valid public fields", "Choisissez des champs publics valides."],
+      ["Expiry must be within 90 days", "Choisissez une expiration dans les 90 prochains jours."],
+      ["Submission already reviewed", "Cette réponse a déjà été examinée. Actualisez la liste."],
+      ["Duplicate target not found", "La réponse indiquée comme doublon est introuvable."],
+      ["Receipt not found", "Ce reçu privé est introuvable."],
+      ["Submission is being accepted", "Cette réponse est en cours d’acceptation. Réessayez dans un instant."],
+      ["Only the collection owner can manage contributions", "Seul le propriétaire de la collection peut gérer les contributions."],
+    ];
+    for (const [source, translated] of contributionErrors) if (message.includes(source)) return translated;
     const workflowErrors: [string, string][] = [
       ["This transition is not allowed", "Cette transition n’est pas autorisée."],
       ["Change the state with a workflow transition", "Changez l’état avec une transition du flux."],
