@@ -61,8 +61,39 @@ async function request<T>(query: string, variables: Record<string, unknown> = {}
   return body.data;
 }
 
-const collectionFields = "id ownerId name fields { id name kind unit options codeListId targetObjectFormatId multiple variableName referenceMode sourceFieldId } formats { id name color version objectModel copiedFromFormatId linkedSource { sourceCollectionId sourceFormatId acceptedVersion targetVersion } workflow { stateFieldId initialState transitions { from to minimumRole } requirements { state fieldIds } } fields { id name kind unit options codeListId targetObjectFormatId multiple variableName referenceMode sourceFieldId } } codeLists { id name version codes { code labelEn labelFr parentCode active mergedInto } } units { id name symbol dimension baseUnitId factor objectFormatId version copiedFromUnitId } exchangeRates { id from to rate effectiveAt } sharedObjects { id sourceCollectionId sourceFormatId sourceFormatVersion objectId sourceName objectName propertyFieldIds mode snapshot { fieldId name kind value unitSnapshot { id version symbol dimension factor root objectFormatId } } createdAt revokedAt } savedViews { id name layout formatIds columnFieldIds search filterFieldId filterOperator filterValue sort manualOrderFieldIds groupByFormat taskDoneFieldId taskDueFieldId taskCompletedFieldId taskPriorityFieldId calendarStartFieldId calendarEndFieldId calendarTimeZone } formulas { id name formatId expression version dependencies } stockRules { id name formatId kind productFieldId quantityFieldId version } allowNegativeStock members { userId email name role addedAt sharedFieldIds }";
-const entryFields = "id formatId sourceObjectId contributionLinkId contributionReceivedAt recurrence { startFieldId endFieldId timeZone frequency interval untilDate excludedDates } workflow { assigneeUserId dueAt reminderMinutesBefore history { kind from to actorUserId at assigneeUserId dueAt } } values { fieldId value objectIds objectSnapshots { objectId capturedAt properties { fieldId name kind value unitSnapshot { id version symbol dimension factor root objectFormatId } } } unitSnapshot { id version symbol dimension factor root objectFormatId } measureValue { status uncertainty uncertaintyType quality instrument observedAt recordedAt revisedAt revisionNote } } createdAt updatedAt";
+const collectionFields = "id ownerId name fields { id name kind unit options codeListId targetObjectFormatId multiple variableName referenceMode sourceFieldId } formats { id name color version objectModel appendOnly copiedFromFormatId linkedSource { sourceCollectionId sourceFormatId acceptedVersion targetVersion } workflow { stateFieldId initialState transitions { from to minimumRole } requirements { state fieldIds } } fields { id name kind unit options codeListId targetObjectFormatId multiple variableName referenceMode sourceFieldId } } codeLists { id name version codes { code labelEn labelFr parentCode active mergedInto } } units { id name symbol dimension baseUnitId factor objectFormatId version copiedFromUnitId } exchangeRates { id from to rate effectiveAt } sharedObjects { id sourceCollectionId sourceFormatId sourceFormatVersion objectId sourceName objectName propertyFieldIds mode snapshot { fieldId name kind value unitSnapshot { id version symbol dimension factor root objectFormatId } } createdAt revokedAt } savedViews { id name layout formatIds columnFieldIds search filterFieldId filterOperator filterValue sort manualOrderFieldIds groupByFormat taskDoneFieldId taskDueFieldId taskCompletedFieldId taskPriorityFieldId calendarStartFieldId calendarEndFieldId calendarTimeZone } formulas { id name formatId expression version dependencies } stockRules { id name formatId kind productFieldId quantityFieldId version } allowNegativeStock members { userId email name role addedAt sharedFieldIds }";
+const entryFields = "id formatId correctionOf ledgerHash ledgerSequence sourceObjectId contributionLinkId contributionReceivedAt recurrence { startFieldId endFieldId timeZone frequency interval untilDate excludedDates } workflow { assigneeUserId dueAt reminderMinutesBefore history { kind from to actorUserId at assigneeUserId dueAt } } values { fieldId value objectIds objectSnapshots { objectId capturedAt properties { fieldId name kind value unitSnapshot { id version symbol dimension factor root objectFormatId } } } unitSnapshot { id version symbol dimension factor root objectFormatId } measureValue { status uncertainty uncertaintyType quality instrument observedAt recordedAt revisedAt revisionNote } } createdAt updatedAt";
+
+export type LedgerIntegrity = { valid: boolean; checked: number; headHash: string; redactionHash: string; problem?: string | null };
+export const ledgerApi = {
+  async enable(collectionId: string, formatId: string): Promise<Collection> {
+    return (await request<{ enableLedger: Collection }>(`mutation($collectionId:String!,$formatId:String!){enableLedger(collectionId:$collectionId,formatId:$formatId){${collectionFields}}}`, { collectionId, formatId })).enableLedger;
+  },
+  async verify(collectionId: string, formatId: string): Promise<LedgerIntegrity> {
+    return (await request<{ verifyLedger: LedgerIntegrity }>('query($collectionId:String!,$formatId:String!){verifyLedger(collectionId:$collectionId,formatId:$formatId){valid checked headHash redactionHash problem}}', { collectionId, formatId })).verifyLedger;
+  },
+  async proof(collectionId: string, formatId: string): Promise<string> {
+    return (await request<{ ledgerProof: string }>('query($collectionId:String!,$formatId:String!){ledgerProof(collectionId:$collectionId,formatId:$formatId)}', { collectionId, formatId })).ledgerProof;
+  },
+  async balance(collectionId: string, formatId: string, fieldId: string): Promise<string> {
+    return (await request<{ ledgerBalance: string }>('query($collectionId:String!,$formatId:String!,$fieldId:String!){ledgerBalance(collectionId:$collectionId,formatId:$formatId,fieldId:$fieldId)}', { collectionId, formatId, fieldId })).ledgerBalance;
+  },
+  async correct(originalId: string, values: { fieldId: string; value: string }[]): Promise<Entry> {
+    return (await request<{ correctLedgerEntry: Entry }>(`mutation($originalId:String!,$input:SaveEntryInput!){correctLedgerEntry(originalId:$originalId,input:$input){${entryFields}}}`, { originalId, input: { values } })).correctLedgerEntry;
+  },
+  async redact(collectionId: string, formatId: string, entryId: string, fieldIds: string[], reason: string): Promise<LedgerIntegrity> {
+    return (await request<{ redactLedgerFields: LedgerIntegrity }>('mutation($collectionId:String!,$formatId:String!,$entryId:String!,$fieldIds:[String!]!,$reason:String!){redactLedgerFields(collectionId:$collectionId,formatId:$formatId,entryId:$entryId,fieldIds:$fieldIds,reason:$reason){valid checked headHash redactionHash problem}}', { collectionId, formatId, entryId, fieldIds, reason })).redactLedgerFields;
+  },
+  async verifyStock(collectionId: string, productId: string): Promise<LedgerIntegrity> {
+    return (await request<{ verifyStockLedger: LedgerIntegrity }>('query($collectionId:String!,$productId:String!){verifyStockLedger(collectionId:$collectionId,productId:$productId){valid checked headHash redactionHash problem}}', { collectionId, productId })).verifyStockLedger;
+  },
+  async sealStock(collectionId: string, productId: string): Promise<LedgerIntegrity> {
+    return (await request<{ sealStockHistory: LedgerIntegrity }>('mutation($collectionId:String!,$productId:String!){sealStockHistory(collectionId:$collectionId,productId:$productId){valid checked headHash redactionHash problem}}', { collectionId, productId })).sealStockHistory;
+  },
+  async stockProof(collectionId: string, productId: string): Promise<string> {
+    return (await request<{ stockLedgerProof: string }>('query($collectionId:String!,$productId:String!){stockLedgerProof(collectionId:$collectionId,productId:$productId)}', { collectionId, productId })).stockLedgerProof;
+  },
+};
 const userFields = "id name email profession job fieldOfStudy interests hobbies profileCompleted";
 
 export const api = {

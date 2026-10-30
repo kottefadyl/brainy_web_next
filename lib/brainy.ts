@@ -14,7 +14,7 @@ export type ExchangeRate = { id: string; from: string; to: string; rate: string;
 export type UnitSnapshot = { id: string; version: number; symbol: string; dimension: string; factor: string; root: string; objectFormatId?: string | null };
 export type WorkflowDefinition = { stateFieldId: string; initialState: string; transitions: { from: string; to: string; minimumRole: CollectionRole }[]; requirements: { state: string; fieldIds: string[] }[] };
 export type EntryWorkflow = { assigneeUserId?: string | null; dueAt?: string | null; reminderMinutesBefore?: number | null; history: { kind: string; from: string; to: string; actorUserId: string; at: string; assigneeUserId?: string | null; dueAt?: string | null }[] };
-export type CollectionFormat = { id: string; name: string; color: string; version?: number | null; objectModel?: boolean; copiedFromFormatId?: string | null; linkedSource?: { sourceCollectionId: string; sourceFormatId: string; acceptedVersion: number; targetVersion: number } | null; workflow?: WorkflowDefinition | null; fields: Field[] };
+export type CollectionFormat = { id: string; name: string; color: string; version?: number | null; objectModel?: boolean; appendOnly?: boolean; copiedFromFormatId?: string | null; linkedSource?: { sourceCollectionId: string; sourceFormatId: string; acceptedVersion: number; targetVersion: number } | null; workflow?: WorkflowDefinition | null; fields: Field[] };
 export type SavedView = { id: string; name: string; layout: "LIST" | "TABLE" | "CARDS" | "TASKS" | "CALENDAR"; formatIds: string[]; columnFieldIds: string[]; search: string; filterFieldId?: string | null; filterOperator?: EntryFilter["operator"] | null; filterValue?: string | null; sort: "NEWEST" | "OLDEST" | "MANUAL"; manualOrderFieldIds?: string[]; groupByFormat: boolean; taskDoneFieldId?: string | null; taskDueFieldId?: string | null; taskCompletedFieldId?: string | null; taskPriorityFieldId?: string | null; calendarStartFieldId?: string | null; calendarEndFieldId?: string | null; calendarTimeZone?: string | null };
 export type Formula = { id: string; name: string; formatId: string; expression: string; version: number; dependencies: string[] };
 export type AnalysisOperationId = "COUNT" | "SUM" | "AVERAGE" | "MIN" | "MAX" | "MEDIAN" | "PERCENTILE" | "VARIANCE" | "STDDEV" | "RANGE" | "RATE_PER_N" | "CROSSTAB" | "CUMULATIVE" | "MOVING_AVERAGE" | "SUCCESSIVE_DIFF" | "SUCCESSIVE_VARIATION" | "LINEAR_TREND";
@@ -39,6 +39,9 @@ export type Entry = {
   id: string;
   offlinePending?: boolean;
   formatId?: string | null;
+  correctionOf?: string | null;
+  ledgerHash?: string | null;
+  ledgerSequence?: number | null;
   values: { fieldId: string; value: string; unitSnapshot?: UnitSnapshot | null; objectIds?: string[] | null; objectSnapshots?: { objectId: string; capturedAt: string; properties: { fieldId: string; name: string; kind: FieldKind; value: string; unitSnapshot?: UnitSnapshot | null }[] }[] | null; measureValue?: { status?: string; uncertainty?: string; uncertaintyType?: string; quality?: string; instrument?: string; observedAt?: string; recordedAt?: string; revisedAt?: string; revisionNote?: string } | null }[];
   createdAt: string;
   updatedAt: string;
