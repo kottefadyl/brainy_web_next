@@ -1,4 +1,4 @@
-import type { Collection, CollectionUnit, Entry, EntryFilter, EntryPage, User, FieldKind, Language, ProfileInput, SharedObjectGrant, SavedView, EntryReminder, AnalysisInput, AnalysisResult, EntryLink, EntryRelation, StockPosition, StockMovement, StockMovementInput, StockPreview, ForecastInput, ForecastResult, CollectionRole, AuditLog, ClassificationCode, GeoPage, WorkflowDefinition } from "./brainy";
+import type { Collection, CollectionUnit, Entry, EntryFilter, EntryPage, User, FieldKind, Language, ProfileInput, SharedObjectGrant, SavedView, EntryReminder, AnalysisInput, AnalysisResult, EntryLink, EntryRelation, StockPosition, StockMovement, StockMovementInput, StockPreview, ForecastInput, ForecastResult, CollectionRole, AuditLog, ClassificationCode, GeoPage, WorkflowDefinition, SensitivityLevel } from "./brainy";
 
 export type WorkflowNotification = { id: string; collectionId: string; entryId: string; kind: string; actorUserId: string; createdAt: string; readAt?: string | null };
 
@@ -61,7 +61,7 @@ async function request<T>(query: string, variables: Record<string, unknown> = {}
   return body.data;
 }
 
-const collectionFields = "id ownerId name fields { id name kind unit options codeListId targetObjectFormatId multiple variableName referenceMode sourceFieldId } formats { id name color version objectModel appendOnly copiedFromFormatId linkedSource { sourceCollectionId sourceFormatId acceptedVersion targetVersion } workflow { stateFieldId initialState transitions { from to minimumRole } requirements { state fieldIds } } fields { id name kind unit options codeListId targetObjectFormatId multiple variableName referenceMode sourceFieldId } } codeLists { id name version codes { code labelEn labelFr parentCode active mergedInto } } units { id name symbol dimension baseUnitId factor objectFormatId version copiedFromUnitId } exchangeRates { id from to rate effectiveAt } sharedObjects { id sourceCollectionId sourceFormatId sourceFormatVersion objectId sourceName objectName propertyFieldIds mode snapshot { fieldId name kind value unitSnapshot { id version symbol dimension factor root objectFormatId } } createdAt revokedAt } savedViews { id name layout formatIds columnFieldIds search filterFieldId filterOperator filterValue sort manualOrderFieldIds groupByFormat taskDoneFieldId taskDueFieldId taskCompletedFieldId taskPriorityFieldId calendarStartFieldId calendarEndFieldId calendarTimeZone } formulas { id name formatId expression version dependencies } stockRules { id name formatId kind productFieldId quantityFieldId version } allowNegativeStock members { userId email name role addedAt sharedFieldIds }";
+const collectionFields = "id ownerId name minAggregateSize fields { id name kind sensitivity unit options codeListId targetObjectFormatId multiple variableName referenceMode sourceFieldId } formats { id name color version sensitivity objectModel appendOnly copiedFromFormatId linkedSource { sourceCollectionId sourceFormatId acceptedVersion targetVersion } workflow { stateFieldId initialState transitions { from to minimumRole } requirements { state fieldIds } } fields { id name kind sensitivity unit options codeListId targetObjectFormatId multiple variableName referenceMode sourceFieldId } } codeLists { id name version codes { code labelEn labelFr parentCode active mergedInto } } units { id name symbol dimension baseUnitId factor objectFormatId version copiedFromUnitId } exchangeRates { id from to rate effectiveAt } sharedObjects { id sourceCollectionId sourceFormatId sourceFormatVersion objectId sourceName objectName propertyFieldIds sensitiveFieldIds mode snapshot { fieldId name kind value unitSnapshot { id version symbol dimension factor root objectFormatId } } createdAt revokedAt } savedViews { id name layout formatIds columnFieldIds search filterFieldId filterOperator filterValue sort manualOrderFieldIds groupByFormat taskDoneFieldId taskDueFieldId taskCompletedFieldId taskPriorityFieldId calendarStartFieldId calendarEndFieldId calendarTimeZone } formulas { id name formatId expression version dependencies } stockRules { id name formatId kind productFieldId quantityFieldId version } allowNegativeStock members { userId email name role addedAt sharedFieldIds sensitiveFieldIds }";
 const entryFields = "id formatId correctionOf ledgerHash ledgerSequence sourceObjectId contributionLinkId contributionReceivedAt recurrence { startFieldId endFieldId timeZone frequency interval untilDate excludedDates } workflow { assigneeUserId dueAt reminderMinutesBefore history { kind from to actorUserId at assigneeUserId dueAt } } values { fieldId value objectIds objectSnapshots { objectId capturedAt properties { fieldId name kind value unitSnapshot { id version symbol dimension factor root objectFormatId } } } unitSnapshot { id version symbol dimension factor root objectFormatId } measureValue { status uncertainty uncertaintyType quality instrument observedAt recordedAt revisedAt revisionNote } } createdAt updatedAt";
 
 export type LedgerIntegrity = { valid: boolean; checked: number; headHash: string; redactionHash: string; problem?: string | null };
@@ -92,6 +92,17 @@ export const ledgerApi = {
   },
   async stockProof(collectionId: string, productId: string): Promise<string> {
     return (await request<{ stockLedgerProof: string }>('query($collectionId:String!,$productId:String!){stockLedgerProof(collectionId:$collectionId,productId:$productId)}', { collectionId, productId })).stockLedgerProof;
+  },
+};
+export const sensitivityApi = {
+  async setFormat(collectionId: string, formatId: string, level: SensitivityLevel, expectedVersion: number): Promise<Collection> {
+    return (await request<{ setFormatSensitivity: Collection }>(`mutation($collectionId:String!,$formatId:String!,$level:SensitivityLevel!,$expectedVersion:Int!){setFormatSensitivity(collectionId:$collectionId,formatId:$formatId,level:$level,expectedVersion:$expectedVersion){${collectionFields}}}`, { collectionId, formatId, level, expectedVersion })).setFormatSensitivity;
+  },
+  async setField(collectionId: string, formatId: string, fieldId: string, level: SensitivityLevel, expectedVersion: number): Promise<Collection> {
+    return (await request<{ setFieldSensitivity: Collection }>(`mutation($collectionId:String!,$formatId:String!,$fieldId:String!,$level:SensitivityLevel!,$expectedVersion:Int!){setFieldSensitivity(collectionId:$collectionId,formatId:$formatId,fieldId:$fieldId,level:$level,expectedVersion:$expectedVersion){${collectionFields}}}`, { collectionId, formatId, fieldId, level, expectedVersion })).setFieldSensitivity;
+  },
+  async setMinimum(collectionId: string, minimum: number): Promise<Collection> {
+    return (await request<{ setMinimumAggregateSize: Collection }>(`mutation($collectionId:String!,$minimum:Int!){setMinimumAggregateSize(collectionId:$collectionId,minimum:$minimum){${collectionFields}}}`, { collectionId, minimum })).setMinimumAggregateSize;
   },
 };
 const userFields = "id name email profession job fieldOfStudy interests hobbies profileCompleted";
@@ -163,10 +174,10 @@ export const api = {
   async importGeoPoints(collectionId: string, formatId: string, fieldId: string, text: string, kind: 'GEOJSON' | 'CSV', importKey: string): Promise<{ count: number; errors: { row: number; message: string }[] }> {
     return (await request<{ importGeoPoints: { count: number; errors: { row: number; message: string }[] } }>(`mutation($collectionId:String!,$formatId:String!,$fieldId:String!,$text:String!,$kind:String!,$importKey:String!){importGeoPoints(collectionId:$collectionId,formatId:$formatId,fieldId:$fieldId,text:$text,kind:$kind,importKey:$importKey){count errors{row message}}}`, { collectionId, formatId, fieldId, text, kind, importKey })).importGeoPoints;
   },
-  async exportGeoPoints(collectionId: string, formatId: string, fieldId: string, kind: 'GEOJSON' | 'CSV'): Promise<string> {
-    return (await request<{ exportGeoPoints: string }>(`query($collectionId:String!,$formatId:String!,$fieldId:String!,$kind:String!){exportGeoPoints(collectionId:$collectionId,formatId:$formatId,fieldId:$fieldId,kind:$kind)}`, { collectionId, formatId, fieldId, kind })).exportGeoPoints;
+  async exportGeoPoints(collectionId: string, formatId: string, fieldId: string, kind: 'GEOJSON' | 'CSV', includeSensitive = false): Promise<string> {
+    return (await request<{ exportGeoPoints: string }>(`query($collectionId:String!,$formatId:String!,$fieldId:String!,$kind:String!,$includeSensitive:Boolean){exportGeoPoints(collectionId:$collectionId,formatId:$formatId,fieldId:$fieldId,kind:$kind,includeSensitive:$includeSensitive)}`, { collectionId, formatId, fieldId, kind, includeSensitive })).exportGeoPoints;
   },
-  async workspaceBackup(): Promise<string> { return (await request<{ workspaceBackup: string }>(`query { workspaceBackup }`, {}, true)).workspaceBackup; },
+  async workspaceBackup(includeSensitive = false): Promise<string> { return (await request<{ workspaceBackup: string }>(`query($includeSensitive:Boolean){workspaceBackup(includeSensitive:$includeSensitive)}`, { includeSensitive }, true)).workspaceBackup; },
   async restoreWorkspaceBackup(archive: string, dryRun: boolean): Promise<{ version: number; collections: number; entries: number; relations: number; stockMovements: number; conflicts: string[]; allowed: boolean; restored: boolean }> {
     return (await request<{ restoreWorkspaceBackup: { version: number; collections: number; entries: number; relations: number; stockMovements: number; conflicts: string[]; allowed: boolean; restored: boolean } }>(`mutation($archive:String!,$dryRun:Boolean!){restoreWorkspaceBackup(archive:$archive,dryRun:$dryRun){version collections entries relations stockMovements conflicts allowed restored}}`, { archive, dryRun }, true)).restoreWorkspaceBackup;
   },
@@ -277,7 +288,7 @@ export const api = {
       { input: { name, formats: [{ name: formatName, color, fields, objectModel }] } },
     )).createCollection;
   },
-  async createCollectionWithFormats(name: string, formats: { name: string; color: string; objectModel?: boolean; fields: { name: string; kind: FieldKind; unit?: string; options?: string[]; codeListId?: string }[] }[], units: CollectionUnit[] = [], exchangeRates: Collection["exchangeRates"] = [], codeLists: Collection["codeLists"] = []): Promise<Collection> {
+  async createCollectionWithFormats(name: string, formats: { name: string; color: string; sensitivity?: SensitivityLevel; objectModel?: boolean; fields: { name: string; kind: FieldKind; sensitivity?: SensitivityLevel; unit?: string; options?: string[]; codeListId?: string }[] }[], units: CollectionUnit[] = [], exchangeRates: Collection["exchangeRates"] = [], codeLists: Collection["codeLists"] = []): Promise<Collection> {
     return (await request<{ createCollection: Collection }>(
       `mutation Create($input: CreateCollectionInput!) { createCollection(input: $input) { ${collectionFields} } }`,
       { input: { name, formats, codeLists: codeLists.map(({ id, name, codes }) => ({ id, name, codes: codes.map(({ code, labelEn, labelFr, parentCode, active, mergedInto }) => ({ code, labelEn, labelFr, parentCode, active, mergedInto })) })), units: units.map(({ id, name, symbol, dimension, baseUnitId, factor, objectFormatId }) => ({ id, name, symbol, dimension, baseUnitId, factor, objectFormatId })), exchangeRates: exchangeRates.map(({ from, to, rate, effectiveAt }) => ({ from, to, rate, effectiveAt })) } },
@@ -290,7 +301,7 @@ export const api = {
     )).addCollectionFormat;
   },
   async objectTemplates(language: Language): Promise<{ id: string; name: string; description: string; fields: { id: string; name: string; kind: FieldKind; unit?: string }[] }[]> {
-    return (await request<{ objectModelTemplates: { id: string; name: string; description: string; fields: { id: string; name: string; kind: FieldKind; unit?: string }[] }[] }>(`query Templates($language: String) { objectModelTemplates(language: $language) { id name description fields { id name kind unit } } }`, { language })).objectModelTemplates;
+    return (await request<{ objectModelTemplates: { id: string; name: string; description: string; fields: { id: string; name: string; kind: FieldKind; unit?: string }[] }[] }>(`query Templates($language: String) { objectModelTemplates(language: $language) { id name description fields { id name kind sensitivity unit } } }`, { language })).objectModelTemplates;
   },
   async addObjectTemplate(collectionId: string, templateId: string, name: string, color: string, language: Language): Promise<Collection> {
     return (await request<{ addObjectModelFromTemplate: Collection }>(`mutation Template($collectionId: String!, $templateId: String!, $name: String!, $color: String!, $language: String) { addObjectModelFromTemplate(collectionId: $collectionId, templateId: $templateId, name: $name, color: $color, language: $language) { ${collectionFields} } }`, { collectionId, templateId, name, color, language })).addObjectModelFromTemplate;
@@ -406,8 +417,8 @@ export const api = {
   async moveObject(objectId: string, targetCollectionId: string): Promise<{ objectId: string; operationId: string }> {
     return (await request<{ moveCollectionObject: { objectId: string; operationId: string } }>(`mutation MoveObject($objectId: String!, $targetCollectionId: String!) { moveCollectionObject(objectId: $objectId, targetCollectionId: $targetCollectionId) { objectId operationId } }`, { objectId, targetCollectionId })).moveCollectionObject;
   },
-  async shareObject(objectId: string, targetCollectionId: string, propertyFieldIds: string[], mode: "CURRENT" | "SNAPSHOT"): Promise<SharedObjectGrant> {
-    return (await request<{ shareCollectionObject: SharedObjectGrant }>(`mutation ShareObject($objectId: String!, $targetCollectionId: String!, $propertyFieldIds: [String!]!, $mode: String!) { shareCollectionObject(objectId: $objectId, targetCollectionId: $targetCollectionId, propertyFieldIds: $propertyFieldIds, mode: $mode) { id sourceCollectionId sourceFormatId sourceFormatVersion objectId sourceName objectName propertyFieldIds mode snapshot { fieldId name kind value } createdAt revokedAt } }`, { objectId, targetCollectionId, propertyFieldIds, mode })).shareCollectionObject;
+  async shareObject(objectId: string, targetCollectionId: string, propertyFieldIds: string[], mode: "CURRENT" | "SNAPSHOT", includeSensitive = false): Promise<SharedObjectGrant> {
+    return (await request<{ shareCollectionObject: SharedObjectGrant }>(`mutation ShareObject($objectId: String!, $targetCollectionId: String!, $propertyFieldIds: [String!]!, $mode: String!, $includeSensitive:Boolean) { shareCollectionObject(objectId: $objectId, targetCollectionId: $targetCollectionId, propertyFieldIds: $propertyFieldIds, mode: $mode, includeSensitive:$includeSensitive) { id sourceCollectionId sourceFormatId sourceFormatVersion objectId sourceName objectName propertyFieldIds sensitiveFieldIds mode snapshot { fieldId name kind value } createdAt revokedAt } }`, { objectId, targetCollectionId, propertyFieldIds, mode, includeSensitive })).shareCollectionObject;
   },
   async revokeObjectShare(targetCollectionId: string, grantId: string): Promise<void> {
     await request<{ revokeCollectionObjectShare: boolean }>(`mutation RevokeObjectShare($targetCollectionId: String!, $grantId: String!) { revokeCollectionObjectShare(targetCollectionId: $targetCollectionId, grantId: $grantId) }`, { targetCollectionId, grantId });
@@ -477,10 +488,10 @@ export const api = {
   async deleteEntry(id: string): Promise<void> {
     await request(`mutation DeleteEntry($id: String!) { deleteEntry(id: $id) }`, { id });
   },
-  async addCollectionMember(collectionId: string, email: string, role: CollectionRole, sharedFieldIds?: string[]): Promise<Collection> {
+  async addCollectionMember(collectionId: string, email: string, role: CollectionRole, sharedFieldIds?: string[], sensitiveFieldIds?: string[]): Promise<Collection> {
     return (await request<{ addCollectionMember: Collection }>(
-      `mutation AddMember($collectionId: String!, $email: String!, $role: CollectionRole!, $sharedFieldIds: [String!]) { addCollectionMember(collectionId: $collectionId, email: $email, role: $role, sharedFieldIds: $sharedFieldIds) { ${collectionFields} } }`,
-      { collectionId, email, role, sharedFieldIds },
+      `mutation AddMember($collectionId: String!, $email: String!, $role: CollectionRole!, $sharedFieldIds: [String!], $sensitiveFieldIds:[String!]) { addCollectionMember(collectionId: $collectionId, email: $email, role: $role, sharedFieldIds: $sharedFieldIds, sensitiveFieldIds:$sensitiveFieldIds) { ${collectionFields} } }`,
+      { collectionId, email, role, sharedFieldIds, sensitiveFieldIds },
     )).addCollectionMember;
   },
   async removeCollectionMember(collectionId: string, memberUserId: string): Promise<Collection> {

@@ -1,0 +1,21 @@
+.sensitivity-panel { width: 100%; max-width: 860px; min-width: 0; display: grid; gap: 20px; grid-template-columns: minmax(0, 1fr); padding-bottom: 36px; }
+.sensitivity-panel > * { min-width: 0; }
+.sensitivity-panel header h1 { margin-bottom: 8px; }
+.sensitivity-panel header p { margin: 0; color: var(--muted); }
+.sensitivity-notice, .sensitivity-box { margin: 0; padding: 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.sensitivity-box { display: grid; gap: 12px; }
+.sensitivity-box h2, .sensitivity-box p { margin: 0; }
+.sensitivity-box label, .sensitivity-box form { display: grid; gap: 6px; }
+.sensitivity-box label { font-weight: 600; }
+.sensitivity-box input:not([type="checkbox"]), .sensitivity-box select { width: 100%; min-height: 44px; padding: 8px 10px; border: 1px solid var(--control-border); border-radius: 8px; background: var(--surface); color: var(--ink); }
+.sensitivity-box button { min-height: 44px; padding: 8px 14px; border: 1px solid var(--control-border); border-radius: 8px; background: var(--surface); color: var(--ink); text-align: left; }
+.sensitivity-box button:disabled { opacity: .55; }
+.sensitivity-box :is(button,input,select,summary):focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.sensitivity-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 14px; }
+.sensitivity-box small { color: var(--muted); }
+.sensitivity-box summary { cursor: pointer; font-weight: 700; }
+.sensitivity-box fieldset { border: 1px solid var(--border); border-radius: 8px; display: grid; gap: 6px; }
+.sensitivity-box .sensitivity-check { display: flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 400; }
+.sensitivity-check input { width: 20px; height: 20px; }
+.sensitivity-members { display: flex; flex-wrap: wrap; gap: 8px; }
+.sensitivity-box form { gap: 12px; }

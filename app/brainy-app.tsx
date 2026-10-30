@@ -14,6 +14,7 @@ import GeoMapView from "./geo-map-view";
 import WorkflowPanel from "./workflow-panel";
 import ContributionPanel from "./contribution-panel";
 import LedgerPanel from "./ledger-panel";
+import SensitivityPanel from "./sensitivity-panel";
 import { GeoFieldInput } from "./geo-fields";
 import "./geo-classification.css";
 import StarterDialog from "./starter-dialog";
@@ -26,7 +27,7 @@ import QuickCaptureDialog from "./quick-capture-dialog";
 import QuickEntryDialog from "./quick-entry-dialog";
 import { bookText, downloadTransfer, exportCollection, importCollection, parseTransfer, transferCsv, transferMapping, type TransferBundle } from "../lib/transfer";
 import {
-  entryClipboardText, fieldKindLabel, fieldKinds, formatColors, formatDisplayName, formatFieldValue, formatForEntry, numberUnits,
+  effectiveFieldSensitivity, entryClipboardText, fieldKindLabel, fieldKinds, formatColors, formatDisplayName, formatFieldValue, formatForEntry, numberUnits,
   t, translateError, unitCategories, unitLabel, valuesByField,
   type Collection, type CollectionUnit, type Entry, type EntryFilter, type EntryPage, type FieldKind, type Language, type SavedView, type EntryReminder, type User,
 } from "../lib/brainy";
@@ -593,6 +594,11 @@ function ShareObjectToCollection({ source, targets, object, language, onClose, o
   const [targetId, setTargetId] = useState("");
   const [propertyIds, setPropertyIds] = useState<string[]>([title.id]);
   const [mode, setMode] = useState<"CURRENT" | "SNAPSHOT">("CURRENT");
+  const [includeSensitive, setIncludeSensitive] = useState(false);
+  const protectedSelected = propertyIds.some((id) => {
+    const field = format.fields.find((item) => item.id === id);
+    return !!field && effectiveFieldSensitivity(format, field) !== "ORDINARY";
+  });
   const [relationCount, setRelationCount] = useState(0);
   useEffect(() => { let live = true; api.relations(source.id, object.id).then((items) => { if (live) setRelationCount(items.length); }).catch(() => {}); return () => { live = false; }; }, [source.id, object.id]);
   const [busy, setBusy] = useState(false);
@@ -601,7 +607,7 @@ function ShareObjectToCollection({ source, targets, object, language, onClose, o
   async function share() {
     if (!targetId || conflict) return;
     setBusy(true); setError("");
-    try { await api.shareObject(object.id, targetId, propertyIds, mode); onShared(); }
+    try { await api.shareObject(object.id, targetId, propertyIds, mode, includeSensitive); onShared(); }
     catch (cause) { setError(errorMessage(cause, language)); }
     finally { setBusy(false); }
   }
@@ -610,11 +616,11 @@ function ShareObjectToCollection({ source, targets, object, language, onClose, o
       <p className="modal-intro">{source.name} · {object.values.find((item) => item.fieldId === title.id)?.value}</p>
       <label className="input-label">{language === "fr" ? "Collection cible" : "Target collection"}<select value={targetId} onChange={(event) => setTargetId(event.target.value)}><option value="">—</option>{targets.filter((item) => item.id !== source.id).map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>
       <fieldset className="share-properties"><legend>{language === "fr" ? "Caractéristiques autorisées" : "Allowed properties"}</legend>{format.fields.filter((item) => item.kind !== "OBJECT_REF" && item.kind !== "ATTACHMENT").map((item) => <label key={item.id}><input type="checkbox" checked={propertyIds.includes(item.id)} disabled={item.id === title.id} onChange={(event) => setPropertyIds((current) => event.target.checked ? [...current, item.id] : current.filter((id) => id !== item.id))} />{item.name}</label>)}</fieldset>
-      <label className="input-label">{language === "fr" ? "Valeurs accessibles" : "Accessible values"}<select value={mode} onChange={(event) => setMode(event.target.value as "CURRENT" | "SNAPSHOT")}><option value="CURRENT">{language === "fr" ? "Actuelles jusqu’à révocation" : "Current until revoked"}</option><option value="SNAPSHOT">{language === "fr" ? "Figées au partage" : "Snapshot when shared"}</option></select></label>
+      <label className="input-label"><input type="checkbox" checked={includeSensitive} onChange={(event) => setIncludeSensitive(event.target.checked)} /> {language === "fr" ? "Inclure explicitement les propriétés personnelles ou sensibles" : "Explicitly include personal or sensitive properties"}</label><label className="input-label">{language === "fr" ? "Valeurs accessibles" : "Accessible values"}<select value={mode} onChange={(event) => setMode(event.target.value as "CURRENT" | "SNAPSHOT")}><option value="CURRENT">{language === "fr" ? "Actuelles jusqu’à révocation" : "Current until revoked"}</option><option value="SNAPSHOT">{language === "fr" ? "Figées au partage" : "Snapshot when shared"}</option></select></label>
       <p className="modal-intro">{language === "fr" ? `Le partage donne accès aux caractéristiques choisies. ${relationCount} relation(s) et les mouvements de stock restent dans la collection source.` : `Sharing grants access to the chosen properties. ${relationCount} relations and stock movements remain in the source collection.`}</p>
       {conflict && <p role="alert">{language === "fr" ? "Cet objet est déjà lié à cette collection." : "This object is already linked to this collection."}</p>}
       {error && <div className="form-error" role="alert">{error}</div>}
-      <div className="modal-actions"><Button variant="secondary" onClick={onClose}>{t(language, "cancel")}</Button><Button disabled={busy || !targetId || !!conflict} onClick={share}>{language === "fr" ? "Partager par lien" : "Share by link"}</Button></div>
+      <div className="modal-actions"><Button variant="secondary" onClick={onClose}>{t(language, "cancel")}</Button><Button disabled={busy || !targetId || !!conflict || protectedSelected && !includeSensitive} onClick={share}>{language === "fr" ? "Partager par lien" : "Share by link"}</Button></div>
     </div>
   </Modal>;
 }
@@ -808,6 +814,7 @@ function UnitEditor({ collection, language, onClose, onSaved }: { collection: Co
 }
 
 function TransferEditor({ collection, language, onClose, onImported }: { collection: Collection | null; language: Language; onClose: () => void; onImported: (collection: Collection) => void }) {
+  const [includeSensitive, setIncludeSensitive] = useState(false);
   const [bundle, setBundle] = useState<TransferBundle | null>(null);
   const [targetMode, setTargetMode] = useState<"new" | "current">("new");
   const [busy, setBusy] = useState(false);
@@ -820,7 +827,7 @@ function TransferEditor({ collection, language, onClose, onImported }: { collect
     if (!collection) return;
     setBusy(true); setError("");
     try {
-      const data = await exportCollection(collection);
+      const data = await exportCollection(collection, includeSensitive, language);
       const safe = collection.name.replace(/[^a-z0-9_-]+/gi, "-").slice(0, 40) || "collection";
       downloadTransfer(`brainy-${safe}.${kind}`, kind === "json" ? JSON.stringify(data, null, 2) : kind === "csv" ? transferCsv(data, language) : bookText(data, language), kind === "json" ? "application/json" : kind === "csv" ? "text/csv;charset=utf-8" : "text/plain;charset=utf-8");
     } catch (cause) { setError(errorMessage(cause, language)); }
@@ -844,8 +851,8 @@ function TransferEditor({ collection, language, onClose, onImported }: { collect
     try {
       if (!target) {
         target = await api.createCollectionWithFormats(bundle.collection.name, bundle.collection.formats.map((format) => ({
-          name: format.name, color: format.color, objectModel: format.objectModel,
-          fields: format.fields.map((field) => ({ name: field.name, kind: field.kind, ...(field.unit ? { unit: field.unit } : {}), ...(field.options ? { options: field.options } : {}), ...(field.codeListId ? { codeListId: field.codeListId } : {}) })),
+          name: format.name, color: format.color, sensitivity: format.sensitivity, objectModel: format.objectModel,
+          fields: format.fields.map((field) => ({ name: field.name, kind: field.kind, sensitivity: field.sensitivity, ...(field.unit ? { unit: field.unit } : {}), ...(field.options ? { options: field.options } : {}), ...(field.codeListId ? { codeListId: field.codeListId } : {}) })),
         })), bundle.collection.units, bundle.collection.exchangeRates, bundle.collection.codeLists ?? []);
       }
       const validation = await importCollection(bundle, target, true);
@@ -867,7 +874,7 @@ function TransferEditor({ collection, language, onClose, onImported }: { collect
 
   return <Modal title={t(language, "importPreview")} closeLabel={t(language, "close")} onClose={onClose} size="wide">
     <div className="transfer-panel">
-      {collection && <div className="transfer-export"><strong>{t(language, "exportData")}</strong><div><Button variant="secondary" disabled={busy} onClick={() => download("json")}>{t(language, "exportJson")}</Button><Button variant="secondary" disabled={busy} onClick={() => download("csv")}>{t(language, "exportCsv")}</Button>{collection.formats.some((format) => format.fields.some((field) => field.kind === "LONG_TEXT") && format.fields.some((field) => field.kind === "NUMBER" && ["ordre", "order"].includes(field.name.toLocaleLowerCase()))) && <Button variant="secondary" disabled={busy} onClick={() => download("txt")}>{language === "fr" ? "Texte du livre" : "Book text"}</Button>}</div></div>}
+      {collection && <div className="transfer-export"><strong>{t(language, "exportData")}</strong><label><input type="checkbox" checked={includeSensitive} onChange={(event) => setIncludeSensitive(event.target.checked)} /> {language === "fr" ? "Inclure explicitement les champs personnels et sensibles" : "Explicitly include personal and sensitive fields"}</label><div><Button variant="secondary" disabled={busy} onClick={() => download("json")}>{t(language, "exportJson")}</Button><Button variant="secondary" disabled={busy} onClick={() => download("csv")}>{t(language, "exportCsv")}</Button>{collection.formats.some((format) => format.fields.some((field) => field.kind === "LONG_TEXT") && format.fields.some((field) => field.kind === "NUMBER" && ["ordre", "order"].includes(field.name.toLocaleLowerCase()))) && <Button variant="secondary" disabled={busy} onClick={() => download("txt")}>{language === "fr" ? "Texte du livre" : "Book text"}</Button>}</div></div>}
       <div className="transfer-import"><strong>{t(language, "importData")}</strong><label className="input-label">{t(language, "importFile")}<input type="file" accept=".json,application/json" onChange={(event) => void chooseFile(event.target.files?.[0])} /></label></div>
       {bundle && <div className="transfer-preview"><h3>{bundle.collection.name}</h3><p>{bundle.entries.length} {t(language, "entries")} · {bundle.collection.formats.length} {t(language, "formats")}</p><div className="transfer-choice"><label><input type="radio" name="import-target" checked={targetMode === "new"} onChange={() => setTargetMode("new")} /> {t(language, "importIntoNew")}</label>{collection && <label><input type="radio" name="import-target" checked={targetMode === "current"} onChange={() => setTargetMode("current")} /> {t(language, "importIntoCurrent")}: {collection.name}</label>}</div><strong>{t(language, "importMapping")}</strong><div className="transfer-columns">{bundle.collection.formats.map((format) => <div key={format.id}><b>{format.name}</b><span>{format.fields.map((field) => `${field.name} (${field.kind}${field.unit ? ` · ${field.unit}` : ""})`).join("  →  ")}</span></div>)}</div><p>{t(language, "importResume")}</p></div>}
       {mappingError && <div className="form-error" role="alert">{mappingError}</div>}
@@ -1014,7 +1021,7 @@ export default function BrainyApp() {
   const [user, setUser] = useState<User | null>(null);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"collection" | "insights" | "stock" | "classifications" | "map" | "workflow" | "contributions" | "ledger">("collection");
+  const [activeSection, setActiveSection] = useState<"collection" | "insights" | "stock" | "classifications" | "map" | "workflow" | "contributions" | "ledger" | "sensitivity">("collection");
   const [entries, setEntries] = useState<Entry[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [pageAfter, setPageAfter] = useState<string | null>(null);
@@ -1219,6 +1226,7 @@ export default function BrainyApp() {
           {selected && activeSection === "workflow" && <WorkflowPanel key={selected.id} collection={selected} user={user} language={language} onClose={() => setActiveSection("collection")} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} onEntriesChanged={() => { void refresh(); }} />}
           {selected && activeSection === "contributions" && <ContributionPanel key={selected.id} collection={selected} language={language} onClose={() => setActiveSection("collection")} onEntriesChanged={() => { void refresh(); }} />}
           {selected && activeSection === "ledger" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{t(language, "collection")}</button><LedgerPanel key={selected.id} collection={selected} language={language} userId={user.id} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} onEntriesChanged={() => { void refresh(); }} /></section>}
+          {selected && activeSection === "sensitivity" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{t(language, "collection")}</button><SensitivityPanel key={selected.id} collection={selected} language={language} userId={user.id} onChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} /></section>}
           {selected && activeSection === "classifications" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{t(language, "collection")}</button><ClassificationPanel key={selected.id} collection={selected} targets={collections} language={language} onChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} /></section>}
           {selected && activeSection === "map" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{t(language, "collection")}</button><GeoMapView key={selected.id} collection={selected} language={language} initialSearch={search} filters={filterFieldId && filterValue ? [{ fieldId: filterFieldId, operator: filterOperator, value: filterValue }] : undefined} viewId={selectedViewId || undefined} onImported={() => void refresh()} onOpenEntry={async (id) => { try { setDialog({ kind: "entry", entry: await api.entry(selected.id, id) }); } catch (cause) { setDialogError(String(cause)); } }} /></section>}
           {!selected && !loadingCollections ? <div className="empty-state first-empty"><div className="empty-art"><FolderHeart size={52} strokeWidth={1.4} /></div><h2>{t(language, "noCollections")}</h2><p>{t(language, "noCollectionsDetail")}</p><Button onClick={() => setDialog({ kind: "starter" })}><Plus size={18} /> {t(language, "createCollection")}</Button><OfflineSyncPanel userId={user.id} collections={collections} language={language} onSynced={() => { void refresh(); }} /><WorkspaceBackupPanel language={language} onRestored={() => { void refresh(); }} /><BackgroundJobsPanel collections={collections} language={language} /></div> : selected && activeSection === "collection" && <>
@@ -1230,6 +1238,7 @@ export default function BrainyApp() {
               <button type="button" className="collection-hub-card" onClick={() => setActiveSection("workflow")}><span className="collection-hub-icon"><FileText size={22} /></span><span className="collection-hub-copy"><strong>{language === "fr" ? "États et validations" : "States and approvals"}</strong><small>{language === "fr" ? "Assignations, échéances et historique" : "Assignments, due dates and history"}</small></span><ArrowRight className="collection-hub-arrow" size={18} /></button>
               {selected.ownerId === user.id && <button type="button" className="collection-hub-card" onClick={() => setActiveSection("contributions")}><span className="collection-hub-icon"><FileText size={22} /></span><span className="collection-hub-copy"><strong>{language === "fr" ? "Contributions publiques" : "Public contributions"}</strong><small>{language === "fr" ? "Liens et réponses à valider" : "Links and submissions to review"}</small></span><ArrowRight className="collection-hub-arrow" size={18} /></button>}
               <button type="button" className="collection-hub-card" onClick={() => setActiveSection("ledger")}><span className="collection-hub-icon"><FileText size={22} /></span><span className="collection-hub-copy"><strong>{language === "fr" ? "Registre" : "Register"}</strong><small>{language === "fr" ? "Écritures, intégrité et corrections" : "Writings, integrity and corrections"}</small></span><ArrowRight className="collection-hub-arrow" size={18} /></button>
+              <button type="button" className="collection-hub-card" onClick={() => setActiveSection("sensitivity")}><span className="collection-hub-icon"><FileText size={22} /></span><span className="collection-hub-copy"><strong>{language === "fr" ? "Confidentialité" : "Privacy"}</strong><small>{language === "fr" ? "Niveaux et seuils d’analyse" : "Levels and analysis limits"}</small></span><ArrowRight className="collection-hub-arrow" size={18} /></button>
               <button type="button" className="collection-hub-card" onClick={() => setActiveSection("stock")}><span className="collection-hub-icon"><Boxes size={22} /></span><span className="collection-hub-copy"><strong>{language === "fr" ? "Stock" : "Stock"}</strong><small>{language === "fr" ? "Positions et mouvements validés" : "Positions and confirmed movements"}</small></span><ArrowRight className="collection-hub-arrow" size={18} /></button>
               <button type="button" className="collection-hub-card collection-hub-featured" onClick={() => setActiveSection("insights")}><span className="collection-hub-icon"><ChartNoAxesCombined size={23} /></span><span className="collection-hub-copy"><strong>{language === "fr" ? "Calculs et graphiques" : "Calculations and charts"}</strong><small>{language === "fr" ? "Une page pour explorer vos données" : "A page to explore your data"}</small></span><ArrowRight className="collection-hub-arrow" size={18} /></button>
               <button type="button" className="collection-hub-card" onClick={() => setDialog({ kind: "units" })}><span className="collection-hub-icon"><Ruler size={22} /></span><span className="collection-hub-copy"><strong>{t(language, "manageUnits")}</strong><small>{language === "fr" ? "Mesures et conversions" : "Measures and conversions"}</small></span><ArrowRight className="collection-hub-arrow" size={18} /></button>
@@ -1296,4 +1305,3 @@ export default function BrainyApp() {
     </div>
   );
 }
-

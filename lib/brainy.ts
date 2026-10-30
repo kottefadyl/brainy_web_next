@@ -1,10 +1,11 @@
 export type Language = "en" | "fr";
 export type FieldKind = "TITLE" | "DATE" | "NUMBER" | "TIME" | "LINK" | "CHARACTER" | "TEXT" | "BOOLEAN" | "SELECT" | "MULTI_SELECT" | "DATETIME" | "DURATION" | "LONG_TEXT" | "ATTACHMENT" | "OBJECT_REF" | "MEASURE" | "CODE" | "POSITION" | "ZONE";
+export type SensitivityLevel = "ORDINARY" | "PERSONAL" | "SENSITIVE";
 
 export type User = { id: string; name: string; email: string; profession?: string | null; job?: string | null; fieldOfStudy?: string | null; interests: string[]; hobbies: string[]; profileCompleted: boolean };
 export type ProfileInput = { name: string; profession: string; job: string; fieldOfStudy: string; interests: string[]; hobbies: string[] };
 export const formatColors = ["#EEF5FF", "#EDF9F3", "#FFF5EB", "#F4F0FF", "#FFF0F4", "#EAF8FA", "#FBF7E9", "#F1F8ED", "#F8F0FA", "#F1F5FA", "#FFF7F1", "#EFF8FF", "#FDEFF7", "#EDF7FF", "#F7FBEA", "#FFF0E8", "#EFEFFD", "#E9F8F4", "#FBF1E8", "#F0F8F9", "#FFF2EF", "#F4F8E8", "#F1F2FF", "#EFFAF0"] as const;
-export type Field = { id: string; name: string; kind: FieldKind; unit?: string | null; options?: string[] | null; codeListId?: string | null; targetObjectFormatId?: string | null; multiple?: boolean | null; variableName?: string | null; referenceMode?: "CURRENT" | "SNAPSHOT" | null; sourceFieldId?: string | null };
+export type Field = { id: string; name: string; kind: FieldKind; sensitivity?: SensitivityLevel; unit?: string | null; options?: string[] | null; codeListId?: string | null; targetObjectFormatId?: string | null; multiple?: boolean | null; variableName?: string | null; referenceMode?: "CURRENT" | "SNAPSHOT" | null; sourceFieldId?: string | null };
 export type ClassificationCode = { code: string; labelEn: string; labelFr: string; parentCode?: string | null; active: boolean; mergedInto?: string | null };
 export type ClassificationList = { id: string; name: string; version: number; codes: ClassificationCode[] };
 export type GeoPoint = { entryId: string; name: string; latitude: number; longitude: number; accuracy?: number | null };
@@ -14,7 +15,15 @@ export type ExchangeRate = { id: string; from: string; to: string; rate: string;
 export type UnitSnapshot = { id: string; version: number; symbol: string; dimension: string; factor: string; root: string; objectFormatId?: string | null };
 export type WorkflowDefinition = { stateFieldId: string; initialState: string; transitions: { from: string; to: string; minimumRole: CollectionRole }[]; requirements: { state: string; fieldIds: string[] }[] };
 export type EntryWorkflow = { assigneeUserId?: string | null; dueAt?: string | null; reminderMinutesBefore?: number | null; history: { kind: string; from: string; to: string; actorUserId: string; at: string; assigneeUserId?: string | null; dueAt?: string | null }[] };
-export type CollectionFormat = { id: string; name: string; color: string; version?: number | null; objectModel?: boolean; appendOnly?: boolean; copiedFromFormatId?: string | null; linkedSource?: { sourceCollectionId: string; sourceFormatId: string; acceptedVersion: number; targetVersion: number } | null; workflow?: WorkflowDefinition | null; fields: Field[] };
+export type CollectionFormat = { id: string; name: string; color: string; version?: number | null; objectModel?: boolean; appendOnly?: boolean; sensitivity?: SensitivityLevel; copiedFromFormatId?: string | null; linkedSource?: { sourceCollectionId: string; sourceFormatId: string; acceptedVersion: number; targetVersion: number } | null; workflow?: WorkflowDefinition | null; fields: Field[] };
+const sensitivityRank: Record<SensitivityLevel, number> = { ORDINARY: 0, PERSONAL: 1, SENSITIVE: 2 };
+export const defaultFieldSensitivity = (field: Field): SensitivityLevel =>
+  field.sensitivity ?? (field.kind === "POSITION" || field.kind === "ZONE" ? "SENSITIVE" : "ORDINARY");
+export const effectiveFieldSensitivity = (format: CollectionFormat, field: Field): SensitivityLevel => {
+  const fieldLevel = defaultFieldSensitivity(field);
+  const formatLevel = format.sensitivity ?? "ORDINARY";
+  return sensitivityRank[formatLevel] >= sensitivityRank[fieldLevel] ? formatLevel : fieldLevel;
+};
 export type SavedView = { id: string; name: string; layout: "LIST" | "TABLE" | "CARDS" | "TASKS" | "CALENDAR"; formatIds: string[]; columnFieldIds: string[]; search: string; filterFieldId?: string | null; filterOperator?: EntryFilter["operator"] | null; filterValue?: string | null; sort: "NEWEST" | "OLDEST" | "MANUAL"; manualOrderFieldIds?: string[]; groupByFormat: boolean; taskDoneFieldId?: string | null; taskDueFieldId?: string | null; taskCompletedFieldId?: string | null; taskPriorityFieldId?: string | null; calendarStartFieldId?: string | null; calendarEndFieldId?: string | null; calendarTimeZone?: string | null };
 export type Formula = { id: string; name: string; formatId: string; expression: string; version: number; dependencies: string[] };
 export type AnalysisOperationId = "COUNT" | "SUM" | "AVERAGE" | "MIN" | "MAX" | "MEDIAN" | "PERCENTILE" | "VARIANCE" | "STDDEV" | "RANGE" | "RATE_PER_N" | "CROSSTAB" | "CUMULATIVE" | "MOVING_AVERAGE" | "SUCCESSIVE_DIFF" | "SUCCESSIVE_VARIATION" | "LINEAR_TREND";
@@ -30,11 +39,11 @@ export type ForecastResult = { method: string; frequency: string; sourceFrom: st
 export type EntryLink = { id: string; collectionId: string; fromEntryId: string; toEntryId: string; label: string; createdAt: string; deletedAt?: string | null };
 export type EntryRelation = { id: string; collectionId: string; fromEntryId: string; toEntryId: string; kind: 'ASSOCIATION' | 'PARENT' | 'COMPONENT'; label: string; quantity?: string | null; unit?: string | null; snapshotValue?: string | null; snapshotUnit?: string | null; snapshotFieldId?: string | null; createdAt: string };
 export type EntryReminder = { id: string; entryId: string; fieldId: string; viewId?: string | null; minutesBefore: number; channels: string[]; timeZone: string; timeOfDay?: string | null; state: string; nextAt?: string | null; occurrenceAt?: string | null; attempts: number; failure?: string | null };
-export type SharedObjectGrant = { id: string; sourceCollectionId: string; sourceFormatId: string; sourceFormatVersion: number; objectId: string; sourceName: string; objectName: string; propertyFieldIds: string[]; mode: "CURRENT" | "SNAPSHOT"; snapshot: { fieldId: string; name: string; kind: FieldKind; value: string; unitSnapshot?: UnitSnapshot | null }[]; createdAt: string; revokedAt?: string | null };
+export type SharedObjectGrant = { id: string; sourceCollectionId: string; sourceFormatId: string; sourceFormatVersion: number; objectId: string; sourceName: string; objectName: string; propertyFieldIds: string[]; sensitiveFieldIds?: string[]; mode: "CURRENT" | "SNAPSHOT"; snapshot: { fieldId: string; name: string; kind: FieldKind; value: string; unitSnapshot?: UnitSnapshot | null }[]; createdAt: string; revokedAt?: string | null };
 export type CollectionRole = "OWNER" | "EDITOR" | "READER";
-export type CollectionMember = { userId: string; email: string; name: string; role: CollectionRole; addedAt: string; sharedFieldIds?: string[] };
+export type CollectionMember = { userId: string; email: string; name: string; role: CollectionRole; addedAt: string; sharedFieldIds?: string[]; sensitiveFieldIds?: string[] };
 export type AuditLog = { id: string; collectionId: string; userId: string; action: string; details?: string | null; occurredAt: string };
-export type Collection = { id: string; name: string; ownerId?: string; fields: Field[]; formats: CollectionFormat[]; codeLists: ClassificationList[]; units: CollectionUnit[]; exchangeRates: ExchangeRate[]; sharedObjects: SharedObjectGrant[]; savedViews: SavedView[]; formulas: Formula[]; stockRules?: StockRule[]; allowNegativeStock?: boolean; members?: CollectionMember[] };
+export type Collection = { id: string; name: string; ownerId?: string; minAggregateSize?: number; fields: Field[]; formats: CollectionFormat[]; codeLists: ClassificationList[]; units: CollectionUnit[]; exchangeRates: ExchangeRate[]; sharedObjects: SharedObjectGrant[]; savedViews: SavedView[]; formulas: Formula[]; stockRules?: StockRule[]; allowNegativeStock?: boolean; members?: CollectionMember[] };
 export type Entry = {
   id: string;
   offlinePending?: boolean;

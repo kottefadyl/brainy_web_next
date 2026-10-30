@@ -10,6 +10,7 @@ export default function BackgroundJobsPanel({ collections, language }: { collect
   const [collectionId, setCollectionId] = useState(collections[0]?.id ?? "");
   const [formatId, setFormatId] = useState("");
   const [limit, setLimit] = useState(5000);
+  const [includeSensitive, setIncludeSensitive] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [jobs, setJobs] = useState<BackgroundJob[]>([]);
   const [busy, setBusy] = useState(false);
@@ -87,7 +88,8 @@ export default function BackgroundJobsPanel({ collections, language }: { collect
         <button type="button" disabled={busy || !file} onClick={() => void importFile()}>{fr ? "Lancer l’import" : "Start import"}</button>
         <label>{fr ? "Format de données à exporter" : "Data format to export"}<select value={chosenFormatId} onChange={(event) => setFormatId(event.target.value)}>{collection.formats.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
         <label>{fr ? "Entrées maximum" : "Maximum entries"}<input type="number" min="1" max="5000" value={limit} onChange={(event) => setLimit(Number(event.target.value))} /></label>
-        <button type="button" disabled={busy || !chosenFormatId || limit < 1 || limit > 5000} onClick={() => void run(() => api.startBackgroundJob(collection.id, "EXPORT", { formatId: chosenFormatId, limit }))}>{fr ? "Préparer l’export" : "Prepare export"}</button>
+        <label><input type="checkbox" checked={includeSensitive} onChange={(event) => setIncludeSensitive(event.target.checked)} /> {fr ? "Inclure explicitement les champs personnels et sensibles" : "Explicitly include personal and sensitive fields"}</label>
+        <button type="button" disabled={busy || !chosenFormatId || limit < 1 || limit > 5000} onClick={() => void run(() => api.startBackgroundJob(collection.id, "EXPORT", { formatId: chosenFormatId, limit, includeSensitive }))}>{fr ? "Préparer l’export" : "Prepare export"}</button>
       </>}
       {jobs.length === 0 && <p>{fr ? "Aucun traitement récent dans cette collection." : "No recent tasks in this collection."}</p>}
       <div aria-live="polite">{jobs.map((job) => <article key={job.id} className="workspace-backup-panel">

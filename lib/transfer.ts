@@ -1,18 +1,22 @@
 import { api } from "./api";
-import { formatFieldValue, type Collection, type Entry, type FieldKind, type Language, type UnitSnapshot } from "./brainy";
+import { effectiveFieldSensitivity, formatFieldValue, type Collection, type Entry, type FieldKind, type Language, type UnitSnapshot } from "./brainy";
 
 export type TransferValue = { fieldId: string; value: string; unitSnapshot?: UnitSnapshot | null; attachmentBase64?: string; attachmentMimeType?: string };
 export type TransferEntry = { id: string; formatId: string; sourceObjectId?: string | null; createdAt: string; updatedAt: string; values: TransferValue[]; workflowHistory?: NonNullable<Entry["workflow"]>["history"] };
 export type TransferBundle = {
   brainyExportVersion: 1;
   exportedAt: string;
-  collection: { id: string; name: string; units: Collection["units"]; exchangeRates: Collection["exchangeRates"]; codeLists?: Collection["codeLists"]; sharedObjects?: Collection["sharedObjects"]; formats: { id: string; name: string; color: string; objectModel?: boolean; workflow?: Collection["formats"][number]["workflow"]; fields: { id: string; name: string; kind: FieldKind; unit?: string | null; options?: string[] | null; codeListId?: string | null; targetObjectFormatId?: string | null; multiple?: boolean | null; variableName?: string | null; referenceMode?: "CURRENT" | "SNAPSHOT" | null }[] }[] };
+  collection: { id: string; name: string; units: Collection["units"]; exchangeRates: Collection["exchangeRates"]; codeLists?: Collection["codeLists"]; sharedObjects?: Collection["sharedObjects"]; formats: { id: string; name: string; color: string; sensitivity?: Collection["formats"][number]["sensitivity"]; objectModel?: boolean; workflow?: Collection["formats"][number]["workflow"]; fields: { id: string; name: string; kind: FieldKind; sensitivity?: Collection["formats"][number]["fields"][number]["sensitivity"]; unit?: string | null; options?: string[] | null; codeListId?: string | null; targetObjectFormatId?: string | null; multiple?: boolean | null; variableName?: string | null; referenceMode?: "CURRENT" | "SNAPSHOT" | null }[] }[] };
   entries: TransferEntry[];
   links?: { fromSourceId: string; toSourceId: string; label: string }[];
   relations?: { fromSourceId: string; toSourceId: string; kind: 'ASSOCIATION' | 'PARENT' | 'COMPONENT'; label: string; quantity?: string | null; unit?: string | null; snapshotValue?: string | null; snapshotUnit?: string | null; snapshotFieldId?: string | null }[];
 };
 
-export async function exportCollection(collection: Collection): Promise<TransferBundle> {
+export async function exportCollection(collection: Collection, includeSensitive = false, language: Language = "en"): Promise<TransferBundle> {
+  const visibleFormats = collection.formats.map((format) => ({ ...format, fields: format.fields.filter((field) => includeSensitive || effectiveFieldSensitivity(format, field) === "ORDINARY") })).filter((format) => format.fields.length > 0 && (!format.objectModel || format.fields.some((field) => field.kind === "TITLE")));
+  if (!visibleFormats.length) throw new Error(language === "fr" ? "Tous les champs sont protégés. Choisissez explicitement leur inclusion pour exporter cette collection." : "All fields are protected. Choose explicitly to include them before exporting this collection.");
+  const visibleByFormat = new Map(visibleFormats.map((format) => [format.id, new Set(format.fields.map((field) => field.id))]));
+  const hasProtected = collection.formats.some((format) => format.fields.some((field) => effectiveFieldSensitivity(format, field) !== "ORDINARY"));
   const entries: TransferEntry[] = [];
   const links: { fromSourceId: string; toSourceId: string; label: string }[] = [];
   const seenLinks = new Set<string>();
@@ -23,15 +27,19 @@ export async function exportCollection(collection: Collection): Promise<Transfer
     const page = await api.entriesPage(collection.id, { after: cursor });
     for (const entry of page.entries) {
       const format = collection.formats.find((item) => item.id === entry.formatId) ?? collection.formats[0];
+      const allowed = visibleByFormat.get(format.id);
+      if (!allowed) continue;
       const values: TransferValue[] = [];
       for (const value of entry.values) {
+        if (!allowed.has(value.fieldId)) continue;
         const field = format.fields.find((item) => item.id === value.fieldId);
         if (field?.kind === "ATTACHMENT") {
           const attachment = await api.entryAttachment(entry.id, field.id);
           values.push({ ...value, attachmentBase64: attachment.base64, attachmentMimeType: attachment.mimeType });
-        } else values.push(value);
+        } else values.push(includeSensitive ? value : { ...value, objectSnapshots: [] });
       }
-      entries.push({ id: entry.id, formatId: format.id, ...(entry.sourceObjectId ? { sourceObjectId: entry.sourceObjectId } : {}), createdAt: entry.createdAt, updatedAt: entry.updatedAt, values, ...(entry.workflow?.history?.length ? { workflowHistory: entry.workflow.history } : {}) });
+      if (!values.length) continue;
+      entries.push({ id: entry.id, formatId: format.id, ...(entry.sourceObjectId ? { sourceObjectId: entry.sourceObjectId } : {}), createdAt: entry.createdAt, updatedAt: entry.updatedAt, values, ...(entry.workflow?.history?.length && (includeSensitive || !hasProtected) ? { workflowHistory: entry.workflow.history } : {}) });
       for (const link of await api.entryLinks(collection.id, entry.id)) if (!seenLinks.has(link.id)) {
         seenLinks.add(link.id);
         links.push({ fromSourceId: link.fromEntryId, toSourceId: link.toEntryId, label: link.label });
@@ -43,11 +51,12 @@ export async function exportCollection(collection: Collection): Promise<Transfer
     }
     cursor = page.nextCursor ?? undefined;
   } while (cursor);
+  const included = new Set(entries.map((entry) => entry.id));
   return {
     brainyExportVersion: 1,
     exportedAt: new Date().toISOString(),
-    collection: { id: collection.id, name: collection.name, units: collection.units ?? [], exchangeRates: collection.exchangeRates ?? [], codeLists: collection.codeLists ?? [], sharedObjects: collection.sharedObjects ?? [], formats: collection.formats.map((format) => ({ id: format.id, name: format.name, color: format.color, objectModel: format.objectModel ?? false, workflow: format.workflow, fields: format.fields.map((field) => ({ ...field })) })) },
-    entries, links, relations,
+    collection: { id: collection.id, name: collection.name, units: collection.units ?? [], exchangeRates: collection.exchangeRates ?? [], codeLists: collection.codeLists ?? [], sharedObjects: includeSensitive ? collection.sharedObjects ?? [] : [], formats: visibleFormats.map((format) => ({ id: format.id, name: format.name, color: format.color, sensitivity: format.sensitivity, objectModel: format.objectModel ?? false, workflow: includeSensitive || !hasProtected ? format.workflow : undefined, fields: format.fields.map((field) => ({ ...field })) })) },
+    entries, links: links.filter((link) => included.has(link.fromSourceId) && included.has(link.toSourceId)), relations: relations.filter((relation) => included.has(relation.fromSourceId) && included.has(relation.toSourceId)).map((relation) => includeSensitive || !hasProtected ? relation : { ...relation, snapshotValue: undefined, snapshotUnit: undefined, snapshotFieldId: undefined }),
   };
 }
 
