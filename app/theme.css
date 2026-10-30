@@ -937,3 +937,106 @@ html[data-theme="dark"] .mobile-menu button:hover {
     transition-duration: 0.01ms !important;
   }
 }
+
+.entry-form {
+  display: grid;
+  gap: 16px;
+}
+
+.entry-form-context {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.entry-form-context svg {
+  flex: none;
+  color: var(--blue);
+}
+
+.entry-form > .input-label {
+  margin: 0;
+}
+
+.entry-form .selected-format {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  border-left: 3px solid var(--format-color, var(--blue));
+  background: var(--surface-soft);
+  color: var(--ink);
+}
+
+.entry-format-fields {
+  border-left: 3px solid var(--format-color, var(--blue));
+  animation: entry-fields-in 180ms ease-out both;
+}
+
+.entry-format-fields .input-label {
+  gap: 8px;
+  color: var(--ink);
+  font-size: 0.875rem;
+}
+
+.entry-field-heading {
+  align-items: center;
+  color: var(--ink);
+}
+
+.entry-field-heading strong {
+  font-size: 0.875rem;
+}
+
+.entry-field-heading small {
+  color: var(--muted);
+}
+
+.entry-field-title input {
+  min-height: 48px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.entry-field-long textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.entry-format-fields input:not([type="file"]),
+.entry-format-fields select,
+.entry-format-fields textarea {
+  transition: border-color 140ms ease-out, background-color 140ms ease-out;
+}
+
+@keyframes entry-fields-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 700px) {
+  .entry-form {
+    gap: 12px;
+  }
+
+  .entry-format-fields {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 16px;
+  }
+}
