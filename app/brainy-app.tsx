@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
 import {
-  ArrowLeft, ArrowRight, Bell, BookOpen, Boxes, CalendarDays, ChartNoAxesCombined, Check, ChevronDown, Copy, FileText,
-  FolderHeart, Globe2, Link2, LogOut, Moon, MoreHorizontal, Pencil, Plus, Ruler,
-  RefreshCw, Sparkles, Sun, Trash2, X,
+  ArrowLeft, ArrowRight, Bell, BookOpen, CalendarDays, ChartNoAxesCombined, Check, ChevronDown, Copy, FileText,
+  FolderHeart, Globe2, Link2, LogOut, Moon, MoreHorizontal, Pencil, Plus,
+  RefreshCw, SlidersHorizontal, Sparkles, Sun, Trash2, X,
 } from "lucide-react";
 import { api, ApiError } from "../lib/api";
 import InsightsDialog from "./insights-dialog";
@@ -15,13 +15,13 @@ import WorkflowPanel from "./workflow-panel";
 import ContributionPanel from "./contribution-panel";
 import LedgerPanel from "./ledger-panel";
 import SensitivityPanel from "./sensitivity-panel";
+import CollectionToolsHub from "./collection-tools-hub";
+import WorkspaceToolsDialog from "./workspace-tools-dialog";
 import { GeoFieldInput } from "./geo-fields";
 import "./geo-classification.css";
 import StarterDialog from "./starter-dialog";
 import EntryLinksDialog from "./entry-links-dialog";
 import OfflineSyncPanel from "./offline-sync-panel";
-import WorkspaceBackupPanel from "./workspace-backup-panel";
-import BackgroundJobsPanel from "./background-jobs-panel";
 import { queueEntry, reviseQueuedEntry } from "../lib/offline-queue";
 import QuickCaptureDialog from "./quick-capture-dialog";
 import QuickEntryDialog from "./quick-entry-dialog";
@@ -54,6 +54,7 @@ type Dialog =
   | { kind: "linkedFormatUpdate"; formatId: string }
   | { kind: "view"; viewId?: string }
   | { kind: "reminder"; entry: Entry }
+  | { kind: "workspaceTools" }
   | null;
 
 function dateTime(value: string, language: Language): string {
@@ -1207,12 +1208,13 @@ export default function BrainyApp() {
         <Button variant="secondary" className="sidebar-create" onClick={() => setDialog({ kind: "starter" })}><Plus size={18} /> {language === "fr" ? "Créer avec un modèle" : "Create from template"}</Button>
         <Button variant="secondary" className="sidebar-create" onClick={() => setDialog({ kind: "collection" })}>{language === "fr" ? "Créer manuellement" : "Create manually"}</Button>
         <Button variant="secondary" className="sidebar-create" onClick={() => setDialog({ kind: "transfer" })}>{t(language, "importData")} / {t(language, "exportData")}</Button>
+        <Button variant="secondary" className="sidebar-create" onClick={() => setDialog({ kind: "workspaceTools" })}><SlidersHorizontal size={18} /> {language === "fr" ? "Outils de l’espace" : "Workspace tools"}</Button>
         <div className="sidebar-bottom"><div className="profile-avatar">{user.name.charAt(0).toUpperCase()}</div><button type="button" className="profile-info profile-edit-button" onClick={() => setProfileEditing(true)} title={t(language, "editProfile")}><strong>{user.name}</strong><span>{user.email}</span></button><button type="button" className="icon-button" onClick={signOut} title={t(language, "signOut")} aria-label={t(language, "signOut")}><LogOut size={18} /></button></div>
       </aside>
 
       <main className="workspace">
         <header className="topbar"><div className="mobile-brand"><Brand compact /></div><span className="topbar-path">{t(language, "workspace")}{selected && <><span className="slash">/</span><strong>{selected.name}</strong></>}</span><div className="topbar-right"><button type="button" className="quick-topbar" onClick={() => { setSharedContent(undefined); setQuickCapture(true); }}>{language === "fr" ? "Capturer" : "Capture"}</button><ThemeToggle language={language} mode={colorMode} onChange={setColorMode} /><LanguagePicker language={language} onChange={setLanguage} /><button type="button" className="icon-button refresh-button" onClick={refresh} aria-label={t(language, "refresh")} title={t(language, "refresh")}><RefreshCw size={18} /></button><button type="button" className="mobile-menu-button" onClick={() => setMenuOpen(!menuOpen)} aria-label={t(language, "menu")}><MoreHorizontal size={22} /></button></div></header>
-        {menuOpen && <div className="mobile-menu"><div className="mobile-menu-title">{t(language, "collections")}</div>{collections.map((item) => <button key={item.id} type="button" onClick={() => { selectCollection(item.id); setMenuOpen(false); }}>{item.name}</button>)}<button type="button" onClick={() => { setDialog({ kind: "collection" }); setMenuOpen(false); }}><Plus size={16} />{t(language, "newCollection")}</button><button type="button" onClick={() => { setProfileEditing(true); setMenuOpen(false); }}><Pencil size={16} />{t(language, "editProfile")}</button><button type="button" onClick={signOut}><LogOut size={16} />{t(language, "signOut")}</button></div>}
+        {menuOpen && <div className="mobile-menu"><div className="mobile-menu-title">{t(language, "collections")}</div>{collections.map((item) => <button key={item.id} type="button" onClick={() => { selectCollection(item.id); setMenuOpen(false); }}>{item.name}</button>)}<button type="button" onClick={() => { setDialog({ kind: "collection" }); setMenuOpen(false); }}><Plus size={16} />{t(language, "newCollection")}</button><button type="button" onClick={() => { setDialog({ kind: "workspaceTools" }); setMenuOpen(false); }}><SlidersHorizontal size={16} />{language === "fr" ? "Outils de l’espace" : "Workspace tools"}</button><button type="button" onClick={() => { setProfileEditing(true); setMenuOpen(false); }}><Pencil size={16} />{t(language, "editProfile")}</button><button type="button" onClick={signOut}><LogOut size={16} />{t(language, "signOut")}</button></div>}
 
         <div className="workspace-body">
           {activeSection === "collection" && <div className="workspace-greeting"><span className="eyebrow blue"><Sparkles size={15} /> {t(language, "workspace")}</span><h1>{t(language, "workspace")}<span className="heading-sparkle">✳</span></h1><p>{t(language, "collectionSubtitle")}</p></div>}
@@ -1229,23 +1231,18 @@ export default function BrainyApp() {
           {selected && activeSection === "sensitivity" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{t(language, "collection")}</button><SensitivityPanel key={selected.id} collection={selected} language={language} userId={user.id} onChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} /></section>}
           {selected && activeSection === "classifications" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{t(language, "collection")}</button><ClassificationPanel key={selected.id} collection={selected} targets={collections} language={language} onChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} /></section>}
           {selected && activeSection === "map" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{t(language, "collection")}</button><GeoMapView key={selected.id} collection={selected} language={language} initialSearch={search} filters={filterFieldId && filterValue ? [{ fieldId: filterFieldId, operator: filterOperator, value: filterValue }] : undefined} viewId={selectedViewId || undefined} onImported={() => void refresh()} onOpenEntry={async (id) => { try { setDialog({ kind: "entry", entry: await api.entry(selected.id, id) }); } catch (cause) { setDialogError(String(cause)); } }} /></section>}
-          {!selected && !loadingCollections ? <div className="empty-state first-empty"><div className="empty-art"><FolderHeart size={52} strokeWidth={1.4} /></div><h2>{t(language, "noCollections")}</h2><p>{t(language, "noCollectionsDetail")}</p><Button onClick={() => setDialog({ kind: "starter" })}><Plus size={18} /> {t(language, "createCollection")}</Button><OfflineSyncPanel userId={user.id} collections={collections} language={language} onSynced={() => { void refresh(); }} /><WorkspaceBackupPanel language={language} onRestored={() => { void refresh(); }} /><BackgroundJobsPanel collections={collections} language={language} /></div> : selected && activeSection === "collection" && <>
+          {!selected && !loadingCollections ? <div className="empty-state first-empty"><div className="empty-art"><FolderHeart size={52} strokeWidth={1.4} /></div><h2>{t(language, "noCollections")}</h2><p>{t(language, "noCollectionsDetail")}</p><Button onClick={() => setDialog({ kind: "starter" })}><Plus size={18} /> {t(language, "createCollection")}</Button><OfflineSyncPanel userId={user.id} collections={collections} language={language} onSynced={() => { void refresh(); }} /></div> : selected && activeSection === "collection" && <>
             <OfflineSyncPanel userId={user.id} collections={collections} language={language} onSynced={() => { void refresh(); }} />
-            <WorkspaceBackupPanel language={language} onRestored={() => { void refresh(); }} />
-            <BackgroundJobsPanel collections={collections} language={language} />
-            <section className="collection-hero"><div className="collection-hero-main"><div className="collection-icon"><FolderHeart size={27} /></div><div><span className="eyebrow">{t(language, "collection")}</span><h2>{selected.name}</h2><div className="collection-meta"><span><FileText size={15} /> {entries.length} {t(language, "entries")}</span><span>{selected.formats.length} {t(language, selected.formats.length === 1 ? "format" : "formats")}</span></div></div></div><div className="collection-hero-actions"><Button variant="secondary" onClick={() => { setRename(selected.name); setDialogError(""); setDialog({ kind: "rename" }); }}><Pencil size={16} /> {t(language, "rename")}</Button><Button variant="subtle" className="hero-delete" onClick={() => { setDialogError(""); setDialog({ kind: "deleteCollection" }); }}><Trash2 size={17} /> {t(language, "delete")}</Button></div></section>
-            <nav className="collection-hub" aria-label={language === "fr" ? "Outils de la collection" : "Collection tools"}>
-              <button type="button" className="collection-hub-card" onClick={() => setActiveSection("workflow")}><span className="collection-hub-icon"><FileText size={22} /></span><span className="collection-hub-copy"><strong>{language === "fr" ? "États et validations" : "States and approvals"}</strong><small>{language === "fr" ? "Assignations, échéances et historique" : "Assignments, due dates and history"}</small></span><ArrowRight className="collection-hub-arrow" size={18} /></button>
-              {selected.ownerId === user.id && <button type="button" className="collection-hub-card" onClick={() => setActiveSection("contributions")}><span className="collection-hub-icon"><FileText size={22} /></span><span className="collection-hub-copy"><strong>{language === "fr" ? "Contributions publiques" : "Public contributions"}</strong><small>{language === "fr" ? "Liens et réponses à valider" : "Links and submissions to review"}</small></span><ArrowRight className="collection-hub-arrow" size={18} /></button>}
-              <button type="button" className="collection-hub-card" onClick={() => setActiveSection("ledger")}><span className="collection-hub-icon"><FileText size={22} /></span><span className="collection-hub-copy"><strong>{language === "fr" ? "Registre" : "Register"}</strong><small>{language === "fr" ? "Écritures, intégrité et corrections" : "Writings, integrity and corrections"}</small></span><ArrowRight className="collection-hub-arrow" size={18} /></button>
-              <button type="button" className="collection-hub-card" onClick={() => setActiveSection("sensitivity")}><span className="collection-hub-icon"><FileText size={22} /></span><span className="collection-hub-copy"><strong>{language === "fr" ? "Confidentialité" : "Privacy"}</strong><small>{language === "fr" ? "Niveaux et seuils d’analyse" : "Levels and analysis limits"}</small></span><ArrowRight className="collection-hub-arrow" size={18} /></button>
-              <button type="button" className="collection-hub-card" onClick={() => setActiveSection("stock")}><span className="collection-hub-icon"><Boxes size={22} /></span><span className="collection-hub-copy"><strong>{language === "fr" ? "Stock" : "Stock"}</strong><small>{language === "fr" ? "Positions et mouvements validés" : "Positions and confirmed movements"}</small></span><ArrowRight className="collection-hub-arrow" size={18} /></button>
-              <button type="button" className="collection-hub-card collection-hub-featured" onClick={() => setActiveSection("insights")}><span className="collection-hub-icon"><ChartNoAxesCombined size={23} /></span><span className="collection-hub-copy"><strong>{language === "fr" ? "Calculs et graphiques" : "Calculations and charts"}</strong><small>{language === "fr" ? "Une page pour explorer vos données" : "A page to explore your data"}</small></span><ArrowRight className="collection-hub-arrow" size={18} /></button>
-              <button type="button" className="collection-hub-card" onClick={() => setDialog({ kind: "units" })}><span className="collection-hub-icon"><Ruler size={22} /></span><span className="collection-hub-copy"><strong>{t(language, "manageUnits")}</strong><small>{language === "fr" ? "Mesures et conversions" : "Measures and conversions"}</small></span><ArrowRight className="collection-hub-arrow" size={18} /></button>
-              <button type="button" className="collection-hub-card" onClick={() => setDialog({ kind: "objects" })}><span className="collection-hub-icon"><Boxes size={22} /></span><span className="collection-hub-copy"><strong>{language === "fr" ? "Objets" : "Objects"}</strong><small>{language === "fr" ? "Modèles et références" : "Models and references"}</small></span><ArrowRight className="collection-hub-arrow" size={18} /></button>
-              <button type="button" className="collection-hub-card" onClick={() => setActiveSection("classifications")}><span className="collection-hub-icon"><FileText size={22} /></span><span className="collection-hub-copy"><strong>{language === "fr" ? "Classifications" : "Classifications"}</strong><small>{language === "fr" ? "Listes de codes locales" : "Local code lists"}</small></span><ArrowRight className="collection-hub-arrow" size={18} /></button>
-              <button type="button" className="collection-hub-card" onClick={() => setActiveSection("map")}><span className="collection-hub-icon"><Globe2 size={22} /></span><span className="collection-hub-copy"><strong>{language === "fr" ? "Carte" : "Map"}</strong><small>{language === "fr" ? "Positions et zones" : "Positions and zones"}</small></span><ArrowRight className="collection-hub-arrow" size={18} /></button>
-            </nav>
+
+
+            <section className="collection-hero"><div className="collection-hero-main"><div className="collection-icon"><FolderHeart size={27} /></div><div><span className="eyebrow">{t(language, "collection")}</span><h2>{selected.name}</h2><div className="collection-meta"><span><FileText size={15} /> {entries.length} {t(language, "entries")}</span><span>{selected.formats.length} {t(language, selected.formats.length === 1 ? "format" : "formats")}</span></div></div></div><div className="collection-hero-actions"><Button variant="secondary" onClick={() => setActiveSection("insights")}><ChartNoAxesCombined size={16} /> {language === "fr" ? "Calculs" : "Insights"}</Button><Button variant="secondary" onClick={() => { setRename(selected.name); setDialogError(""); setDialog({ kind: "rename" }); }}><Pencil size={16} /> {t(language, "rename")}</Button><Button variant="subtle" className="hero-delete" onClick={() => { setDialogError(""); setDialog({ kind: "deleteCollection" }); }}><Trash2 size={17} /> {t(language, "delete")}</Button></div></section>
+            <CollectionToolsHub
+              collection={selected}
+              user={user}
+              language={language}
+              onOpenSection={setActiveSection}
+              onOpenDialog={(kind) => setDialog({ kind })}
+            />
             <section className="format-strip">
               <div className="format-strip-head"><div><span className="section-overline">{t(language, "formats")}</span><p>{t(language, "formatHelp")}</p></div><Button variant="secondary" disabled={selected.formats.length >= formatColors.length} onClick={() => setDialog({ kind: "addFormat" })}><Plus size={16} /> {t(language, "addFormat")}</Button></div>
               <div className="format-cards">{selected.formats.map((format) => <div key={format.id} className="format-card" style={{ "--format-color": format.color } as CSSProperties}>
@@ -1301,6 +1298,14 @@ export default function BrainyApp() {
       {dialog?.kind === "units" && selected && <UnitEditor collection={selected} language={language} onClose={() => setDialog(null)} onSaved={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} />}
       {dialog?.kind === "rename" && selected && <Modal title={t(language, "renameCollection")} closeLabel={t(language, "close")} onClose={() => setDialog(null)}><form onSubmit={renameCollection} className="modal-form"><label className="input-label">{t(language, "collectionName")}<input autoFocus value={rename} onChange={(event) => setRename(event.target.value)} maxLength={80} required /></label>{dialogError && <div className="form-error" role="alert">{dialogError}</div>}<div className="modal-actions"><Button type="button" variant="secondary" onClick={() => setDialog(null)}>{t(language, "cancel")}</Button><Button type="submit" disabled={busy}>{busy ? t(language, "saving") : t(language, "save")}</Button></div></form></Modal>}
       {dialog?.kind === "deleteCollection" && selected && <Modal title={t(language, "deleteCollectionQuestion")} closeLabel={t(language, "close")} onClose={() => setDialog(null)}><div className="confirm-body"><p>{t(language, "deleteCollectionDetail")}</p><strong>{selected.name}</strong>{dialogError && <div className="form-error" role="alert">{dialogError}</div>}<div className="modal-actions"><Button variant="secondary" onClick={() => setDialog(null)}>{t(language, "cancel")}</Button><Button variant="danger" disabled={busy} onClick={removeCollection}>{t(language, "deleteCollection")}</Button></div></div></Modal>}
+      {dialog?.kind === "workspaceTools" && (
+        <WorkspaceToolsDialog
+          collections={collections}
+          language={language}
+          onClose={() => setDialog(null)}
+          onRestored={() => { void refresh(); }}
+        />
+      )}
       {dialog?.kind === "deleteEntry" && <Modal title={t(language, "deleteEntryQuestion")} closeLabel={t(language, "close")} onClose={() => setDialog(null)}><div className="confirm-body"><p>{t(language, "deleteEntryDetail")}</p>{dialogError && <div className="form-error" role="alert">{dialogError}</div>}<div className="modal-actions"><Button variant="secondary" onClick={() => setDialog(null)}>{t(language, "cancel")}</Button><Button variant="danger" disabled={busy} onClick={() => removeEntry(dialog.entry)}>{t(language, "deleteEntry")}</Button></div></div></Modal>}
     </div>
   );
