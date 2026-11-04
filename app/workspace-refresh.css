@@ -656,7 +656,7 @@ html[data-theme="dark"] .app-shell .empty-state .button-secondary {
   }
 
   .app-shell .collection-hero-actions .button {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .app-shell .collection-hero-actions .button:not(.hero-add-entry) {
@@ -669,4 +669,192 @@ html[data-theme="dark"] .app-shell .empty-state .button-secondary {
   .app-shell .collection-tools-toggle {
     transition: none;
   }
+}
+
+/* Collection navigation keeps the list prominent and the rare actions grouped. */
+.app-shell .collection-sidebar {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.app-shell .sidebar-total {
+  min-width: 24px;
+  padding: 3px 7px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, .14);
+  color: #fff;
+  text-align: center;
+  letter-spacing: 0;
+}
+
+.app-shell .sidebar-search {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  margin: 4px 4px 14px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, .37);
+  border-radius: 10px;
+  background: rgba(7, 42, 88, .15);
+  color: #f1f6ff;
+}
+
+.app-shell .sidebar-search:focus-within {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.app-shell .sidebar-search input {
+  min-width: 0;
+  width: 100%;
+  border: 0 !important;
+  outline: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+}
+
+.app-shell .sidebar-search input::placeholder { color: #fff; opacity: 1; }
+.app-shell .sidebar-actions { display: grid; gap: 8px; margin-top: 12px; }
+.app-shell .sidebar-new-collection,
+.app-shell .sidebar-more summary,
+.app-shell .sidebar-more-options button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+.app-shell .sidebar-new-collection {
+  border: 1px solid #fff;
+  background: #fff;
+  color: #174a88;
+}
+.app-shell .sidebar-new-collection:hover { background: #eaf3ff; }
+.app-shell .sidebar-more summary {
+  list-style: none;
+  border: 1px solid rgba(255, 255, 255, .4);
+  color: #f5f8ff;
+}
+.app-shell .sidebar-more summary::-webkit-details-marker { display: none; }
+.app-shell .sidebar-more summary:hover,
+.app-shell .sidebar-more[open] summary { background: rgba(255, 255, 255, .15); }
+.app-shell .sidebar-more-options { display: grid; gap: 3px; padding-top: 5px; }
+.app-shell .sidebar-more-options button {
+  border: 0;
+  background: transparent;
+  color: #f5f8ff;
+  font-weight: 500;
+}
+.app-shell .sidebar-more-options button:hover { background: rgba(255, 255, 255, .16); }
+.app-shell .sidebar-actions :is(button, summary):focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+html[data-theme="dark"] .app-shell .sidebar-search {
+  border-color: #5c5c64;
+  background: #242427;
+  color: #dedee4;
+}
+html[data-theme="dark"] .app-shell .sidebar-search input::placeholder { color: #bfc0c6; }
+html[data-theme="dark"] .app-shell .sidebar-total { background: #303035; color: #dcdce1; }
+html[data-theme="dark"] .app-shell .sidebar-new-collection {
+  background: #b6a8f7;
+  border-color: #b6a8f7;
+  color: #211b34;
+}
+html[data-theme="dark"] .app-shell .sidebar-new-collection:hover { background: #c7bdf8; }
+html[data-theme="dark"] .app-shell .sidebar-more summary { border-color: #505057; }
+html[data-theme="dark"] .app-shell .sidebar-more summary:hover,
+html[data-theme="dark"] .app-shell .sidebar-more[open] summary,
+html[data-theme="dark"] .app-shell .sidebar-more-options button:hover { background: #2f2f34; }
+
+.app-shell .collection-section-nav {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  margin: 18px 0 10px;
+  padding: 4px;
+  width: max-content;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.app-shell .collection-section-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 15px;
+  border-radius: 9px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.app-shell .collection-section-nav a:hover { background: var(--hover); color: var(--ink); }
+.app-shell .collection-section-nav a:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+.app-shell #collection-entries,
+.app-shell #collection-formats,
+.app-shell #collection-tools { scroll-margin-top: 84px; }
+
+.app-shell .mobile-menu { max-height: calc(100dvh - 74px); overflow: hidden; }
+.app-shell .mobile-menu-search { display: block; padding: 4px 8px 10px; }
+.app-shell .mobile-menu-search input { width: 100%; min-height: 44px; padding: 9px 11px; border: 1px solid var(--control-border); border-radius: 9px; background: var(--surface); color: var(--ink); font: inherit; }
+.app-shell .mobile-menu-search input:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.app-shell .mobile-menu-list { display: grid; overflow-y: auto; min-height: 0; max-height: min(42dvh, 320px); }
+.app-shell .mobile-menu-empty { margin: 0; padding: 10px; color: var(--muted); font-size: 13px; }
+.app-shell .mobile-menu-list button[aria-current="page"] { background: var(--blue-soft); color: var(--blue); font-weight: 700; }
+.app-shell .mobile-menu-actions { display: grid; overflow-y: auto; min-height: 0; border-top: 1px solid var(--line); }
+html[data-theme="dark"] .app-shell .mobile-menu-list button[aria-current="page"] { color: #d9d1ff; }
+html[data-theme="dark"] .app-shell .entry-tools input::placeholder { color: #aaaab4; opacity: 1; }
+
+/* Quick entry is a direct form; extra fields and preferences stay discoverable. */
+.quick-dialog header p { margin-top: 4px; color: var(--muted); font-size: 13px; line-height: 1.4; }
+.quick-dialog header button { flex: 0 0 44px; min-width: 44px; min-height: 44px; }
+.quick-dialog .quick-entry-fields { display: grid; gap: 0; }
+.quick-dialog .quick-entry-field {
+  padding: 11px 0 15px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+.quick-dialog .quick-entry-field label { color: var(--ink); }
+.quick-dialog .quick-today-option { display: flex; align-items: center; gap: 8px; margin-top: 9px; color: var(--muted); font-weight: 500; }
+.quick-dialog .quick-today-option input,
+.quick-dialog .quick-entry-settings input { width: 18px; height: 18px; accent-color: var(--blue); }
+.quick-dialog .quick-subtle { padding-inline: 0; border: 0; background: transparent; color: var(--blue); }
+.quick-dialog .quick-subtle:hover:not(:disabled) { background: transparent; text-decoration: underline; }
+.quick-dialog .quick-optional-fields,
+.quick-dialog .quick-entry-settings { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.quick-dialog :is(.quick-optional-fields, .quick-entry-settings) summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--ink); }
+.quick-dialog .quick-optional-fields summary span { margin-left: 6px; color: var(--muted); }
+.quick-dialog .quick-entry-settings p { margin: 9px 0; color: var(--muted); font-size: 13px; }
+.quick-dialog .quick-entry-settings > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 12px; }
+.quick-dialog .quick-entry-settings label { display: flex; align-items: center; gap: 8px; min-height: 36px; font-weight: 500; }
+.quick-dialog .quick-entry-notice { color: var(--ink); font-size: 13px; }
+.quick-dialog .quick-entry-fallback { padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-soft); }
+.quick-dialog .quick-entry-fallback p { margin-bottom: 10px; color: var(--muted); }
+.quick-dialog .quick-entry-fallback button { color: var(--blue); }
+.quick-dialog :is(input, select, textarea, summary, button):focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+html[data-theme="dark"] .quick-dialog .quick-subtle { color: #c9bcff; }
+@media (max-width: 640px) {
+  .quick-dialog .quick-entry-settings > div { grid-template-columns: 1fr; }
+  .app-shell .collection-section-nav { width: 100%; }
+  .app-shell .collection-section-nav a { flex: 1; justify-content: center; padding-inline: 10px; }
+}
+@media (max-width: 400px) {
+  .app-shell .entries-heading .button { min-height: 44px; font-size: 12px; }
 }
