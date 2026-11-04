@@ -26,28 +26,28 @@
 
 html[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #1B1D22;
-  --background: #1B1D22;
-  --surface: #24272E;
-  --surface-elevated: #2D313A;
-  --surface-soft: #2D313A;
-  --hover: #353B46;
-  --ink: #F1F3F7;
-  --foreground: #F1F3F7;
-  --muted: #B5BECC;
-  --line: #3E4653;
-  --border: #3E4653;
-  --control-border: #7B8799;
-  --blue: #96BDFF;
-  --blue-dark: #7EA9F5;
-  --blue-soft: #26334A;
-  --on-primary: #142443;
-  --focus: #A9CBFF;
-  --green: #69C59D;
-  --danger: #FFADB5;
-  --danger-fill: #FFADB5;
+  --bg: #1A2330;
+  --background: #1A2330;
+  --surface: #263241;
+  --surface-elevated: #303E50;
+  --surface-soft: #2B3A4D;
+  --hover: #394B61;
+  --ink: #F5F7FC;
+  --foreground: #F5F7FC;
+  --muted: #C5D0E0;
+  --line: #465A72;
+  --border: #465A72;
+  --control-border: #8B9DB3;
+  --blue: #A9CDFF;
+  --blue-dark: #91B9F4;
+  --blue-soft: #2B466A;
+  --on-primary: #17304F;
+  --focus: #BBD7FF;
+  --green: #7EDCC5;
+  --danger: #FFB7C0;
+  --danger-fill: #FFB7C0;
   --on-danger: #3B1116;
-  --shadow: 0 12px 28px rgba(0, 0, 0, 0.36);
+  --shadow: 0 12px 28px rgba(3, 10, 19, 0.42);
 }
 
 body {

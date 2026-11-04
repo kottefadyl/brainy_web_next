@@ -1,6 +1,6 @@
 /* Workspace palette: Fedora-inspired blue, calm surfaces, and format-owned color. */
 .app-shell {
-  --bg: #F0F5FB;
+  --bg: #F3F7FC;
   --surface: #FFFFFF;
   --surface-elevated: #FFFFFF;
   --surface-soft: #EAF2FC;
@@ -19,34 +19,87 @@
 }
 
 .app-shell .sidebar {
-  background: #F8FBFF;
-  border-right-color: #D6E4F4;
+  background: #1B2D47;
+  border-right-color: #314A6A;
+  color: #F3F7FF;
+}
+
+.app-shell .sidebar .brand,
+.app-shell .sidebar .profile-info strong {
+  color: #F3F7FF;
+}
+
+.app-shell .sidebar-top p,
+.app-shell .sidebar .profile-info span,
+.app-shell .sidebar .sidebar-empty {
+  color: #B9CBE4;
 }
 
 .app-shell .sidebar-heading {
-  color: #315D99;
+  color: #AFC9ED;
+}
+
+.app-shell .sidebar .icon-button {
+  color: #D8E8FF;
+}
+
+.app-shell .sidebar .icon-button:hover {
+  background: #2D486B;
+  color: #FFFFFF;
+}
+
+.app-shell .sidebar .nav-item {
+  color: #D7E5F8;
+}
+
+.app-shell .sidebar .nav-item:not(.active):hover {
+  background: #2B4567;
+  color: #FFFFFF;
 }
 
 .app-shell .nav-item.active {
-  background: #DEEDFF;
-  color: #174A88;
-  box-shadow: inset 4px 0 0 #2463CE;
+  background: #365C8C;
+  color: #FFFFFF;
+  box-shadow: inset 4px 0 0 #A9CDFF;
 }
 
 .app-shell .nav-item.active .nav-count {
-  color: #174A88;
+  color: #E1EFFF;
 }
 
 .app-shell .collection-nav + .sidebar-create {
-  background: #E7F1FF;
-  border-color: #BDD6FA;
-  color: #1F559D;
+  background: #2D62A7;
+  border-color: #6C9BD7;
+  color: #FFFFFF;
 }
 
 .app-shell .collection-nav + .sidebar-create:hover {
-  background: #D7E9FF;
-  border-color: #95BDF4;
-  color: #174A88;
+  background: #3975C2;
+  border-color: #A2C9FA;
+  color: #FFFFFF;
+}
+
+.app-shell .sidebar > .sidebar-create:not(:first-of-type),
+.app-shell .sidebar > .button.sidebar-create:not(:first-of-type) {
+  background: #263D5C;
+  border-color: #486482;
+  color: #EDF5FF;
+}
+
+.app-shell .sidebar > .sidebar-create:not(:first-of-type):hover,
+.app-shell .sidebar > .button.sidebar-create:not(:first-of-type):hover {
+  background: #345478;
+  border-color: #82A8D3;
+  color: #FFFFFF;
+}
+
+.app-shell .sidebar-bottom {
+  border-top-color: #486482;
+}
+
+.app-shell .sidebar .profile-avatar {
+  background: #355F91;
+  color: #EAF4FF;
 }
 
 .app-shell .topbar {
@@ -289,17 +342,17 @@
 }
 
 html[data-theme="dark"] .app-shell {
-  --bg: #192330;
-  --surface: #242F3E;
-  --surface-elevated: #2D3A4C;
-  --surface-soft: #2A394D;
-  --hover: #33465C;
-  --ink: #F1F5FC;
-  --muted: #C0CDE0;
-  --line: #43546A;
-  --border: #43546A;
-  --control-border: #899AAF;
-  --blue-soft: #294467;
+  --bg: #172334;
+  --surface: #263549;
+  --surface-elevated: #304159;
+  --surface-soft: #2B3D55;
+  --hover: #364D68;
+  --ink: #F5F7FC;
+  --muted: #C5D0E0;
+  --line: #4A607A;
+  --border: #4A607A;
+  --control-border: #90A5BF;
+  --blue-soft: #2B4D76;
 }
 
 html[data-theme="dark"] .app-shell .workspace {
@@ -307,8 +360,8 @@ html[data-theme="dark"] .app-shell .workspace {
 }
 
 html[data-theme="dark"] .app-shell .sidebar {
-  background: #1D2938;
-  border-right-color: #40536D;
+  background: #0E1725;
+  border-right-color: #354A65;
 }
 
 html[data-theme="dark"] .app-shell .sidebar-heading {
@@ -316,7 +369,7 @@ html[data-theme="dark"] .app-shell .sidebar-heading {
 }
 
 html[data-theme="dark"] .app-shell .nav-item.active {
-  background: #2B4970;
+  background: #2A4D78;
   color: #F1F6FF;
   box-shadow: inset 4px 0 0 #9AC6FF;
 }
@@ -343,13 +396,13 @@ html[data-theme="dark"] .app-shell .format-strip-head .button:hover:not(:disable
 }
 
 html[data-theme="dark"] .app-shell .topbar {
-  background: #242F3E;
-  border-bottom-color: #40536D;
+  background: #263549;
+  border-bottom-color: #435A76;
 }
 
 html[data-theme="dark"] .app-shell .collection-hero {
-  background: #2A568A;
-  border-color: #5483B9;
+  background: #2B5791;
+  border-color: #668FC4;
   box-shadow: none;
 }
 
@@ -396,7 +449,7 @@ html[data-theme="dark"] .app-shell .section-overline {
 }
 
 html[data-theme="dark"] .app-shell .format-card {
-  background: color-mix(in srgb, var(--format-color) 12%, #242F3E) !important;
+  background: color-mix(in srgb, var(--format-color) 18%, #263549) !important;
   border: 1px solid var(--line) !important;
   border-top: 4px solid var(--format-accent) !important;
   box-shadow: none !important;
@@ -413,9 +466,19 @@ html[data-theme="dark"] .app-shell .format-card .format-tag {
 }
 
 html[data-theme="dark"] .app-shell .entry-card.entry-row {
-  background: color-mix(in srgb, var(--format-color) 12%, #242F3E) !important;
+  background: color-mix(in srgb, var(--format-color) 16%, #263549) !important;
   border-color: var(--line) !important;
   border-left: 4px solid var(--format-accent) !important;
+}
+
+@supports (color: oklch(from red l c h)) {
+  html[data-theme="dark"] .app-shell .format-card {
+    background: oklch(from var(--format-color) 31% 0.055 h) !important;
+  }
+
+  html[data-theme="dark"] .app-shell .entry-card.entry-row {
+    background: oklch(from var(--format-color) 29% 0.045 h) !important;
+  }
 }
 
 @media (max-width: 1100px) {
