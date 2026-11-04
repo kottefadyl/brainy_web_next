@@ -1,10 +1,11 @@
 /* Workspace palette: Fedora-inspired blue, calm surfaces, and format-owned color. */
 .app-shell {
-  --bg: #F3F7FC;
+  grid-template-columns: clamp(250px, 22vw, 292px) minmax(0, 1fr);
+  --bg: #F8F9FB;
   --surface: #FFFFFF;
   --surface-elevated: #FFFFFF;
-  --surface-soft: #EAF2FC;
-  --hover: #E3EEFB;
+  --surface-soft: #F0F3F8;
+  --hover: #E9EDF4;
   --ink: #1D2B42;
   --muted: #52657F;
   --line: #D4E1F0;
@@ -19,8 +20,8 @@
 }
 
 .app-shell .sidebar {
-  background: #1B2D47;
-  border-right-color: #314A6A;
+  background: #2B66B5;
+  border-right-color: #21549A;
   color: #F3F7FF;
 }
 
@@ -29,14 +30,19 @@
   color: #F3F7FF;
 }
 
+.app-shell .sidebar .brand-dot,
+.app-shell .sidebar .nav-count {
+  color: #E0EDFF;
+}
+
 .app-shell .sidebar-top p,
 .app-shell .sidebar .profile-info span,
 .app-shell .sidebar .sidebar-empty {
-  color: #B9CBE4;
+  color: #E0EDFF;
 }
 
 .app-shell .sidebar-heading {
-  color: #AFC9ED;
+  color: #E0EDFF;
 }
 
 .app-shell .sidebar .icon-button {
@@ -44,21 +50,21 @@
 }
 
 .app-shell .sidebar .icon-button:hover {
-  background: #2D486B;
+  background: #447FC9;
   color: #FFFFFF;
 }
 
 .app-shell .sidebar .nav-item {
-  color: #D7E5F8;
+  color: #F0F6FF;
 }
 
 .app-shell .sidebar .nav-item:not(.active):hover {
-  background: #2B4567;
+  background: #3674C0;
   color: #FFFFFF;
 }
 
 .app-shell .nav-item.active {
-  background: #365C8C;
+  background: #1D5197;
   color: #FFFFFF;
   box-shadow: inset 4px 0 0 #A9CDFF;
 }
@@ -68,38 +74,56 @@
 }
 
 .app-shell .collection-nav + .sidebar-create {
-  background: #2D62A7;
-  border-color: #6C9BD7;
-  color: #FFFFFF;
+  background: #FFFFFF;
+  border-color: #FFFFFF;
+  color: #16477F;
 }
 
 .app-shell .collection-nav + .sidebar-create:hover {
-  background: #3975C2;
-  border-color: #A2C9FA;
-  color: #FFFFFF;
+  background: #EAF3FF;
+  border-color: #FFFFFF;
+  color: #16477F;
 }
 
 .app-shell .sidebar > .sidebar-create:not(:first-of-type),
 .app-shell .sidebar > .button.sidebar-create:not(:first-of-type) {
-  background: #263D5C;
-  border-color: #486482;
-  color: #EDF5FF;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #9FC2F0;
+  color: #FFFFFF;
 }
 
 .app-shell .sidebar > .sidebar-create:not(:first-of-type):hover,
 .app-shell .sidebar > .button.sidebar-create:not(:first-of-type):hover {
-  background: #345478;
-  border-color: #82A8D3;
+  background: rgba(255, 255, 255, 0.22);
+  border-color: #D3E6FF;
   color: #FFFFFF;
 }
 
 .app-shell .sidebar-bottom {
-  border-top-color: #486482;
+  border-top-color: #8CB3E8;
 }
 
 .app-shell .sidebar .profile-avatar {
-  background: #355F91;
+  background: #1D5197;
   color: #EAF4FF;
+}
+
+.app-shell .collection-nav {
+  scrollbar-width: thin;
+  scrollbar-color: #A8CCF5 transparent;
+}
+
+.app-shell .collection-nav::-webkit-scrollbar {
+  width: 8px;
+}
+
+.app-shell .collection-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.app-shell .collection-nav::-webkit-scrollbar-thumb {
+  background: #A8CCF5;
+  border-radius: 8px;
 }
 
 .app-shell .topbar {
@@ -342,17 +366,17 @@
 }
 
 html[data-theme="dark"] .app-shell {
-  --bg: #172334;
-  --surface: #263549;
-  --surface-elevated: #304159;
-  --surface-soft: #2B3D55;
-  --hover: #364D68;
-  --ink: #F5F7FC;
-  --muted: #C5D0E0;
-  --line: #4A607A;
-  --border: #4A607A;
-  --control-border: #90A5BF;
-  --blue-soft: #2B4D76;
+  --bg: #19191B;
+  --surface: #242427;
+  --surface-elevated: #2F2F33;
+  --surface-soft: #2A2A2E;
+  --hover: #39393E;
+  --ink: #F2F2F4;
+  --muted: #BFC0C6;
+  --line: #49494F;
+  --border: #49494F;
+  --control-border: #85858E;
+  --blue-soft: #383343;
 }
 
 html[data-theme="dark"] .app-shell .workspace {
@@ -360,96 +384,157 @@ html[data-theme="dark"] .app-shell .workspace {
 }
 
 html[data-theme="dark"] .app-shell .sidebar {
-  background: #0E1725;
-  border-right-color: #354A65;
+  background: #111113;
+  border-right-color: #36363B;
+}
+
+html[data-theme="dark"] .app-shell .sidebar .brand-dot,
+html[data-theme="dark"] .app-shell .sidebar .nav-count,
+html[data-theme="dark"] .app-shell .sidebar-top p,
+html[data-theme="dark"] .app-shell .sidebar .profile-info span {
+  color: #C6C6CC;
+}
+
+html[data-theme="dark"] .app-shell .sidebar .nav-item {
+  color: #E6E6E9;
+}
+
+html[data-theme="dark"] .app-shell .sidebar .nav-item:not(.active):hover,
+html[data-theme="dark"] .app-shell .sidebar .icon-button:hover {
+  background: #2D2D32;
 }
 
 html[data-theme="dark"] .app-shell .sidebar-heading {
-  color: #A8C9FA;
+  color: #BFC0C6;
 }
 
 html[data-theme="dark"] .app-shell .nav-item.active {
-  background: #2A4D78;
-  color: #F1F6FF;
-  box-shadow: inset 4px 0 0 #9AC6FF;
+  background: #383343;
+  color: #F2F2F4;
+  box-shadow: inset 4px 0 0 #B6A8F7;
 }
 
 html[data-theme="dark"] .app-shell .nav-item.active .nav-count {
-  color: #DCEBFF;
+  color: #DCD6F9;
+}
+
+html[data-theme="dark"] .app-shell .sidebar-bottom {
+  border-top-color: #45454B;
+}
+
+html[data-theme="dark"] .app-shell .sidebar .profile-avatar {
+  background: #343039;
+  color: #E8E2FF;
+}
+
+html[data-theme="dark"] .app-shell .collection-nav {
+  scrollbar-color: #69696F transparent;
+}
+
+html[data-theme="dark"] .app-shell .collection-nav::-webkit-scrollbar-thumb {
+  background: #69696F;
 }
 
 html[data-theme="dark"] .app-shell .collection-nav + .sidebar-create,
 html[data-theme="dark"] .app-shell .quick-topbar,
 html[data-theme="dark"] .app-shell .format-strip-head .button,
 html[data-theme="dark"] .app-shell .entries-heading .button-secondary {
-  background: #294467;
-  border-color: #5F82AE;
-  color: #DCEBFF;
+  background: #343438;
+  border-color: #68686F;
+  color: #F2F2F4;
 }
 
-html[data-theme="dark"] .app-shell .collection-nav + .sidebar-create:hover,
+html[data-theme="dark"] .app-shell .collection-nav + .sidebar-create {
+  background: #B6A8F7;
+  border-color: #B6A8F7;
+  color: #211B34;
+}
+
+html[data-theme="dark"] .app-shell .collection-nav + .sidebar-create:hover {
+  background: #C9BEFF;
+  border-color: #C9BEFF;
+  color: #211B34;
+}
+
 html[data-theme="dark"] .app-shell .quick-topbar:hover,
 html[data-theme="dark"] .app-shell .format-strip-head .button:hover:not(:disabled) {
-  background: #355783;
-  border-color: #91B8EC;
-  color: #FFFFFF;
+  background: #414146;
+  border-color: #85858E;
+  color: #F2F2F4;
 }
 
 html[data-theme="dark"] .app-shell .topbar {
-  background: #263549;
-  border-bottom-color: #435A76;
+  background: #202023;
+  border-bottom-color: #424247;
 }
 
 html[data-theme="dark"] .app-shell .collection-hero {
-  background: #2B5791;
-  border-color: #668FC4;
+  background: #2A2A2E;
+  border-color: #4B4B51;
   box-shadow: none;
 }
 
+html[data-theme="dark"] .app-shell .collection-hero .eyebrow,
+html[data-theme="dark"] .app-shell .collection-meta {
+  color: #D4D4D9;
+}
+
 html[data-theme="dark"] .app-shell .collection-hero-actions .hero-add-entry {
-  background: #DCEBFF;
-  border-color: #DCEBFF;
-  color: #173C6B;
+  background: #B6A8F7;
+  border-color: #B6A8F7;
+  color: #211B34;
 }
 
 html[data-theme="dark"] .app-shell .collection-hero-actions .hero-add-entry:hover:not(:disabled) {
-  background: #FFFFFF;
-  border-color: #FFFFFF;
-  color: #173C6B;
+  background: #C9BEFF;
+  border-color: #C9BEFF;
+  color: #211B34;
 }
 
 html[data-theme="dark"] .app-shell .collection-tools-toggle {
-  background: #203F49;
-  border-color: #437B80;
-  color: #EAFBF8;
+  background: #252529;
+  border-color: #4B4B51;
+  color: #F2F2F4;
 }
 
 html[data-theme="dark"] .app-shell .collection-tools-toggle:hover {
-  background: #29515B;
-  border-color: #74B6B6;
+  background: #303035;
+  border-color: #77777E;
 }
 
 html[data-theme="dark"] .app-shell .tools-toggle-icon,
 html[data-theme="dark"] .app-shell .tools-badge {
-  background: #315E63;
-  color: #D1FFF4;
+  background: #383343;
+  color: #DCD6F9;
 }
 
 html[data-theme="dark"] .app-shell .tools-toggle-text strong {
-  color: #F0FAF8;
+  color: #F2F2F4;
 }
 
 html[data-theme="dark"] .app-shell .tools-toggle-text small,
 html[data-theme="dark"] .app-shell .tools-chevron {
-  color: #C5E6E1;
+  color: #BFC0C6;
 }
 
 html[data-theme="dark"] .app-shell .section-overline {
-  color: #A8CBFF;
+  color: #B6A8F7;
+}
+
+html[data-theme="dark"] .app-shell .format-card,
+html[data-theme="dark"] .app-shell .entry-card.entry-row {
+  --format-accent: color-mix(in srgb, var(--format-color) 55%, #8C8C94);
+}
+
+@supports (color: oklch(from red l c h)) {
+  html[data-theme="dark"] .app-shell .format-card,
+  html[data-theme="dark"] .app-shell .entry-card.entry-row {
+    --format-accent: oklch(from var(--format-color) 70% 0.08 h);
+  }
 }
 
 html[data-theme="dark"] .app-shell .format-card {
-  background: color-mix(in srgb, var(--format-color) 18%, #263549) !important;
+  background: color-mix(in srgb, var(--format-color) 8%, #3D3D42) !important;
   border: 1px solid var(--line) !important;
   border-top: 4px solid var(--format-accent) !important;
   box-shadow: none !important;
@@ -460,25 +545,45 @@ html[data-theme="dark"] .app-shell .format-card strong {
 }
 
 html[data-theme="dark"] .app-shell .format-card .format-tag {
-  background: #304054;
-  border-color: #64758A;
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.27);
   color: var(--ink);
 }
 
+html[data-theme="dark"] .app-shell .format-card .format-tag small {
+  color: #F5F7FC;
+  border-left-color: rgba(255, 255, 255, 0.3);
+}
+
 html[data-theme="dark"] .app-shell .entry-card.entry-row {
-  background: color-mix(in srgb, var(--format-color) 16%, #263549) !important;
+  background: color-mix(in srgb, var(--format-color) 6%, #39393E) !important;
   border-color: var(--line) !important;
   border-left: 4px solid var(--format-accent) !important;
 }
 
-@supports (color: oklch(from red l c h)) {
-  html[data-theme="dark"] .app-shell .format-card {
-    background: oklch(from var(--format-color) 31% 0.055 h) !important;
-  }
+html[data-theme="dark"] .app-shell .empty-state {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+}
 
-  html[data-theme="dark"] .app-shell .entry-card.entry-row {
-    background: oklch(from var(--format-color) 29% 0.045 h) !important;
-  }
+html[data-theme="dark"] .app-shell .empty-state h2 {
+  color: var(--ink);
+}
+
+html[data-theme="dark"] .app-shell .empty-state p {
+  color: var(--muted);
+}
+
+html[data-theme="dark"] .app-shell .empty-state .empty-art {
+  background: #383343;
+  color: #DCD6F9;
+}
+
+html[data-theme="dark"] .app-shell .empty-state .button-secondary {
+  background: #B6A8F7;
+  border-color: #B6A8F7;
+  color: #211B34;
 }
 
 @media (max-width: 1100px) {

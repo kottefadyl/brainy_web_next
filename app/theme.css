@@ -26,28 +26,28 @@
 
 html[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #1A2330;
-  --background: #1A2330;
-  --surface: #263241;
-  --surface-elevated: #303E50;
-  --surface-soft: #2B3A4D;
-  --hover: #394B61;
-  --ink: #F5F7FC;
-  --foreground: #F5F7FC;
-  --muted: #C5D0E0;
-  --line: #465A72;
-  --border: #465A72;
-  --control-border: #8B9DB3;
-  --blue: #A9CDFF;
-  --blue-dark: #91B9F4;
-  --blue-soft: #2B466A;
-  --on-primary: #17304F;
-  --focus: #BBD7FF;
+  --bg: #19191B;
+  --background: #19191B;
+  --surface: #242427;
+  --surface-elevated: #2F2F33;
+  --surface-soft: #2A2A2E;
+  --hover: #39393E;
+  --ink: #F2F2F4;
+  --foreground: #F2F2F4;
+  --muted: #BFC0C6;
+  --line: #49494F;
+  --border: #49494F;
+  --control-border: #85858E;
+  --blue: #B6A8F7;
+  --blue-dark: #A091EA;
+  --blue-soft: #383343;
+  --on-primary: #211B34;
+  --focus: #D0C5FF;
   --green: #7EDCC5;
   --danger: #FFB7C0;
   --danger-fill: #FFB7C0;
   --on-danger: #3B1116;
-  --shadow: 0 12px 28px rgba(3, 10, 19, 0.42);
+  --shadow: 0 12px 28px rgba(0, 0, 0, 0.42);
 }
 
 body {
@@ -858,8 +858,8 @@ textarea {
 
 /* Dark Theme Format & Entry Contrast Adaptation (brainy-ui-ux tokens.md) */
 html[data-theme="dark"] .format-card {
-  background: color-mix(in srgb, var(--format-color) 14%, #24272E) !important;
-  border: 1px solid color-mix(in srgb, var(--format-color) 36%, #3E4653) !important;
+  background: color-mix(in srgb, var(--format-color) 8%, #3D3D42) !important;
+  border: 1px solid var(--line) !important;
   border-left: 4px solid color-mix(in srgb, var(--format-color) 78%, #FFFFFF) !important;
   color: var(--ink) !important;
 }
@@ -891,8 +891,8 @@ html[data-theme="dark"] .format-card-head button:hover {
 }
 
 html[data-theme="dark"] .entry-card.entry-row {
-  background: color-mix(in srgb, var(--format-color) 12%, #24272E) !important;
-  border: 1px solid #3E4653 !important;
+  background: color-mix(in srgb, var(--format-color) 6%, #39393E) !important;
+  border: 1px solid var(--line) !important;
   border-left: 4px solid color-mix(in srgb, var(--format-color) 76%, #FFFFFF) !important;
   color: var(--ink) !important;
 }

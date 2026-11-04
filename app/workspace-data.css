@@ -178,24 +178,24 @@ html[data-theme="dark"] .app-shell .entry-tools {
 html[data-theme="dark"] .app-shell .entry-row .entry-field-name,
 html[data-theme="dark"] .app-shell .entry-row .entry-date,
 html[data-theme="dark"] .app-shell .entry-row .entry-edited {
-  color: #C9D6E8;
+  color: #C4C4CA;
 }
 
 html[data-theme="dark"] .app-shell .entry-row .entry-format-label {
-  background: #304359;
+  background: #303034;
   border-color: var(--format-accent);
-  color: #F5F7FC;
+  color: #F2F2F4;
 }
 
 html[data-theme="dark"] .app-shell .entry-more[open] summary,
 html[data-theme="dark"] .app-shell .entry-row .small-action:hover {
-  background: #40536C;
+  background: #444449;
   color: #FFFFFF;
 }
 
 html[data-theme="dark"] .app-shell .entry-more-fields {
-  background: #304359;
-  color: #D6E5F7;
+  background: #303034;
+  color: #E2E2E8;
 }
 
 @media (max-width: 760px) {
