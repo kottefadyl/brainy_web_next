@@ -41,10 +41,10 @@
 [data-theme="dark"] .workflow-page input,[data-theme="dark"] .workflow-page select{background:#222225;color:#f2f2f4;border-color:#85858e}
 [data-theme="dark"] .workflow-page button{background:#303034;border-color:#67676e;color:#f2f2f4}
 [data-theme="dark"] .workflow-page button:hover:not(:disabled){background:#3c3c42}
-[data-theme="dark"] .workflow-page .workflow-primary{background:#b6a8f7;border-color:#b6a8f7;color:#211b34}
+[data-theme="dark"] .workflow-page .workflow-primary{background:var(--blue);border-color:var(--blue);color:var(--on-primary)}
 [data-theme="dark"] .workflow-required,[data-theme="dark"] .workflow-entry,[data-theme="dark"] .workflow-notice{border-color:#49494f}
 [data-theme="dark"] .workflow-entry{background:#29292c}
-[data-theme="dark"] .workflow-entry summary span{background:#383343;color:#ece6ff}
+[data-theme="dark"] .workflow-entry summary span{background:var(--blue-soft);color:#e1efff}
 [data-theme="dark"] .workflow-entry summary time{color:#c6c6cc}
 [data-theme="dark"] .workflow-error{background:#412931;color:#ffd8dd;border-color:#9c5a65}
 @media(max-width:600px){.workflow-page{padding:18px 14px 42px}.workflow-box{padding:16px}.workflow-transition>label{flex-basis:100%}}

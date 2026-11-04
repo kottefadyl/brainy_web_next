@@ -376,7 +376,7 @@ html[data-theme="dark"] .app-shell {
   --line: #49494F;
   --border: #49494F;
   --control-border: #85858E;
-  --blue-soft: #383343;
+  --blue-soft: #263A59;
 }
 
 html[data-theme="dark"] .app-shell .workspace {
@@ -409,13 +409,13 @@ html[data-theme="dark"] .app-shell .sidebar-heading {
 }
 
 html[data-theme="dark"] .app-shell .nav-item.active {
-  background: #383343;
-  color: #F2F2F4;
-  box-shadow: inset 4px 0 0 #B6A8F7;
+  background: #24589B;
+  color: #FFFFFF;
+  box-shadow: inset 4px 0 0 #A9CBFF;
 }
 
 html[data-theme="dark"] .app-shell .nav-item.active .nav-count {
-  color: #DCD6F9;
+  color: #E1EFFF;
 }
 
 html[data-theme="dark"] .app-shell .sidebar-bottom {
@@ -423,8 +423,8 @@ html[data-theme="dark"] .app-shell .sidebar-bottom {
 }
 
 html[data-theme="dark"] .app-shell .sidebar .profile-avatar {
-  background: #343039;
-  color: #E8E2FF;
+  background: #263A59;
+  color: #E1EFFF;
 }
 
 html[data-theme="dark"] .app-shell .collection-nav {
@@ -445,15 +445,15 @@ html[data-theme="dark"] .app-shell .entries-heading .button-secondary {
 }
 
 html[data-theme="dark"] .app-shell .collection-nav + .sidebar-create {
-  background: #B6A8F7;
-  border-color: #B6A8F7;
-  color: #211B34;
+  background: var(--blue);
+  border-color: var(--blue);
+  color: var(--on-primary);
 }
 
 html[data-theme="dark"] .app-shell .collection-nav + .sidebar-create:hover {
-  background: #C9BEFF;
-  border-color: #C9BEFF;
-  color: #211B34;
+  background: var(--blue-dark);
+  border-color: var(--blue-dark);
+  color: var(--on-primary);
 }
 
 html[data-theme="dark"] .app-shell .quick-topbar:hover,
@@ -469,26 +469,26 @@ html[data-theme="dark"] .app-shell .topbar {
 }
 
 html[data-theme="dark"] .app-shell .collection-hero {
-  background: #2A2A2E;
-  border-color: #4B4B51;
-  box-shadow: none;
+  background: #1D4C8B;
+  border-color: #4A82C8;
+  box-shadow: 0 12px 28px rgba(5, 25, 55, .22);
 }
 
 html[data-theme="dark"] .app-shell .collection-hero .eyebrow,
 html[data-theme="dark"] .app-shell .collection-meta {
-  color: #D4D4D9;
+  color: #E1EFFF;
 }
 
 html[data-theme="dark"] .app-shell .collection-hero-actions .hero-add-entry {
-  background: #B6A8F7;
-  border-color: #B6A8F7;
-  color: #211B34;
+  background: var(--blue);
+  border-color: var(--blue);
+  color: var(--on-primary);
 }
 
 html[data-theme="dark"] .app-shell .collection-hero-actions .hero-add-entry:hover:not(:disabled) {
-  background: #C9BEFF;
-  border-color: #C9BEFF;
-  color: #211B34;
+  background: var(--blue-dark);
+  border-color: var(--blue-dark);
+  color: var(--on-primary);
 }
 
 html[data-theme="dark"] .app-shell .collection-tools-toggle {
@@ -504,8 +504,8 @@ html[data-theme="dark"] .app-shell .collection-tools-toggle:hover {
 
 html[data-theme="dark"] .app-shell .tools-toggle-icon,
 html[data-theme="dark"] .app-shell .tools-badge {
-  background: #383343;
-  color: #DCD6F9;
+  background: #263A59;
+  color: #DCEBFF;
 }
 
 html[data-theme="dark"] .app-shell .tools-toggle-text strong {
@@ -518,7 +518,7 @@ html[data-theme="dark"] .app-shell .tools-chevron {
 }
 
 html[data-theme="dark"] .app-shell .section-overline {
-  color: #B6A8F7;
+  color: var(--blue);
 }
 
 html[data-theme="dark"] .app-shell .format-card,
@@ -576,14 +576,14 @@ html[data-theme="dark"] .app-shell .empty-state p {
 }
 
 html[data-theme="dark"] .app-shell .empty-state .empty-art {
-  background: #383343;
-  color: #DCD6F9;
+  background: #263A59;
+  color: #DCEBFF;
 }
 
 html[data-theme="dark"] .app-shell .empty-state .button-secondary {
-  background: #B6A8F7;
-  border-color: #B6A8F7;
-  color: #211B34;
+  background: var(--blue);
+  border-color: var(--blue);
+  color: var(--on-primary);
 }
 
 @media (max-width: 1100px) {
@@ -769,11 +769,11 @@ html[data-theme="dark"] .app-shell .sidebar-search {
 html[data-theme="dark"] .app-shell .sidebar-search input::placeholder { color: #bfc0c6; }
 html[data-theme="dark"] .app-shell .sidebar-total { background: #303035; color: #dcdce1; }
 html[data-theme="dark"] .app-shell .sidebar-new-collection {
-  background: #b6a8f7;
-  border-color: #b6a8f7;
-  color: #211b34;
+  background: var(--blue);
+  border-color: var(--blue);
+  color: var(--on-primary);
 }
-html[data-theme="dark"] .app-shell .sidebar-new-collection:hover { background: #c7bdf8; }
+html[data-theme="dark"] .app-shell .sidebar-new-collection:hover { background: var(--blue-dark); }
 html[data-theme="dark"] .app-shell .sidebar-more summary { border-color: #505057; }
 html[data-theme="dark"] .app-shell .sidebar-more summary:hover,
 html[data-theme="dark"] .app-shell .sidebar-more[open] summary,
