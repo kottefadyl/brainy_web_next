@@ -16,6 +16,7 @@ import ContributionPanel from "./contribution-panel";
 import LedgerPanel from "./ledger-panel";
 import SensitivityPanel from "./sensitivity-panel";
 import CollectionToolsHub from "./collection-tools-hub";
+import CollectionHeroActions from "./collection-hero-actions";
 import WorkspaceToolsDialog from "./workspace-tools-dialog";
 import { GeoFieldInput } from "./geo-fields";
 import "./geo-classification.css";
@@ -1235,7 +1236,7 @@ export default function BrainyApp() {
             <OfflineSyncPanel userId={user.id} collections={collections} language={language} onSynced={() => { void refresh(); }} />
 
 
-            <section className="collection-hero"><div className="collection-hero-main"><div className="collection-icon"><FolderHeart size={27} /></div><div><span className="eyebrow">{t(language, "collection")}</span><h2>{selected.name}</h2><div className="collection-meta"><span><FileText size={15} /> {entries.length} {t(language, "entries")}</span><span>{selected.formats.length} {t(language, selected.formats.length === 1 ? "format" : "formats")}</span></div></div></div><div className="collection-hero-actions"><Button variant="secondary" onClick={() => setActiveSection("insights")}><ChartNoAxesCombined size={16} /> {language === "fr" ? "Calculs" : "Insights"}</Button><Button variant="secondary" onClick={() => { setRename(selected.name); setDialogError(""); setDialog({ kind: "rename" }); }}><Pencil size={16} /> {t(language, "rename")}</Button><Button variant="subtle" className="hero-delete" onClick={() => { setDialogError(""); setDialog({ kind: "deleteCollection" }); }}><Trash2 size={17} /> {t(language, "delete")}</Button></div></section>
+            <section className="collection-hero"><div className="collection-hero-main"><div className="collection-icon"><FolderHeart size={27} /></div><div><span className="eyebrow">{t(language, "collection")}</span><h2>{selected.name}</h2><div className="collection-meta"><span><FileText size={15} /> {entries.length} {t(language, "entries")}</span><span>{selected.formats.length} {t(language, selected.formats.length === 1 ? "format" : "formats")}</span></div></div></div><CollectionHeroActions language={language} onNewEntry={() => setDialog({ kind: "entry" })} onInsights={() => setActiveSection("insights")} onRename={() => { setRename(selected.name); setDialogError(""); setDialog({ kind: "rename" }); }} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteCollection" }); }} /></section>
             <CollectionToolsHub
               collection={selected}
               user={user}
@@ -1256,7 +1257,7 @@ export default function BrainyApp() {
                 <div className="format-card-fields">{format.fields.map((field) => <span key={field.id} className="format-tag">{field.name}<small>{fieldKindLabel(language, field.kind)}{field.unit ? ` · ${field.unit}` : ""}</small></span>)}</div>
               </div>)}</div>
             </section>
-            <div className="entries-heading"><div><span className="section-overline">{t(language, "savedEntries")}</span><h2>{t(language, "entries")} <span>Page {previousPages.length + 1} · {entries.length}{nextCursor ? "+" : ""}</span></h2></div><Button variant="secondary" onClick={() => setQuickEntry(true)}>{language === "fr" ? "Saisie rapide" : "Quick entry"}</Button><Button onClick={() => setDialog({ kind: "entry" })}><Plus size={19} /> {t(language, "newEntry")}</Button></div>
+            <div className="entries-heading"><div><span className="section-overline">{t(language, "savedEntries")}</span><h2>{t(language, "entries")} <span>Page {previousPages.length + 1} · {entries.length}{nextCursor ? "+" : ""}</span></h2></div><Button variant="secondary" onClick={() => setQuickEntry(true)}>{language === "fr" ? "Saisie rapide" : "Quick entry"}</Button></div>
             <div className="saved-view-bar">
               <label>{language === "fr" ? "Vue" : "View"}<select value={selectedViewId} onChange={(event) => setSelectedViewId(event.target.value)}><option value="">{language === "fr" ? "Liste par défaut" : "Default list"}</option>{selected.savedViews?.map((view) => <option key={view.id} value={view.id}>{view.name}</option>)}</select></label>
               <Button variant="secondary" onClick={() => setDialog({ kind: "view" })}><Plus size={16} />{language === "fr" ? "Enregistrer une vue" : "Save a view"}</Button>
