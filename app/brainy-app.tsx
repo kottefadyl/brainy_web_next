@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { api, ApiError } from "../lib/api";
 import { formatColorStyle } from "../lib/format-colors";
+import { FormatColorPicker } from "./format-color-picker";
 import InsightsDialog from "./insights-dialog";
 import StockPanel from "./stock-panel";
 import ClassificationPanel from "./classification-panel";
@@ -373,7 +374,7 @@ function CollectionEditor({ language, collection, editingFormat, onClose, onSave
         {editingFormat && <p className="modal-intro">{t(language, "formatImpact")}: {impact?.entryCount ?? "…"}</p>}
         {!collection && <label className="input-label">{t(language, "collectionName")}<input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder={t(language, "collectionNameHint")} maxLength={80} required /></label>}
         <label className="input-label">{t(language, "formatName")}<input autoFocus={!!collection} value={formatName} onChange={(event) => setFormatName(event.target.value)} maxLength={80} required /></label>
-        {!editingFormat && <fieldset className="format-color-picker"><legend>{t(language, "formatColor")}</legend><p>{t(language, "formatColorHelp")}</p><div className="format-color-options">{formatColors.map((option, index) => <button key={option} type="button" className={`format-color-option ${color === option ? "selected" : ""}`} style={{ backgroundColor: option }} disabled={collection?.formats.some((format) => format.color === option)} onClick={() => setColor(option)} aria-label={`${t(language, "formatColor")} ${index + 1}`} aria-pressed={color === option}>{color === option && <Check size={17} />}</button>)}</div></fieldset>}
+        {!editingFormat && <FormatColorPicker language={language} value={color} unavailable={collection?.formats.map((format) => format.color) ?? []} onChange={setColor} help={t(language, "formatColorHelp")} />}
         {!editingFormat && <label className="object-choice"><input type="checkbox" checked={objectModel} onChange={(event) => setObjectModel(event.target.checked)} />{language === "fr" ? "Utiliser ce format de données pour des objets" : "Use this data format for objects"}</label>}
         <div className="form-section-title"><div><h3>{t(language, "collectionFormat")}</h3><p>{t(language, "formatHelp")}</p></div><span className="count-chip">{fields.length} {t(language, fields.length === 1 ? "field" : "fields")}</span></div>
         <div className="field-list">
@@ -421,7 +422,7 @@ function FormatColorEditor({ collection, formatId, language, onClose, onSaved }:
   return <Modal title={t(language, "changeColor")} closeLabel={t(language, "close")} onClose={onClose}>
     <form className="modal-form" onSubmit={submit}>
       <p className="modal-intro">{formatDisplayName(format, language)} · {t(language, "formatColorHelp")}</p>
-      <fieldset className="format-color-picker"><legend>{t(language, "formatColor")}</legend><div className="format-color-options">{formatColors.map((option, index) => <button key={option} type="button" className={`format-color-option ${color === option ? "selected" : ""}`} style={{ backgroundColor: option }} disabled={collection.formats.some((item) => item.id !== formatId && item.color === option)} onClick={() => setColor(option)} aria-label={`${t(language, "formatColor")} ${index + 1}`} aria-pressed={color === option}>{color === option && <Check size={17} />}</button>)}</div></fieldset>
+      <FormatColorPicker language={language} value={color} unavailable={collection.formats.filter((item) => item.id !== formatId).map((item) => item.color)} onChange={setColor} />
       {error && <div className="form-error" role="alert">{error}</div>}
       <div className="modal-actions"><Button type="button" variant="secondary" onClick={onClose}>{t(language, "cancel")}</Button><Button type="submit" disabled={busy}>{busy ? t(language, "saving") : t(language, "save")}</Button></div>
     </form>
@@ -1260,7 +1261,7 @@ export default function BrainyApp() {
             <CollectionHeader collection={selected} entryCount={entries.length} language={language} onNewEntry={() => setDialog({ kind: "entry" })} onInsights={() => setActiveSection("insights")} onRename={() => { setRename(selected.name); setDialogError(""); setDialog({ kind: "rename" }); }} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteCollection" }); }} />
             <CollectionTabs language={language} value={collectionTab} onChange={(tab) => setTabSelection({ collectionId: selectedId, tab })} />
             <CollectionTabPanel tab="entries" active={collectionTab === "entries"}>
-            <div id="collection-entries" className="entries-heading"><div><span className="section-overline">{t(language, "savedEntries")}</span><h2>{t(language, "entries")} <span>{language === "fr" ? "Page" : "Page"} {previousPages.length + 1} · {entries.length}{nextCursor ? "+" : ""}</span></h2></div><Button variant="secondary" onClick={() => setQuickEntry(true)}>{language === "fr" ? "Saisie rapide" : "Quick entry"}</Button></div>
+            <div id="collection-entries" className="entries-heading"><div><span className="section-overline">{t(language, "savedEntries")}</span><h2>{t(language, "entries")} <span>{entries.length} {language === "fr" ? entries.length === 1 ? "entrée" : "entrées" : entries.length === 1 ? "entry" : "entries"}</span></h2></div><Button variant="secondary" onClick={() => setQuickEntry(true)}>{language === "fr" ? "Saisie rapide" : "Quick entry"}</Button></div>
             <div className="saved-view-bar">
               <label>{language === "fr" ? "Vue" : "View"}<select value={selectedViewId} onChange={(event) => setSelectedViewId(event.target.value)}><option value="">{language === "fr" ? "Liste par défaut" : "Default list"}</option>{selected.savedViews?.map((view) => <option key={view.id} value={view.id}>{view.name}</option>)}</select></label>
               <Button variant="secondary" onClick={() => setDialog({ kind: "view" })}><Plus size={16} />{language === "fr" ? "Enregistrer une vue" : "Save a view"}</Button>

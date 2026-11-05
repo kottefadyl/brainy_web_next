@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ChartNoAxesCombined, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChartNoAxesCombined, Pencil, Plus, Trash2 } from "lucide-react";
 import { t, type Language } from "../lib/brainy";
 
 type Props = {
@@ -45,7 +45,7 @@ export default function CollectionHeroActions({ language, onNewEntry, onInsights
           event.currentTarget.querySelector("summary")?.focus();
         }
       }}>
-        <summary className="button button-secondary"><MoreHorizontal size={18} /> {language === "fr" ? "Gérer" : "Manage"}</summary>
+        <summary className="button button-secondary"> {language === "fr" ? "Gérer" : "Manage"}</summary>
         <div className="collection-hero-menu">
           <button type="button" onClick={() => runMenuAction(onRename)}><Pencil size={16} /> {t(language, "rename")}</button>
           <button type="button" className="collection-hero-menu-danger" onClick={() => runMenuAction(onDelete)}><Trash2 size={16} /> {t(language, "delete")}</button>

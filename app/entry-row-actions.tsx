@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Bell, Copy, Eye, FileText, Link2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Bell, Copy, Eye, FileText, Link2, Pencil, Trash2 } from "lucide-react";
 import { t, type Language } from "../lib/brainy";
 
 type Props = {
@@ -41,7 +41,7 @@ export default function EntryRowActions({ language, appendOnly, onDetails, onCop
           event.currentTarget.querySelector("summary")?.focus();
         }
       }}>
-        <summary className="small-action" title={language === "fr" ? "Actions de l’entrée" : "Entry actions"} aria-label={language === "fr" ? "Actions de l’entrée" : "Entry actions"}><MoreHorizontal size={18} /></summary>
+        <summary className="small-action" title={language === "fr" ? "Actions de l’entrée" : "Entry actions"} aria-label={language === "fr" ? "Actions de l’entrée" : "Entry actions"}></summary>
         <div className="entry-action-menu">
           <button type="button" onClick={() => runMenuAction(onCopy)}><Copy size={16} /> {t(language, "copyEntry")}</button>
           <button type="button" onClick={() => runMenuAction(onEdit)}>{appendOnly ? <FileText size={16} /> : <Pencil size={16} />} {appendOnly ? language === "fr" ? "Ouvrir le registre" : "Open register" : t(language, "edit")}</button>

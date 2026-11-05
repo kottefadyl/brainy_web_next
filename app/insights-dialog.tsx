@@ -347,6 +347,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
           <label>{fr ? "Décimales" : "Decimals"}<select value={roundDigits} onChange={(event) => setRoundDigits(event.target.value)}><option value="">{fr ? "Aucun arrondi" : "No rounding"}</option>{[0, 1, 2, 3, 4, 5, 6].map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
           {roundDigits !== "" && <label>{fr ? "Règle" : "Rule"}<select value={roundMode} onChange={(event) => setRoundMode(event.target.value)}><option value="HALF_UP">{fr ? "Moitié vers le haut" : "Half up"}</option><option value="HALF_EVEN">{fr ? "Moitié vers le pair" : "Half even"}</option></select></label>}
         </div>
+        {!formulaName.trim() && <p className="action-help">{fr ? "Nommez la formule pour continuer." : "Name the formula to continue."}</p>}
         <button type="button" disabled={busy || !formulaName.trim()} onClick={saveFormula}>{formulaId ? (fr ? "Mettre à jour" : "Update") : (fr ? "Enregistrer la formule" : "Save formula")}</button>
         <ul>
           {formulas.map((formula) => <li key={formula.id}><span>{formula.name}</span><button type="button" onClick={() => editFormula(formula)}>{fr ? "Modifier" : "Edit"}</button><button type="button" onClick={async () => onCollectionChanged(await api.deleteFormula(collection.id, formula.id))}>{fr ? "Supprimer" : "Delete"}</button></li>)}
@@ -356,7 +357,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
       <section className="insights-section">
         <h3>{fr ? "Analyse et graphique" : "Analysis and chart"}</h3>
         <div className="insights-fields">
-          <label>{fr ? "Mesure" : "Measure"}<select value={measure} onChange={(event) => setMeasure(event.target.value)}>{sources.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+          <label>{fr ? "Mesure" : "Measure"}<select id="analysis-measure" value={measure} onChange={(event) => setMeasure(event.target.value)}>{sources.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
           <label>{fr ? "Calcul" : "Calculation"}
             <select value={operation} onChange={(event) => setOperation(event.target.value as AnalysisOperationId)}>
               {OPERATIONS.filter((item) => groupBy !== "ZONE" || item.id === "COUNT").map((item) => <option key={item.id} value={item.id}>{fr ? item.fr : item.en}</option>)}
@@ -441,6 +442,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
           <label>{fr ? "Fréquence" : "Frequency"}<select value={forecastFrequency} onChange={(event) => setForecastFrequency(event.target.value as "DAY" | "MONTH")}><option value="DAY">{fr ? "Jour" : "Day"}</option><option value="MONTH">{fr ? "Mois" : "Month"}</option></select></label>
           <label>{fr ? "Horizon" : "Horizon"}<select value={forecastHorizon} onChange={(event) => setForecastHorizon(Number(event.target.value))}>{[1, 2, 3, 6, 12].map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
         </div>
+        {(!measure || measure.startsWith("formula:") || !(dateFieldId || dateFields[0]?.id)) && <p className="action-help">{fr ? "Choisissez une mesure numérique et un champ date pour continuer." : "Choose a numeric measure and a date field to continue."}</p>}
         <button type="button" className="btn secondary" disabled={busy || !measure || measure.startsWith("formula:") || !(dateFieldId || dateFields[0]?.id)} onClick={runForecast}>{fr ? "Estimer" : "Estimate"}</button>
         <button type="button" className="btn secondary" disabled={busy || !measure || measure.startsWith("formula:") || !(dateFieldId || dateFields[0]?.id)} onClick={() => void queueForecast()}>{fr ? "Estimer en arrière-plan" : "Estimate in background"}</button>
         {forecastResult && <div className="forecast-results">
@@ -476,15 +478,15 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
             <div className="insights-chart">
               <div className="insights-axis-label">{result.unit ?? result.dimension ?? (fr ? "Valeur" : "Value")} (0 – {max})</div>
               <svg viewBox="0 0 500 170" preserveAspectRatio="none" role="img" aria-label={fr ? "Courbe" : "Line chart"}>
-                <polyline fill="none" stroke="#3478c9" strokeWidth="3" points={rows.map((row, idx) => `${20 + idx * 460 / Math.max(1, rows.length - 1)},${150 - (Number(row.value) || 0) / max * 130}`).join(" ")} />
-                {rows.map((row, idx) => <circle key={row.group} cx={20 + idx * 460 / Math.max(1, rows.length - 1)} cy={150 - (Number(row.value) || 0) / max * 130} r="4" fill="#3478c9" />)}
+                <polyline fill="none" stroke="var(--chart-1)" strokeWidth="3" points={rows.map((row, idx) => `${20 + idx * 460 / Math.max(1, rows.length - 1)},${150 - (Number(row.value) || 0) / max * 130}`).join(" ")} />
+                {rows.map((row, idx) => <circle key={row.group} cx={20 + idx * 460 / Math.max(1, rows.length - 1)} cy={150 - (Number(row.value) || 0) / max * 130} r="4" fill="var(--chart-1)" />)}
               </svg>
               <div className="insights-axis-label">{rows.map((row) => row.label).join(" · ")}</div>
             </div>
           )}
           {effectiveChart === "PIE" && (
             <div className="insights-chart insights-pie-layout" role="img" aria-label={fr ? "Graphique de répartition" : "Share chart"}>
-              <div className="insights-pie" style={{ background: `conic-gradient(${rows.map((row, idx) => { const colors = ["#3478c9", "#5db5a0", "#e2a653", "#aa8bcb", "#d7839e"]; const start = rows.slice(0, idx).reduce((sum, item) => sum + Math.max(0, Number(item.value) || 0), 0) / total * 360; const end = start + Math.max(0, Number(row.value) || 0) / total * 360; return `${colors[idx % colors.length]} ${start}deg ${end}deg`; }).join(", ")})` }} />
+              <div className="insights-pie" style={{ background: `conic-gradient(${rows.map((row, idx) => { const colors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"]; const start = rows.slice(0, idx).reduce((sum, item) => sum + Math.max(0, Number(item.value) || 0), 0) / total * 360; const end = start + Math.max(0, Number(row.value) || 0) / total * 360; return `${colors[idx % colors.length]} ${start}deg ${end}deg`; }).join(", ")})` }} />
               <div className="insights-pie-list">{rows.map((row) => <div key={row.group}><span>{row.label}</span><strong>{row.value} {result.unit ?? ""}</strong></div>)}</div>
             </div>
           )}
@@ -515,8 +517,10 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
         </section>
       ) : (
         <div className="insights-empty-result">
+          <span className="insights-empty-icon" aria-hidden="true">✦</span>
           <strong>{fr ? "Prêt à explorer vos données" : "Ready to explore your data"}</strong>
-          <span>{fr ? "Lancez un calcul ou utilisez le graphique rapide pour afficher les résultats ici." : "Run a calculation or use the quick chart to display results here."}</span>
+          <span>{fr ? "Choisissez une mesure et lancez un calcul pour découvrir ce que racontent vos données." : "Choose a measure and calculate to see the story in your data."}</span>
+          <button type="button" className="btn secondary" onClick={() => document.getElementById("analysis-measure")?.focus()}>{fr ? "Choisir une mesure" : "Choose a measure"}</button>
         </div>
       )}
       <button type="button" className="insights-close" onClick={onClose}>{fr ? "Retour à la collection" : "Back to collection"}</button>

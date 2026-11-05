@@ -1,0 +1,87 @@
+/* Phase 1 finish: use the same theme surfaces in dialogs and advanced tools. */
+html[data-theme], html[data-theme] body { overflow-x: hidden; }
+html[data-theme] .modal,
+html[data-theme] .modal-head,
+html[data-theme] .modal-body { background: var(--dialog-surface); color: var(--ink); }
+html[data-theme] .modal-head { border-bottom: 1px solid var(--line); }
+html[data-theme] .modal-head .icon-button { border-color: var(--control-border); background: var(--surface-elevated); color: var(--ink); }
+html[data-theme] .modal-body { padding-top: 32px; scroll-padding-top: 32px; }
+html[data-theme] .modal-body .modal-form { padding-top: 4px; }
+html[data-theme] .modal-actions { background: var(--dialog-surface); border-top-color: var(--line); }
+html[data-theme] .modal :is(h2,h3,h4,strong,legend,label) { color: var(--ink); }
+html[data-theme] .modal :is(p,small) { color: var(--muted); }
+html[data-theme] .modal :is(input,select,textarea) { border-color: var(--control-border); background: var(--surface); color: var(--ink); }
+html[data-theme] .modal :is(input,select,textarea):focus-visible,
+html[data-theme] .modal :is(button,summary):focus-visible { outline: 2px solid var(--focus) !important; outline-offset: 2px !important; }
+html[data-theme] .modal :is(.units-panel > section,.unit-converter,.object-model-setup,.object-detail,.relation-impact,.linked-objects,.transfer-columns > div,.starter-grid button) { border: 1px solid var(--line) !important; background: var(--surface-elevated) !important; color: var(--ink) !important; }
+html[data-theme] .modal .units-panel :is(h3,p,label),
+html[data-theme] .modal .unit-converter :is(h3,p,label) { color: var(--ink) !important; }
+html[data-theme] .modal :is(.local-unit-list button,.object-list button,.object-reference-results button,.starter-grid button) { border-color: var(--control-border); background: var(--surface); color: var(--ink); }
+html[data-theme] .modal .unit-result { border-color: var(--success); background: var(--surface-elevated); color: var(--ink); }
+html[data-theme] .modal :is(.form-disclosure,.unit-editor-form) { border-top-color: var(--line); }
+html[data-theme] .modal :is(.form-disclosure summary,.form-text-action,.object-model-toggle) { color: var(--ink); }
+html[data-theme] .modal :is(.unit-converter .unit-form > button,.unit-editor-form > button[type=submit],.starter-dialog .modal-actions button:last-child) { border-color: var(--blue); background: var(--blue); color: var(--on-primary); }
+
+html[data-theme] .analysis-page .insights-fields { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+html[data-theme] .insights-section { border-color: var(--line); background: var(--surface); color: var(--ink); }
+html[data-theme] .analysis-page .insights-fields > * { min-width: 0; max-width: 100%; }
+html[data-theme] .analysis-page .insights-fields :is(input,select) { width: 100%; min-width: 0; }
+html[data-theme] .analysis-page :is(.insights-section,.insights-formulas,.insights-quick-start,.insights-chart,.insights-empty-result) { border-color: var(--line); background: var(--surface); color: var(--ink); }
+html[data-theme] .analysis-page :is(h3,h4,strong,.insights-formulas summary) { color: var(--ink); }
+html[data-theme] .analysis-page :is(p,small,.insights-axis-label,.insights-empty-result span:not(.insights-empty-icon)) { color: var(--muted); }
+html[data-theme] .analysis-page .insights-empty-result { border-style: dashed; gap: 12px; }
+html[data-theme] .analysis-page .insights-empty-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 12px; background: var(--accent-soft); color: var(--blue); font-size: 26px; }
+html[data-theme] .analysis-page .insights-empty-result .btn { margin-top: 8px; border-color: var(--control-border); background: var(--surface-elevated); color: var(--ink); }
+html[data-theme] .analysis-page .insights-actions .primary { border-color: var(--blue); background: var(--blue); color: var(--on-primary); }
+html[data-theme] .analysis-page .insights-quick-start .insights-quick,
+html[data-theme] .analysis-page .insights-actions :is(.secondary,.insights-quick),
+html[data-theme] .analysis-page .forecast-section .secondary { border-color: var(--control-border); background: var(--surface-elevated); color: var(--ink); }
+html[data-theme] .analysis-page .insights-pie-list > div,
+html[data-theme] .analysis-page .insights-table-wrap :is(td,th) { border-bottom-color: var(--line); }
+html[data-theme] .analysis-page .insights-bar div { background: var(--hover); }
+html[data-theme] .analysis-page .insights-bar i { background: var(--chart-1); }
+
+html[data-theme] .format-color-picker,
+html[data-theme] .contribution-box fieldset,
+html[data-theme] .view-choices,
+html[data-theme] .share-properties,
+html[data-theme] .workflow-required,
+html[data-theme] .sensitivity-box fieldset { min-width: 0; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-elevated); }
+html[data-theme] :is(.format-color-picker,.contribution-box fieldset,.view-choices,.share-properties,.workflow-required,.sensitivity-box fieldset) legend { padding: 0 6px; color: var(--ink); font-size: 14px; font-weight: 700; }
+html[data-theme] .format-color-picker p { color: var(--muted); }
+html[data-theme] .format-color-option { width: 44px; height: 44px; border: 2px solid var(--control-border); color: var(--on-pastel); }
+html[data-theme] .format-color-option.selected { outline: 2px solid var(--focus); outline-offset: 2px; }
+html[data-theme] .format-color-option:disabled { opacity: 1; border-style: dashed; cursor: not-allowed; }
+html[data-theme] .contribution-check { min-height: 44px; align-items: center; cursor: pointer; }
+html[data-theme] .contribution-check input,
+html[data-theme] :is(.view-choices,.share-properties,.workflow-required,.sensitivity-box) input[type=checkbox] { appearance: none; width: 22px; height: 22px; flex: none; margin: 0; border: 2px solid var(--control-border); border-radius: 5px; background: var(--surface); cursor: pointer; }
+html[data-theme] :is(.contribution-check,.view-choices,.share-properties,.workflow-required,.sensitivity-box) input[type=checkbox]:checked { border-color: var(--blue); background: var(--blue); box-shadow: inset 0 0 0 4px var(--surface); }
+html[data-theme] :is(.contribution-check,.view-choices,.share-properties,.workflow-required,.sensitivity-box) input[type=checkbox]:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+html[data-theme] :is(.view-choices,.share-properties,.workflow-required,.sensitivity-box) label:has(> input[type=checkbox]) { min-height: 44px; display: inline-flex; align-items: center; gap: 10px; }
+
+html[data-theme] .action-help { display: block; margin: 8px 0; color: var(--muted) !important; font-size: 14px; }
+html[data-theme] :is(.analysis-page,.modal,.contribution-panel,.classification-panel,.entry-links-dialog) button:disabled { opacity: 1; border-color: var(--control-border); background: var(--surface-elevated); color: var(--muted); cursor: not-allowed; }
+html[data-theme] .classification-table-wrap .code-remove { display: grid; place-items: center; width: 44px; min-width: 44px; height: 44px; padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--danger); font-size: 22px; }
+html[data-theme] .classification-table-wrap .code-remove:hover { border-color: var(--danger); background: var(--hover); }
+html[data-theme] .classification-panel { width: 100%; max-width: 100%; min-width: 0; grid-template-columns: minmax(0, 1fr); overflow-x: clip; }
+html[data-theme] .classification-panel > * { min-width: 0; }
+html[data-theme] .classification-table-wrap { width: 100%; max-width: 100%; min-width: 0; margin-inline: 0; overflow-x: auto; }
+html[data-theme] .app-shell:has(.classification-panel) { overflow-x: clip; }
+html[data-theme] .contribution-box button:disabled,
+html[data-theme] .analysis-page button:disabled { opacity: 1 !important; border-color: var(--control-border) !important; background: var(--surface-elevated) !important; color: var(--muted) !important; }
+html[data-theme] :is(.geo-map-view,.sensitivity-box,.workflow-page) button:disabled { opacity: 1; border-color: var(--control-border); background: var(--surface-elevated); color: var(--muted); cursor: not-allowed; }
+
+html[data-theme] summary { position: relative; list-style: none !important; padding-right: 34px; cursor: pointer; }
+html[data-theme] summary::marker { content: ""; }
+html[data-theme] summary::-webkit-details-marker { display: none; }
+html[data-theme] summary::after { content: ""; position: absolute; right: 12px; top: 50%; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: translateY(-70%) rotate(45deg); transition: transform 160ms ease; }
+html[data-theme] details[open] > summary::after { transform: translateY(-30%) rotate(225deg); }
+html[data-theme] summary:focus-visible { outline: 2px solid var(--focus) !important; outline-offset: 2px !important; }
+html[data-theme] .language-picker summary > svg:last-child { display: none; }
+html[data-theme] .app-shell .collection-section-nav { border-bottom: 0; }
+html[data-theme] .app-shell .collection-tools-toggle { background: var(--surface); border-color: var(--line); }
+html[data-theme] .app-shell .tools-toggle-icon { background: var(--surface-elevated); color: var(--blue); }
+@media (max-width: 420px) { html[data-theme] .analysis-page .insights-fields { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { html[data-theme] summary::after { transition: none; } }
+
+html[data-theme] .app-shell .entry-more summary { width: 44px; height: 44px; min-width: 44px; }

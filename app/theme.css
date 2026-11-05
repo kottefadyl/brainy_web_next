@@ -28,6 +28,7 @@
   --warning: #8A5A00;
   --info: #2463CE;
   --on-tint: #20242C;
+  --on-pastel: #20242C;
   --chart-1: #2463CE;
   --chart-2: #0F8F72;
   --chart-3: #B9730A;
@@ -72,6 +73,7 @@ html[data-theme="dark"] {
   --warning: #F2C26B;
   --info: #96BDFF;
   --on-tint: #F1F3F7;
+  --on-pastel: #20242C;
   --chart-1: #7FB0FF;
   --chart-2: #5FD1B2;
   --chart-3: #F2B968;

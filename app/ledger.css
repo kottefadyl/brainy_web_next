@@ -1,20 +1,20 @@
 .ledger-panel { width: 100%; max-width: 860px; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; padding-bottom: 36px; }
 .ledger-panel > * { min-width: 0; }
 .ledger-panel header h1 { margin: 0 0 8px; }
-.ledger-panel header p { margin: 0; color: var(--muted, #596577); }
+.ledger-panel header p { margin: 0; color: var(--muted); }
 .ledger-panel label { display: grid; gap: 6px; font-weight: 600; }
-.ledger-panel input:not([type="checkbox"]), .ledger-panel select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border, #a8b2c2); border-radius: 8px; background: var(--surface, #fff); color: inherit; }
-.ledger-panel button { min-height: 44px; padding: 8px 14px; border: 1px solid var(--border, #9da9bc); border-radius: 8px; background: var(--surface, #fff); color: inherit; cursor: pointer; }
-.ledger-panel button:focus-visible, .ledger-panel input:focus-visible, .ledger-panel select:focus-visible { outline: 3px solid var(--focus, #3584e4); outline-offset: 2px; }
+.ledger-panel input:not([type="checkbox"]), .ledger-panel select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: inherit; }
+.ledger-panel button { min-height: 44px; padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: inherit; cursor: pointer; }
+.ledger-panel button:focus-visible, .ledger-panel input:focus-visible, .ledger-panel select:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .ledger-panel button:disabled { opacity: .55; cursor: default; }
-.ledger-box { display: grid; gap: 12px; padding: 20px; border: 1px solid var(--border, #a8b2c2); border-radius: 12px; background: var(--surface, #fff); }
+.ledger-box { display: grid; gap: 12px; padding: 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
 .ledger-box h2, .ledger-box p { margin: 0; }
 .ledger-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .ledger-list { margin: 0; padding-left: 24px; display: grid; gap: 18px; }
-.ledger-list li { padding-block: 10px; border-bottom: 1px solid var(--border, #a8b2c2); overflow-wrap: anywhere; }
+.ledger-list li { padding-block: 10px; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
 .ledger-list dl { display: grid; gap: 4px; margin: 10px 0; }
 .ledger-list dl div { display: grid; grid-template-columns: minmax(100px, 1fr) 2fr; gap: 8px; }
-.ledger-list dt { color: var(--muted, #596577); }
+.ledger-list dt { color: var(--muted); }
 .ledger-list dd { margin: 0; white-space: pre-wrap; }
 .ledger-check { display: flex !important; align-items: center; gap: 10px; min-height: 44px; }
 .ledger-check input { width: 20px; height: 20px; }
