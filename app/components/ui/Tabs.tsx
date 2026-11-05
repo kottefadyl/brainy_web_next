@@ -3,9 +3,9 @@
 import { useRef } from "react";
 
 export type TabItem = { id: string; label: string; disabled?: boolean };
-type Props = { label: string; items: readonly TabItem[]; value: string; onChange: (id: string) => void; className?: string };
+type Props = { label: string; items: readonly TabItem[]; value: string; onChange: (id: string) => void; className?: string; idPrefix?: string };
 
-export function Tabs({ label, items, value, onChange, className = "" }: Props) {
+export function Tabs({ label, items, value, onChange, className = "", idPrefix }: Props) {
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
   function move(index: number, direction: number) {
     for (let offset = 1; offset <= items.length; offset++) {
@@ -18,7 +18,7 @@ export function Tabs({ label, items, value, onChange, className = "" }: Props) {
     if (target) { onChange(target.id); refs.current[target.id]?.focus(); }
   }
   return <div role="tablist" aria-label={label} className={`ui-tabs ${className}`.trim()}>
-    {items.map((item, index) => <button key={item.id} ref={(element) => { refs.current[item.id] = element; }} type="button" role="tab" className="ui-tab" aria-selected={value === item.id} tabIndex={value === item.id ? 0 : -1} disabled={item.disabled} onClick={() => onChange(item.id)} onKeyDown={(event) => {
+    {items.map((item, index) => <button key={item.id} ref={(element) => { refs.current[item.id] = element; }} type="button" role="tab" id={idPrefix ? `${idPrefix}-tab-${item.id}` : undefined} aria-controls={idPrefix ? `${idPrefix}-${item.id}` : undefined} className="ui-tab" aria-selected={value === item.id} tabIndex={value === item.id ? 0 : -1} disabled={item.disabled} onClick={() => onChange(item.id)} onKeyDown={(event) => {
       if (event.key === "ArrowRight") { event.preventDefault(); move(index, 1); }
       if (event.key === "ArrowLeft") { event.preventDefault(); move(index, -1); }
       if (event.key === "Home") { event.preventDefault(); edge(false); }

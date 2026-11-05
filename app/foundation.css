@@ -1,6 +1,6 @@
 /* Shared controls and presentation primitives. Color values live in theme.css. */
 button, input, select, textarea { font-family: inherit; }
-input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="range"]):not([type="color"]):not([type="image"]),
+input:where(:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="range"]):not([type="color"]):not([type="image"])),
 select, textarea {
   min-height: 44px;
   border: 1px solid var(--control-border) !important;

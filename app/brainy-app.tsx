@@ -2,9 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
 import {
-  ArrowLeft, ArrowRight, Bell, BookOpen, CalendarDays, ChartNoAxesCombined, Check, ChevronDown, FileText,
-  FolderHeart, Globe2, LogOut, Moon, MoreHorizontal, Pencil, Plus,
-  RefreshCw, SlidersHorizontal, Sparkles, Sun, X,
+  ArrowLeft, ArrowRight, Bell, BookOpen, CalendarDays, ChartNoAxesCombined, Check, ChevronDown,
+  FolderHeart, Globe2, Pencil, Plus, Sparkles, X,
 } from "lucide-react";
 import { api, ApiError } from "../lib/api";
 import { formatColorStyle } from "../lib/format-colors";
@@ -17,8 +16,14 @@ import ContributionPanel from "./contribution-panel";
 import LedgerPanel from "./ledger-panel";
 import SensitivityPanel from "./sensitivity-panel";
 import CollectionToolsHub from "./collection-tools-hub";
-import CollectionHeroActions from "./collection-hero-actions";
-import CollectionSidebar from "./collection-sidebar";
+import { AppShell } from "./components/shell/AppShell";
+import { Sidebar } from "./components/shell/Sidebar";
+import { TopBar } from "./components/shell/TopBar";
+import { MobileCollectionDrawer } from "./components/shell/MobileCollectionDrawer";
+import { CollectionHeader } from "./components/shell/CollectionHeader";
+import { CollectionTabs, CollectionTabPanel, type CollectionTab } from "./components/shell/CollectionTabs";
+import { ThemeToggle, type ColorMode } from "./components/shell/ThemeToggle";
+import { useThemeMode } from "./components/shell/useThemeMode";
 import CollectionFormatsSection from "./collection-formats-section";
 import EntryRowActions from "./entry-row-actions";
 import EntryDetailsContent from "./entry-details-content";
@@ -152,13 +157,6 @@ function LanguagePicker({ language, onChange }: { language: Language; onChange: 
       </div>
     </details>
   );
-}
-
-type ColorMode = "light" | "dark";
-function ThemeToggle({ language, mode, onChange }: { language: Language; mode: ColorMode; onChange: (mode: ColorMode) => void }) {
-  const next = mode === "dark" ? "light" : "dark";
-  const label = language === "fr" ? next === "dark" ? "Activer le thème sombre" : "Activer le thème clair" : next === "dark" ? "Use dark theme" : "Use light theme";
-  return <button type="button" className="theme-toggle" onClick={() => onChange(next)} title={label} aria-label={label}>{mode === "dark" ? <Sun size={18} /> : <Moon size={18} />}<span>{language === "fr" ? mode === "dark" ? "Clair" : "Sombre" : mode === "dark" ? "Light" : "Dark"}</span></button>;
 }
 
 function Button({ children, variant = "primary", className = "", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "subtle" | "danger" }) {
@@ -1038,11 +1036,7 @@ function CalendarView({ collection, view, language, refreshToken, onEdit, onRemi
 
 export default function BrainyApp() {
   const [language, setLanguage] = useState<Language>("en");
-  const [colorMode, setColorMode] = useState<ColorMode>(() => {
-    if (typeof window === "undefined") return "light";
-    const saved = window.localStorage.getItem("brainy_theme");
-    return saved === "light" || saved === "dark" ? saved : window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  });
+  const [colorMode, chooseColorMode] = useThemeMode();
   const [booting, setBooting] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -1073,22 +1067,27 @@ export default function BrainyApp() {
   const [rename, setRename] = useState("");
   const [notice, setNotice] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [mobileCollectionQuery, setMobileCollectionQuery] = useState("");
-  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const [drawerMounted, setDrawerMounted] = useState(false);
+  const drawerTimer = useRef<number | null>(null);
   const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
+  const [tabSelection, setTabSelection] = useState<{ collectionId: string | null; tab: CollectionTab }>({ collectionId: null, tab: "entries" });
   const [profileEditing, setProfileEditing] = useState(false);
   const entryGeneration = useRef(0);
   const [calendarRefresh, setCalendarRefresh] = useState(0);
   const selected = useMemo(() => collections.find((item) => item.id === selectedId) ?? null, [collections, selectedId]);
+  const collectionTab = tabSelection.collectionId === selectedId ? tabSelection.tab : "entries";
+  function openMenu() {
+    if (drawerTimer.current !== null) window.clearTimeout(drawerTimer.current);
+    setDrawerMounted(true);
+    setMenuOpen(true);
+  }
+  function closeMenu() {
+    setMenuOpen(false);
+    if (drawerTimer.current !== null) window.clearTimeout(drawerTimer.current);
+    drawerTimer.current = window.setTimeout(() => { setDrawerMounted(false); drawerTimer.current = null; }, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 240);
+  }
+  useEffect(() => () => { if (drawerTimer.current !== null) window.clearTimeout(drawerTimer.current); }, []);
   useEffect(() => { window.scrollTo(0, 0); }, [activeSection, selectedId]);
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") { setMenuOpen(false); mobileMenuButtonRef.current?.focus(); } };
-    const onPointer = (event: PointerEvent) => { if (!mobileMenuRef.current?.contains(event.target as Node) && !mobileMenuButtonRef.current?.contains(event.target as Node)) setMenuOpen(false); };
-    document.addEventListener("keydown", onKey);
-    document.addEventListener("pointerdown", onPointer);
-    return () => { document.removeEventListener("keydown", onKey); document.removeEventListener("pointerdown", onPointer); };
-  }, [menuOpen]);
   const selectedView = selected?.savedViews?.find((item) => item.id === selectedViewId);
   const filterFormat = selected?.formats.find((item) => item.id === filterFormatId);
   const filterField = filterFormat?.fields.find((item) => item.id === filterFieldId);
@@ -1101,7 +1100,6 @@ export default function BrainyApp() {
     api.me().then(setUser).catch(() => {}).finally(() => setBooting(false));
   }, []);
   useEffect(() => { document.documentElement.lang = language; window.localStorage.setItem("brainy_language", language); }, [language]);
-  useEffect(() => { document.documentElement.dataset.theme = colorMode; window.localStorage.setItem("brainy_theme", colorMode); }, [colorMode]);
   useEffect(() => {
     if (!user?.profileCompleted) return;
     const url = new URL(window.location.href);
@@ -1230,20 +1228,15 @@ export default function BrainyApp() {
   }
 
   if (booting) return <div className="boot-screen"><Brand /><div className="boot-spinner" /><p>{t(language, "loading")}</p></div>;
-  if (!user) return <AuthScreen language={language} onLanguage={setLanguage} colorMode={colorMode} onColorMode={setColorMode} onAuthenticated={setUser} />;
-  if (!user.profileCompleted || profileEditing) return <ProfileScreen user={user} language={language} onLanguage={setLanguage} colorMode={colorMode} onColorMode={setColorMode} onSaved={(updated) => { setUser(updated); setProfileEditing(false); }} onCancel={user.profileCompleted ? () => setProfileEditing(false) : undefined} onSignOut={signOut} />;
+  if (!user) return <AuthScreen language={language} onLanguage={setLanguage} colorMode={colorMode} onColorMode={chooseColorMode} onAuthenticated={setUser} />;
+  if (!user.profileCompleted || profileEditing) return <ProfileScreen user={user} language={language} onLanguage={setLanguage} colorMode={colorMode} onColorMode={chooseColorMode} onSaved={(updated) => { setUser(updated); setProfileEditing(false); }} onCancel={user.profileCompleted ? () => setProfileEditing(false) : undefined} onSignOut={signOut} />;
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="sidebar-top"><Brand /><p>{t(language, "tagline")}</p></div>
-        <CollectionSidebar collections={collections} selectedId={selectedId} loading={loadingCollections} language={language} onSelect={selectCollection} onTemplate={() => setDialog({ kind: "starter" })} onManual={() => setDialog({ kind: "collection" })} onTransfer={() => setDialog({ kind: "transfer" })} onTools={() => setDialog({ kind: "workspaceTools" })} />
-        <div className="sidebar-bottom"><div className="profile-avatar">{user.name.charAt(0).toUpperCase()}</div><button type="button" className="profile-info profile-edit-button" onClick={() => setProfileEditing(true)} title={t(language, "editProfile")}><strong>{user.name}</strong><span>{user.email}</span></button><button type="button" className="icon-button" onClick={signOut} title={t(language, "signOut")} aria-label={t(language, "signOut")}><LogOut size={18} /></button></div>
-      </aside>
-
+    <AppShell>
+      <Sidebar brand={<Brand />} collections={collections} selectedId={selectedId} loading={loadingCollections} language={language} userName={user.name} userEmail={user.email} onSelect={selectCollection} onTemplate={() => setDialog({ kind: "starter" })} onManual={() => setDialog({ kind: "collection" })} onTransfer={() => setDialog({ kind: "transfer" })} onTools={() => setDialog({ kind: "workspaceTools" })} onEditProfile={() => setProfileEditing(true)} onSignOut={signOut} />
       <main className="workspace">
-        <header className="topbar"><div className="mobile-brand"><Brand compact /></div><span className="topbar-path">{t(language, "workspace")}{selected && <><span className="slash">/</span><strong>{selected.name}</strong></>}</span><div className="topbar-right"><button type="button" className="quick-topbar" onClick={() => { setSharedContent(undefined); setQuickCapture(true); }}>{language === "fr" ? "Capturer" : "Capture"}</button><ThemeToggle language={language} mode={colorMode} onChange={setColorMode} /><LanguagePicker language={language} onChange={setLanguage} /><button type="button" className="icon-button refresh-button" onClick={refresh} aria-label={t(language, "refresh")} title={t(language, "refresh")}><RefreshCw size={18} /></button><button type="button" ref={mobileMenuButtonRef} className="mobile-menu-button" onClick={() => setMenuOpen(!menuOpen)} aria-label={t(language, "menu")} aria-expanded={menuOpen} aria-controls="mobile-collection-menu"><MoreHorizontal size={22} /></button></div></header>
-        {menuOpen && <div id="mobile-collection-menu" ref={mobileMenuRef} className="mobile-menu"><div className="mobile-menu-title">{t(language, "collections")}</div><label className="mobile-menu-search"><span className="sr-only">{language === "fr" ? "Rechercher une collection" : "Search collections"}</span><input type="search" value={mobileCollectionQuery} onChange={(event) => setMobileCollectionQuery(event.target.value)} placeholder={language === "fr" ? "Rechercher…" : "Search…"} /></label><div className="mobile-menu-list">{collections.filter((item) => item.name.toLocaleLowerCase(language).includes(mobileCollectionQuery.trim().toLocaleLowerCase(language))).map((item) => <button key={item.id} type="button" aria-current={selectedId === item.id ? "page" : undefined} onClick={() => { selectCollection(item.id); setMenuOpen(false); }}>{item.name}</button>)}{mobileCollectionQuery && !collections.some((item) => item.name.toLocaleLowerCase(language).includes(mobileCollectionQuery.trim().toLocaleLowerCase(language))) && <p className="mobile-menu-empty">{language === "fr" ? "Aucune collection trouvée" : "No matching collections"}</p>}</div><div className="mobile-menu-actions"><button type="button" onClick={() => { setDialog({ kind: "starter" }); setMenuOpen(false); }}><Plus size={16} />{t(language, "newCollection")}</button><button type="button" onClick={() => { setDialog({ kind: "collection" }); setMenuOpen(false); }}>{language === "fr" ? "Créer manuellement" : "Create manually"}</button><button type="button" onClick={() => { setDialog({ kind: "workspaceTools" }); setMenuOpen(false); }}><SlidersHorizontal size={16} />{language === "fr" ? "Outils de l’espace" : "Workspace tools"}</button><button type="button" onClick={() => { setProfileEditing(true); setMenuOpen(false); }}><Pencil size={16} />{t(language, "editProfile")}</button><button type="button" onClick={signOut}><LogOut size={16} />{t(language, "signOut")}</button></div></div>}
+        <TopBar brand={<Brand compact />} selectedName={selected?.name} language={language} themeControl={<ThemeToggle language={language} mode={colorMode} onChange={chooseColorMode} />} languageControl={<LanguagePicker language={language} onChange={setLanguage} />} refreshBusy={loadingCollections} menuOpen={menuOpen} menuButtonRef={mobileMenuButtonRef} onCapture={() => { setSharedContent(undefined); setQuickCapture(true); }} onRefresh={() => { void refresh(); }} onToggleMenu={menuOpen ? closeMenu : openMenu} />
+        {drawerMounted && <MobileCollectionDrawer open={menuOpen} collections={collections} selectedId={selectedId} language={language} triggerRef={mobileMenuButtonRef} onClose={closeMenu} onSelect={selectCollection} onTemplate={() => setDialog({ kind: "starter" })} onManual={() => setDialog({ kind: "collection" })} onTools={() => setDialog({ kind: "workspaceTools" })} onEditProfile={() => setProfileEditing(true)} onSignOut={signOut} />}
 
         <div className="workspace-body">
           {activeSection === "collection" && !selected && <div className="workspace-greeting"><span className="eyebrow blue"><Sparkles size={15} /> {t(language, "workspace")}</span><h1>{t(language, "workspace")}<span className="heading-sparkle">✳</span></h1><p>{t(language, "collectionSubtitle")}</p></div>}
@@ -1264,8 +1257,9 @@ export default function BrainyApp() {
             <OfflineSyncPanel userId={user.id} collections={collections} language={language} onSynced={() => { void refresh(); }} />
 
 
-            <section className="collection-hero"><div className="collection-hero-main"><div className="collection-icon"><FolderHeart size={27} /></div><div><span className="eyebrow">{t(language, "collection")}</span><h2>{selected.name}</h2><div className="collection-meta"><span><FileText size={15} /> {entries.length} {t(language, "entries")}</span><span>{selected.formats.length} {t(language, selected.formats.length === 1 ? "format" : "formats")}</span></div></div></div><CollectionHeroActions language={language} onNewEntry={() => setDialog({ kind: "entry" })} onInsights={() => setActiveSection("insights")} onRename={() => { setRename(selected.name); setDialogError(""); setDialog({ kind: "rename" }); }} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteCollection" }); }} /></section>
-            <nav className="collection-section-nav" aria-label={language === "fr" ? "Sections de la collection" : "Collection sections"}><a href="#collection-entries">{t(language, "entries")}</a><a href="#collection-formats">{t(language, "formats")}</a><a href="#collection-tools">{language === "fr" ? "Outils" : "Tools"}</a></nav>
+            <CollectionHeader collection={selected} entryCount={entries.length} language={language} onNewEntry={() => setDialog({ kind: "entry" })} onInsights={() => setActiveSection("insights")} onRename={() => { setRename(selected.name); setDialogError(""); setDialog({ kind: "rename" }); }} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteCollection" }); }} />
+            <CollectionTabs language={language} value={collectionTab} onChange={(tab) => setTabSelection({ collectionId: selectedId, tab })} />
+            <CollectionTabPanel tab="entries" active={collectionTab === "entries"}>
             <div id="collection-entries" className="entries-heading"><div><span className="section-overline">{t(language, "savedEntries")}</span><h2>{t(language, "entries")} <span>{language === "fr" ? "Page" : "Page"} {previousPages.length + 1} · {entries.length}{nextCursor ? "+" : ""}</span></h2></div><Button variant="secondary" onClick={() => setQuickEntry(true)}>{language === "fr" ? "Saisie rapide" : "Quick entry"}</Button></div>
             <div className="saved-view-bar">
               <label>{language === "fr" ? "Vue" : "View"}<select value={selectedViewId} onChange={(event) => setSelectedViewId(event.target.value)}><option value="">{language === "fr" ? "Liste par défaut" : "Default list"}</option>{selected.savedViews?.map((view) => <option key={view.id} value={view.id}>{view.name}</option>)}</select></label>
@@ -1282,8 +1276,9 @@ export default function BrainyApp() {
               {selectedView?.layout === "TASKS" ? <div className="task-list">{entries.map((entry) => { const titleField = selected.formats.find((item) => item.id === entry.formatId)?.fields.find((field) => field.kind === "TITLE"); const done = entry.values.find((item) => item.fieldId === selectedView.taskDoneFieldId)?.value === "true"; const due = entry.values.find((item) => item.fieldId === selectedView.taskDueFieldId)?.value; const priority = entry.values.find((item) => item.fieldId === selectedView.taskPriorityFieldId)?.value; return <div key={entry.id} className="task-row"><label><input type="checkbox" checked={done} onChange={async (event) => { try { const updated = await api.setTaskCompleted(selected.id, selectedView.id, entry.id, event.target.checked); setEntries((current) => current.map((item) => item.id === updated.id ? updated : item)); } catch (cause) { setLoadError(cause); } }} /><span className={done ? "done" : ""}>{entry.values.find((item) => item.fieldId === titleField?.id)?.value ?? selected.formats.find((item) => item.id === entry.formatId)?.name}</span></label>{priority && <small>{priority}</small>}{due && <time>{due.slice(0, 16).replace("T", " ")}</time>}<button type="button" onClick={() => setDialog({ kind: "reminder", entry })}><Bell size={15} /> {language === "fr" ? "Rappel" : "Reminder"}</button><button type="button" onClick={() => entry.ledgerHash ? setActiveSection("ledger") : setDialog({ kind: "entry", entry })}>{entry.ledgerHash ? language === "fr" ? "Ouvrir le registre" : "Open register" : t(language, "edit")}</button></div>; })}</div> : selectedView?.layout === "TABLE" ? <div className="saved-view-table-wrap"><table className="saved-view-table"><thead><tr><th>{language === "fr" ? "Format de données" : "Data format"}</th><th>{language === "fr" ? "Créée" : "Created"}</th>{selectedView.columnFieldIds.map((fieldId) => <th key={fieldId}>{selected.formats.flatMap((format) => format.fields).find((field) => field.id === fieldId)?.name ?? fieldId}</th>)}<th>{language === "fr" ? "Action" : "Action"}</th></tr></thead><tbody>{entries.map((entry) => <tr key={entry.id}><td>{selected.formats.find((format) => format.id === entry.formatId)?.name}</td><td>{dateTime(entry.createdAt, language)}</td>{selectedView.columnFieldIds.map((fieldId) => { const format = selected.formats.find((item) => item.id === entry.formatId); const field = format?.fields.find((item) => item.id === fieldId); const value = entry.values.find((item) => item.fieldId === fieldId); return <td key={fieldId}>{field && value ? formatFieldValue(field, value.value, language, value.unitSnapshot) : "—"}</td>; })}<td><button type="button" onClick={() => entry.ledgerHash ? setActiveSection("ledger") : setDialog({ kind: "entry", entry })}>{entry.ledgerHash ? language === "fr" ? "Ouvrir le registre" : "Open register" : t(language, "edit")}</button></td></tr>)}</tbody></table></div> : selectedView?.groupByFormat ? selected.formats.filter((format) => entries.some((entry) => entry.formatId === format.id)).map((format) => <section key={format.id} className="saved-view-group"><h3>{format.name}</h3><div className={selectedView.layout === "LIST" ? "entry-grid saved-view-list" : "entry-grid"}>{entries.filter((entry) => entry.formatId === format.id).map((entry) => <EntryCard key={entry.id} entry={entry} collection={selected} language={language} onDetails={() => setDialog({ kind: "entryDetails", entry })} onEdit={() => entry.ledgerHash ? setActiveSection("ledger") : setDialog({ kind: "entry", entry })} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteEntry", entry }); }} onCopy={() => copy(entry)} onLinks={() => setDialog({ kind: "entryLinks", entry })} onReminder={selected.formats.find((item) => item.id === entry.formatId)?.fields.some((field) => ["DATE", "DATETIME"].includes(field.kind) && entry.values.some((value) => value.fieldId === field.id)) ? () => setDialog({ kind: "reminder", entry }) : undefined} />)}</div></section>) : <div className={!selectedView || selectedView.layout === "LIST" ? "entry-grid saved-view-list" : "entry-grid"}>{entries.map((entry) => <EntryCard key={entry.id} entry={entry} collection={selected} language={language} onDetails={() => setDialog({ kind: "entryDetails", entry })} onEdit={() => entry.ledgerHash ? setActiveSection("ledger") : setDialog({ kind: "entry", entry })} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteEntry", entry }); }} onCopy={() => copy(entry)} onLinks={() => setDialog({ kind: "entryLinks", entry })} onReminder={selected.formats.find((item) => item.id === entry.formatId)?.fields.some((field) => ["DATE", "DATETIME"].includes(field.kind) && entry.values.some((value) => value.fieldId === field.id)) ? () => setDialog({ kind: "reminder", entry }) : undefined} />)}</div>}
               {(nextCursor || previousPages.length > 0) && <div className="more-entries">{previousPages.length > 0 && <Button variant="secondary" onClick={loadPreviousEntries} disabled={loadingMore}>{language === "fr" ? "Page précédente" : "Previous page"}</Button>}{nextCursor && <Button variant="secondary" onClick={loadMoreEntries} disabled={loadingMore}>{loadingMore ? t(language, "loading") : language === "fr" ? "Page suivante" : "Next page"}</Button>}</div>}
             </> : <div className="empty-state entries-empty"><div className="empty-art"><BookOpen size={46} strokeWidth={1.4} /></div><h2>{search || filterFormatId || selectedView ? t(language, "noMatches") : t(language, "noEntries")}</h2><p>{search || filterFormatId || selectedView ? "" : t(language, "noEntriesDetail")}</p>{!search && !filterFormatId && !selectedView && <Button variant="secondary" onClick={() => setDialog({ kind: "entry" })}><Plus size={17} /> {t(language, "writeEntry")}</Button>}</div>}
-            <div id="collection-formats"><CollectionFormatsSection collection={selected} language={language} onAdd={() => setDialog({ kind: "addFormat" })} onEdit={(formatId) => setDialog({ kind: "editFormat", formatId })} onColor={(formatId) => setDialog({ kind: "formatColor", formatId })} onCopy={(formatId) => setDialog({ kind: "copyFormat", formatId })} onLink={(formatId) => setDialog({ kind: "linkFormat", formatId })} onReviewUpdate={(formatId) => setDialog({ kind: "linkedFormatUpdate", formatId })} /></div>
-            <div id="collection-tools"><CollectionToolsHub collection={selected} user={user} language={language} onOpenSection={setActiveSection} onOpenDialog={(kind) => setDialog({ kind })} /></div>
+            </CollectionTabPanel>
+            <CollectionTabPanel tab="formats" active={collectionTab === "formats"}><CollectionFormatsSection collection={selected} language={language} onAdd={() => setDialog({ kind: "addFormat" })} onEdit={(formatId) => setDialog({ kind: "editFormat", formatId })} onColor={(formatId) => setDialog({ kind: "formatColor", formatId })} onCopy={(formatId) => setDialog({ kind: "copyFormat", formatId })} onLink={(formatId) => setDialog({ kind: "linkFormat", formatId })} onReviewUpdate={(formatId) => setDialog({ kind: "linkedFormatUpdate", formatId })} /></CollectionTabPanel>
+            <CollectionTabPanel tab="tools" active={collectionTab === "tools"}><CollectionToolsHub collection={selected} user={user} language={language} onOpenSection={setActiveSection} onOpenDialog={(kind) => setDialog({ kind })} /></CollectionTabPanel>
           </>}
         </div>
       </main>
@@ -1320,6 +1315,6 @@ export default function BrainyApp() {
       )}
       {dialog?.kind === "deleteEntry" && <Modal title={t(language, "deleteEntryQuestion")} closeLabel={t(language, "close")} onClose={() => setDialog(null)}><div className="confirm-body"><p>{t(language, "deleteEntryDetail")}</p>{dialogError && <div className="form-error" role="alert">{dialogError}</div>}<div className="modal-actions"><Button variant="secondary" onClick={() => setDialog(null)}>{t(language, "cancel")}</Button><Button variant="danger" disabled={busy} onClick={() => removeEntry(dialog.entry)}>{t(language, "deleteEntry")}</Button></div></div></Modal>}
       {dialog?.kind === "entryDetails" && selected && <Modal title={(() => { const format = formatForEntry(selected, dialog.entry); const title = format.fields.find((field) => field.kind === "TITLE" && dialog.entry.values.some((value) => value.fieldId === field.id && value.value.trim())); return title ? dialog.entry.values.find((value) => value.fieldId === title.id)?.value ?? formatDisplayName(format, language) : formatDisplayName(format, language); })()} closeLabel={t(language, "close")} onClose={() => setDialog(null)} size="wide"><EntryDetailsContent entry={dialog.entry} collection={selected} language={language} renderReference={(field) => <EntryReferenceDetails entry={dialog.entry} field={field} language={language} />} onDownload={(field) => downloadAttachment(dialog.entry.id, field.id).catch((cause) => window.alert(errorMessage(cause, language)))} /><div className="modal-actions entry-detail-actions"><Button variant="secondary" onClick={() => copy(dialog.entry)}>{t(language, "copyEntry")}</Button><Button onClick={() => dialog.entry.ledgerHash ? (setDialog(null), setActiveSection("ledger")) : setDialog({ kind: "entry", entry: dialog.entry })}>{dialog.entry.ledgerHash ? language === "fr" ? "Ouvrir le registre" : "Open register" : t(language, "edit")}</Button></div></Modal>}
-    </div>
+    </AppShell>
   );
 }

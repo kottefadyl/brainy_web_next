@@ -1,17 +1,6 @@
 /* Workspace palette: Fedora-inspired blue, calm surfaces, and format-owned color. */
 .app-shell {
   grid-template-columns: clamp(250px, 22vw, 292px) minmax(0, 1fr);
-  --bg: #F8F9FB;
-  --surface: #FFFFFF;
-  --surface-elevated: #FFFFFF;
-  --surface-soft: #F0F3F8;
-  --hover: #E9EDF4;
-  --ink: #1D2B42;
-  --muted: #52657F;
-  --line: #D4E1F0;
-  --border: #D4E1F0;
-  --control-border: #7186A2;
-  --blue-soft: #DCEBFF;
   background: var(--bg);
 }
 
@@ -363,20 +352,6 @@
   background: #E9F2FF;
   border-color: #9CBFED;
   color: #20549A;
-}
-
-html[data-theme="dark"] .app-shell {
-  --bg: #19191B;
-  --surface: #242427;
-  --surface-elevated: #2F2F33;
-  --surface-soft: #2A2A2E;
-  --hover: #39393E;
-  --ink: #F2F2F4;
-  --muted: #BFC0C6;
-  --line: #49494F;
-  --border: #49494F;
-  --control-border: #85858E;
-  --blue-soft: #263A59;
 }
 
 html[data-theme="dark"] .app-shell .workspace {

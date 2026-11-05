@@ -1,0 +1,35 @@
+import type { ReactNode } from "react";
+import { LogOut } from "lucide-react";
+import { t, type Collection, type Language } from "../../../lib/brainy";
+import CollectionSidebar from "../../collection-sidebar";
+
+type Props = {
+  brand: ReactNode;
+  collections: Collection[];
+  selectedId: string | null;
+  loading: boolean;
+  language: Language;
+  userName: string;
+  userEmail: string;
+  onSelect: (id: string) => void;
+  onTemplate: () => void;
+  onManual: () => void;
+  onTransfer: () => void;
+  onTools: () => void;
+  onEditProfile: () => void;
+  onSignOut: () => void;
+};
+
+export function Sidebar({ brand, collections, selectedId, loading, language, userName, userEmail, onSelect, onTemplate, onManual, onTransfer, onTools, onEditProfile, onSignOut }: Props) {
+  return <aside className="sidebar" aria-label={t(language, "collections")}>
+    <div className="sidebar-top">{brand}<p>{t(language, "tagline")}</p></div>
+    <CollectionSidebar collections={collections} selectedId={selectedId} loading={loading} language={language} onSelect={onSelect} onTemplate={onTemplate} onManual={onManual} onTransfer={onTransfer} onTools={onTools} />
+    <div className="sidebar-bottom">
+      <div className="profile-avatar" aria-hidden="true">{userName.charAt(0).toUpperCase()}</div>
+      <button type="button" className="profile-info profile-edit-button" onClick={onEditProfile} title={t(language, "editProfile")} aria-label={`${t(language, "editProfile")}: ${userName}`}>
+        <strong title={userName}>{userName}</strong><span title={userEmail}>{userEmail}</span>
+      </button>
+      <button type="button" className="icon-button sign-out-button" onClick={onSignOut} title={t(language, "signOut")} aria-label={t(language, "signOut")}><LogOut size={18} aria-hidden="true" /></button>
+    </div>
+  </aside>;
+}
