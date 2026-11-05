@@ -6,8 +6,13 @@ import {
   Boxes,
   ChartNoAxesCombined,
   ChevronDown,
-  FileText,
-  Globe2,
+  BookLock,
+  Box,
+  GitBranch,
+  Inbox,
+  MapPin,
+  ShieldCheck,
+  Workflow,
   Ruler,
   SlidersHorizontal,
 } from "lucide-react";
@@ -120,7 +125,7 @@ export default function CollectionToolsHub({
                 onClick={() => onOpenSection("map")}
               >
                 <span className="collection-hub-icon">
-                  <Globe2 size={21} />
+                  <MapPin size={21} />
                 </span>
                 <span className="collection-hub-copy">
                   <strong>{fr ? "Carte" : "Map"}</strong>
@@ -158,7 +163,7 @@ export default function CollectionToolsHub({
                 onClick={() => onOpenDialog("objects")}
               >
                 <span className="collection-hub-icon">
-                  <Boxes size={21} />
+                  <Box size={21} />
                 </span>
                 <span className="collection-hub-copy">
                   <strong>{fr ? "Objets" : "Objects"}</strong>
@@ -173,7 +178,7 @@ export default function CollectionToolsHub({
                 onClick={() => onOpenSection("classifications")}
               >
                 <span className="collection-hub-icon">
-                  <FileText size={21} />
+                  <GitBranch size={21} />
                 </span>
                 <span className="collection-hub-copy">
                   <strong>{fr ? "Classifications" : "Classifications"}</strong>
@@ -196,7 +201,7 @@ export default function CollectionToolsHub({
                 onClick={() => onOpenSection("workflow")}
               >
                 <span className="collection-hub-icon">
-                  <FileText size={21} />
+                  <Workflow size={21} />
                 </span>
                 <span className="collection-hub-copy">
                   <strong>{fr ? "États et validations" : "States and approvals"}</strong>
@@ -216,7 +221,7 @@ export default function CollectionToolsHub({
                   onClick={() => onOpenSection("contributions")}
                 >
                   <span className="collection-hub-icon">
-                    <FileText size={21} />
+                    <Inbox size={21} />
                   </span>
                   <span className="collection-hub-copy">
                     <strong>{fr ? "Contributions publiques" : "Public contributions"}</strong>
@@ -236,7 +241,7 @@ export default function CollectionToolsHub({
                 onClick={() => onOpenSection("ledger")}
               >
                 <span className="collection-hub-icon">
-                  <FileText size={21} />
+                  <BookLock size={21} />
                 </span>
                 <span className="collection-hub-copy">
                   <strong>{fr ? "Registre" : "Register"}</strong>
@@ -255,7 +260,7 @@ export default function CollectionToolsHub({
                 onClick={() => onOpenSection("sensitivity")}
               >
                 <span className="collection-hub-icon">
-                  <FileText size={21} />
+                  <ShieldCheck size={21} />
                 </span>
                 <span className="collection-hub-copy">
                   <strong>{fr ? "Confidentialité" : "Privacy"}</strong>

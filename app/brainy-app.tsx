@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import {
-  ArrowLeft, ArrowRight, Bell, BookOpen, CalendarDays, ChartNoAxesCombined, Check, ChevronDown,
+  ArrowLeft, ArrowRight, Bell, BookOpen, ChartNoAxesCombined, Check, ChevronDown,
   FolderHeart, Globe2, Pencil, Plus, Sparkles, X,
 } from "lucide-react";
 import { api, ApiError } from "../lib/api";
-import { formatColorStyle } from "../lib/format-colors";
 import { FormatColorPicker } from "./format-color-picker";
 import InsightsDialog from "./insights-dialog";
 import StockPanel from "./stock-panel";
@@ -18,6 +17,7 @@ import LedgerPanel from "./ledger-panel";
 import SensitivityPanel from "./sensitivity-panel";
 import CollectionToolsHub from "./collection-tools-hub";
 import { AppShell } from "./components/shell/AppShell";
+import Modal from "./components/ui/Modal";
 import { Sidebar } from "./components/shell/Sidebar";
 import { TopBar } from "./components/shell/TopBar";
 import { MobileCollectionDrawer } from "./components/shell/MobileCollectionDrawer";
@@ -26,8 +26,9 @@ import { CollectionTabs, CollectionTabPanel, type CollectionTab } from "./compon
 import { ThemeToggle, type ColorMode } from "./components/shell/ThemeToggle";
 import { useThemeMode } from "./components/shell/useThemeMode";
 import CollectionFormatsSection from "./collection-formats-section";
-import EntryRowActions from "./entry-row-actions";
+import EntryCard from "./entry-card";
 import EntryDetailsContent from "./entry-details-content";
+import { EntriesEmptyState, EntriesLoadingSkeleton } from "./entries-list-states";
 import WorkspaceToolsDialog from "./workspace-tools-dialog";
 import { GeoFieldInput } from "./geo-fields";
 import "./geo-classification.css";
@@ -162,38 +163,6 @@ function LanguagePicker({ language, onChange }: { language: Language; onChange: 
 
 function Button({ children, variant = "primary", className = "", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "subtle" | "danger" }) {
   return <button className={`button button-${variant} ${className}`} {...props}>{children}</button>;
-}
-
-function Modal({ title, closeLabel, onClose, children, size = "normal" }: { title: string; closeLabel: string; onClose: () => void; children: ReactNode; size?: "normal" | "wide" }) {
-  const modalRef = useRef<HTMLElement>(null);
-  const onCloseRef = useRef(onClose);
-  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
-  useEffect(() => {
-    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const focusable = () => Array.from(modalRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])') ?? []);
-    if (!modalRef.current?.contains(document.activeElement)) focusable()[0]?.focus();
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onCloseRef.current();
-      if (event.key !== "Tab") return;
-      const items = focusable();
-      if (!items.length) return;
-      if (event.shiftKey && document.activeElement === items[0]) { event.preventDefault(); items.at(-1)?.focus(); }
-      else if (!event.shiftKey && document.activeElement === items.at(-1)) { event.preventDefault(); items[0].focus(); }
-    };
-    window.addEventListener("keydown", onKey);
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = previous; previousFocus?.focus(); };
-  }, []);
-
-  return (
-    <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <section ref={modalRef} className={`modal modal-${size}`} role="dialog" aria-modal="true" aria-label={title}>
-        <div className="modal-head"><h2>{title}</h2><button type="button" className="icon-button" onClick={onClose} aria-label={closeLabel}><X size={20} /></button></div>
-        <div className="modal-body">{children}</div>
-      </section>
-    </div>
-  );
 }
 
 function AuthScreen({ language, onLanguage, colorMode, onColorMode, onAuthenticated }: { language: Language; onLanguage: (value: Language) => void; colorMode: ColorMode; onColorMode: (mode: ColorMode) => void; onAuthenticated: (user: User) => void }) {
@@ -651,35 +620,6 @@ function ShareObjectToCollection({ source, targets, object, language, onClose, o
   </Modal>;
 }
 
-function EntryCard({ entry, collection, language, onDetails, onEdit, onDelete, onCopy, onReminder, onLinks }: { entry: Entry; collection: Collection; language: Language; onDetails: () => void; onEdit: () => void; onDelete: () => void; onCopy: () => void; onReminder?: () => void; onLinks?: () => void }) {
-  const format = formatForEntry(collection, entry);
-  const values = valuesByField(entry);
-  const visible = format.fields.filter((field) => values[field.id]?.trim());
-  const titleField = visible.find((field) => field.kind === "TITLE");
-  const title = titleField ? values[titleField.id] : null;
-  const preview = visible.find((field) => field.id !== titleField?.id);
-  const previewValue = preview && preview.kind !== "OBJECT_REF" && preview.kind !== "ATTACHMENT" ? formatFieldValue(preview, values[preview.id], language, entry.values.find((item) => item.fieldId === preview.id)?.unitSnapshot, collection) : null;
-  const edited = Math.abs(new Date(entry.updatedAt).getTime() - new Date(entry.createdAt).getTime()) > 2000;
-  return (
-    <article className="entry-card entry-row" style={formatColorStyle(format.color)}>
-      <div className="entry-row-body">
-        <div className="entry-row-meta">
-          <span className="entry-format-label">{formatDisplayName(format, language)}</span>
-          <span className="entry-date"><CalendarDays size={14} /> {t(language, "created")} {dateTime(entry.createdAt, language)}</span>
-          {edited && <span className="entry-edited">{t(language, "edited")} {dateTime(entry.updatedAt, language)}</span>}
-          {entry.contributionLinkId && entry.contributionReceivedAt && <span className="entry-edited">{language === "fr" ? "Contribution externe reçue le" : "External contribution received"} {dateTime(entry.contributionReceivedAt, language)}</span>}
-          {format.appendOnly && <span className="entry-edited">{language === "fr" ? "Écriture" : "Writing"} #{entry.ledgerSequence}{entry.correctionOf ? ` · ${language === "fr" ? "Correction de" : "Correction of"} ${entry.correctionOf}` : ""}</span>}
-        </div>
-        <div className="entry-row-content">
-          <h3 className="entry-title"><button type="button" onClick={onDetails} title={title ?? undefined}>{title ?? previewValue ?? formatDisplayName(format, language)}</button></h3>
-          {title && previewValue && <span className="entry-preview" title={previewValue}>{previewValue}</span>}
-        </div>
-        <EntryRowActions language={language} appendOnly={!!format.appendOnly} onDetails={onDetails} onCopy={onCopy} onEdit={onEdit} onDelete={onDelete} onLinks={onLinks} onReminder={onReminder} />
-      </div>
-    </article>
-  );
-}
-
 function ObjectLibrary({ collection, language, onClose, onCollection, onCreate, onEdit, onCopyTo, onMoveTo, onShareTo, onChanged }: {
   collection: Collection; language: Language; onClose: () => void; onCollection: (value: Collection) => void;
   onCreate: (formatId: string) => void; onEdit: (entry: Entry) => void; onCopyTo: (objectId: string) => void; onMoveTo: (objectId: string) => void; onShareTo: (object: Entry) => void; onChanged: () => void;
@@ -1048,6 +988,7 @@ export default function BrainyApp() {
   const [pageAfter, setPageAfter] = useState<string | null>(null);
   const [previousPages, setPreviousPages] = useState<(string | null)[]>([]);
   const [loadingMore, setLoadingMore] = useState(false);
+  const entriesCollectionId = useRef<string | null>(null);
   const [searchText, setSearchText] = useState("");
   const [search, setSearch] = useState("");
   const [filterFormatId, setFilterFormatId] = useState("");
@@ -1093,6 +1034,11 @@ export default function BrainyApp() {
   const filterFormat = selected?.formats.find((item) => item.id === filterFormatId);
   const filterField = filterFormat?.fields.find((item) => item.id === filterFieldId);
   const pageOptions = () => selectedViewId ? { viewId: selectedViewId } : { search: search || undefined, formatId: filterFormatId || undefined, filters: filterFieldId && filterValue.trim() ? [{ fieldId: filterFieldId, operator: filterOperator, value: filterValue.trim() }] : undefined };
+  const filtersActive = !!(searchText || filterFormatId || filterFieldId || filterValueText || selectedViewId);
+  function clearFilters() {
+    setSelectedViewId(""); setSearchText(""); setSearch(""); setFilterFormatId("");
+    setFilterFieldId(""); setFilterValueText(""); setFilterValue(""); setFilterOperator("EQ");
+  }
 
   useEffect(() => {
     const stored = window.localStorage.getItem("brainy_language");
@@ -1132,7 +1078,7 @@ export default function BrainyApp() {
     queueMicrotask(() => {
       if (cancelled) return;
       setLoadingEntries(true);
-      setEntries([]);
+      if (entriesCollectionId.current !== selectedId) { setEntries([]); entriesCollectionId.current = selectedId; }
       setNextCursor(null);
       setPageAfter(null);
       setPreviousPages([]);
@@ -1272,11 +1218,13 @@ export default function BrainyApp() {
               <label>{t(language, "chooseFormat")}<select value={filterFormatId} onChange={(event) => { setFilterFormatId(event.target.value); setFilterFieldId(""); setFilterValueText(""); setFilterValue(""); }}><option value="">{t(language, "allFormats")}</option>{selected.formats.map((format) => <option key={format.id} value={format.id}>{formatDisplayName(format, language)}</option>)}</select></label>
               {filterFormat && <label>{t(language, "filterField")}<select value={filterFieldId} onChange={(event) => { setFilterFieldId(event.target.value); setFilterOperator("EQ"); setFilterValueText(""); setFilterValue(""); }}><option value="">{t(language, "noFilter")}</option>{filterFormat.fields.map((field) => <option key={field.id} value={field.id}>{field.name}</option>)}</select></label>}
               {filterField && <><label>{t(language, "filterField")}<select value={filterOperator} onChange={(event) => setFilterOperator(event.target.value as EntryFilter["operator"])}><option value="EQ">{t(language, "equals")}</option>{["TITLE", "TEXT", "LONG_TEXT", "LINK", "CHARACTER", "ATTACHMENT"].includes(filterField.kind) && <option value="CONTAINS">{t(language, "contains")}</option>}{["NUMBER", "DURATION", "DATE", "DATETIME", "TIME"].includes(filterField.kind) && <><option value="GT">{t(language, "greaterThan")}</option><option value="LT">{t(language, "lessThan")}</option></>}</select></label><label>{t(language, "filterValue")}{filterField.kind === "BOOLEAN" || ["SELECT", "MULTI_SELECT"].includes(filterField.kind) ? <select value={filterValueText} onChange={(event) => setFilterValueText(event.target.value)}><option value="">—</option>{(filterField.kind === "BOOLEAN" ? ["true", "false"] : filterField.options ?? []).map((option) => <option key={option} value={option}>{option === "true" ? t(language, "yes") : option === "false" ? t(language, "no") : option}</option>)}</select> : <input value={filterValueText} onChange={(event) => setFilterValueText(event.target.value)} type={filterField.kind === "DATE" ? "date" : filterField.kind === "NUMBER" ? "number" : "text"} />}</label></>}
+              {filtersActive && <Button variant="secondary" className="clear-filters" onClick={clearFilters}>{language === "fr" ? "Effacer les filtres" : "Clear filters"}</Button>}
             </div>}
-            {selectedView?.layout === "CALENDAR" ? <CalendarView collection={selected} view={selectedView} language={language} refreshToken={calendarRefresh} onEdit={(entry) => entry.ledgerHash ? setActiveSection("ledger") : setDialog({ kind: "entry", entry })} onReminder={(entry) => setDialog({ kind: "reminder", entry })} /> : loadingEntries ? <div className="entries-loading"><div className="boot-spinner" />{t(language, "loading")}</div> : entries.length ? <>
-              {selectedView?.layout === "TASKS" ? <div className="task-list">{entries.map((entry) => { const titleField = selected.formats.find((item) => item.id === entry.formatId)?.fields.find((field) => field.kind === "TITLE"); const done = entry.values.find((item) => item.fieldId === selectedView.taskDoneFieldId)?.value === "true"; const due = entry.values.find((item) => item.fieldId === selectedView.taskDueFieldId)?.value; const priority = entry.values.find((item) => item.fieldId === selectedView.taskPriorityFieldId)?.value; return <div key={entry.id} className="task-row"><label><input type="checkbox" checked={done} onChange={async (event) => { try { const updated = await api.setTaskCompleted(selected.id, selectedView.id, entry.id, event.target.checked); setEntries((current) => current.map((item) => item.id === updated.id ? updated : item)); } catch (cause) { setLoadError(cause); } }} /><span className={done ? "done" : ""}>{entry.values.find((item) => item.fieldId === titleField?.id)?.value ?? selected.formats.find((item) => item.id === entry.formatId)?.name}</span></label>{priority && <small>{priority}</small>}{due && <time>{due.slice(0, 16).replace("T", " ")}</time>}<button type="button" onClick={() => setDialog({ kind: "reminder", entry })}><Bell size={15} /> {language === "fr" ? "Rappel" : "Reminder"}</button><button type="button" onClick={() => entry.ledgerHash ? setActiveSection("ledger") : setDialog({ kind: "entry", entry })}>{entry.ledgerHash ? language === "fr" ? "Ouvrir le registre" : "Open register" : t(language, "edit")}</button></div>; })}</div> : selectedView?.layout === "TABLE" ? <div className="saved-view-table-wrap"><table className="saved-view-table"><thead><tr><th>{language === "fr" ? "Format de données" : "Data format"}</th><th>{language === "fr" ? "Créée" : "Created"}</th>{selectedView.columnFieldIds.map((fieldId) => <th key={fieldId}>{selected.formats.flatMap((format) => format.fields).find((field) => field.id === fieldId)?.name ?? fieldId}</th>)}<th>{language === "fr" ? "Action" : "Action"}</th></tr></thead><tbody>{entries.map((entry) => <tr key={entry.id}><td>{selected.formats.find((format) => format.id === entry.formatId)?.name}</td><td>{dateTime(entry.createdAt, language)}</td>{selectedView.columnFieldIds.map((fieldId) => { const format = selected.formats.find((item) => item.id === entry.formatId); const field = format?.fields.find((item) => item.id === fieldId); const value = entry.values.find((item) => item.fieldId === fieldId); return <td key={fieldId}>{field && value ? formatFieldValue(field, value.value, language, value.unitSnapshot) : "—"}</td>; })}<td><button type="button" onClick={() => entry.ledgerHash ? setActiveSection("ledger") : setDialog({ kind: "entry", entry })}>{entry.ledgerHash ? language === "fr" ? "Ouvrir le registre" : "Open register" : t(language, "edit")}</button></td></tr>)}</tbody></table></div> : selectedView?.groupByFormat ? selected.formats.filter((format) => entries.some((entry) => entry.formatId === format.id)).map((format) => <section key={format.id} className="saved-view-group"><h3>{format.name}</h3><div className={selectedView.layout === "LIST" ? "entry-grid saved-view-list" : "entry-grid"}>{entries.filter((entry) => entry.formatId === format.id).map((entry) => <EntryCard key={entry.id} entry={entry} collection={selected} language={language} onDetails={() => setDialog({ kind: "entryDetails", entry })} onEdit={() => entry.ledgerHash ? setActiveSection("ledger") : setDialog({ kind: "entry", entry })} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteEntry", entry }); }} onCopy={() => copy(entry)} onLinks={() => setDialog({ kind: "entryLinks", entry })} onReminder={selected.formats.find((item) => item.id === entry.formatId)?.fields.some((field) => ["DATE", "DATETIME"].includes(field.kind) && entry.values.some((value) => value.fieldId === field.id)) ? () => setDialog({ kind: "reminder", entry }) : undefined} />)}</div></section>) : <div className={!selectedView || selectedView.layout === "LIST" ? "entry-grid saved-view-list" : "entry-grid"}>{entries.map((entry) => <EntryCard key={entry.id} entry={entry} collection={selected} language={language} onDetails={() => setDialog({ kind: "entryDetails", entry })} onEdit={() => entry.ledgerHash ? setActiveSection("ledger") : setDialog({ kind: "entry", entry })} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteEntry", entry }); }} onCopy={() => copy(entry)} onLinks={() => setDialog({ kind: "entryLinks", entry })} onReminder={selected.formats.find((item) => item.id === entry.formatId)?.fields.some((field) => ["DATE", "DATETIME"].includes(field.kind) && entry.values.some((value) => value.fieldId === field.id)) ? () => setDialog({ kind: "reminder", entry }) : undefined} />)}</div>}
+            {loadingEntries && entries.length > 0 && <p className="entries-updating" role="status">{language === "fr" ? "Mise à jour des entrées…" : "Updating entries..."}</p>}
+            {selectedView?.layout === "CALENDAR" ? <CalendarView collection={selected} view={selectedView} language={language} refreshToken={calendarRefresh} onEdit={(entry) => entry.ledgerHash ? setActiveSection("ledger") : setDialog({ kind: "entry", entry })} onReminder={(entry) => setDialog({ kind: "reminder", entry })} /> : loadingEntries && !entries.length ? <EntriesLoadingSkeleton language={language} /> : entries.length ? <>
+              {selectedView?.layout === "TASKS" ? <div className="task-list">{entries.map((entry) => { const titleField = selected.formats.find((item) => item.id === entry.formatId)?.fields.find((field) => field.kind === "TITLE"); const done = entry.values.find((item) => item.fieldId === selectedView.taskDoneFieldId)?.value === "true"; const due = entry.values.find((item) => item.fieldId === selectedView.taskDueFieldId)?.value; const priority = entry.values.find((item) => item.fieldId === selectedView.taskPriorityFieldId)?.value; return <div key={entry.id} className="task-row"><label><input type="checkbox" checked={done} onChange={async (event) => { try { const updated = await api.setTaskCompleted(selected.id, selectedView.id, entry.id, event.target.checked); setEntries((current) => current.map((item) => item.id === updated.id ? updated : item)); } catch (cause) { setLoadError(cause); } }} /><span className={done ? "done" : ""}>{entry.values.find((item) => item.fieldId === titleField?.id)?.value ?? selected.formats.find((item) => item.id === entry.formatId)?.name}</span></label>{priority && <small>{priority}</small>}{due && <time>{due.slice(0, 16).replace("T", " ")}</time>}<button type="button" onClick={() => setDialog({ kind: "reminder", entry })}><Bell size={15} /> {language === "fr" ? "Rappel" : "Reminder"}</button><button type="button" onClick={() => entry.ledgerHash ? setActiveSection("ledger") : setDialog({ kind: "entry", entry })}>{entry.ledgerHash ? language === "fr" ? "Ouvrir le registre" : "Open register" : t(language, "edit")}</button></div>; })}</div> : selectedView?.layout === "TABLE" ? <div className="saved-view-table-wrap"><table className="saved-view-table"><thead><tr><th>{language === "fr" ? "Format de données" : "Data format"}</th><th>{language === "fr" ? "Créée" : "Created"}</th>{selectedView.columnFieldIds.map((fieldId) => <th key={fieldId}>{selected.formats.flatMap((format) => format.fields).find((field) => field.id === fieldId)?.name ?? fieldId}</th>)}<th>{language === "fr" ? "Action" : "Action"}</th></tr></thead><tbody>{entries.map((entry) => <tr key={entry.id}><td>{selected.formats.find((format) => format.id === entry.formatId)?.name}</td><td>{dateTime(entry.createdAt, language)}</td>{selectedView.columnFieldIds.map((fieldId) => { const format = selected.formats.find((item) => item.id === entry.formatId); const field = format?.fields.find((item) => item.id === fieldId); const value = entry.values.find((item) => item.fieldId === fieldId); return <td key={fieldId}>{field && value ? formatFieldValue(field, value.value, language, value.unitSnapshot) : "—"}</td>; })}<td><button type="button" onClick={() => entry.ledgerHash ? setActiveSection("ledger") : setDialog({ kind: "entry", entry })}>{entry.ledgerHash ? language === "fr" ? "Ouvrir le registre" : "Open register" : t(language, "edit")}</button></td></tr>)}</tbody></table></div> : selectedView?.groupByFormat ? selected.formats.filter((format) => entries.some((entry) => entry.formatId === format.id)).map((format) => <section key={format.id} className="saved-view-group"><h3>{format.name}</h3><div className={selectedView.layout === "LIST" ? "entry-grid saved-view-list" : "entry-grid"}>{entries.filter((entry) => entry.formatId === format.id).map((entry) => <EntryCard key={entry.id} entry={entry} selected={dialog?.kind === "entryDetails" && dialog.entry.id === entry.id} collection={selected} language={language} onDetails={() => setDialog({ kind: "entryDetails", entry })} onEdit={() => entry.ledgerHash ? setActiveSection("ledger") : setDialog({ kind: "entry", entry })} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteEntry", entry }); }} onCopy={() => copy(entry)} onLinks={() => setDialog({ kind: "entryLinks", entry })} onReminder={selected.formats.find((item) => item.id === entry.formatId)?.fields.some((field) => ["DATE", "DATETIME"].includes(field.kind) && entry.values.some((value) => value.fieldId === field.id)) ? () => setDialog({ kind: "reminder", entry }) : undefined} />)}</div></section>) : <div className={!selectedView || selectedView.layout === "LIST" ? "entry-grid saved-view-list" : "entry-grid"}>{entries.map((entry) => <EntryCard key={entry.id} entry={entry} selected={dialog?.kind === "entryDetails" && dialog.entry.id === entry.id} collection={selected} language={language} onDetails={() => setDialog({ kind: "entryDetails", entry })} onEdit={() => entry.ledgerHash ? setActiveSection("ledger") : setDialog({ kind: "entry", entry })} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteEntry", entry }); }} onCopy={() => copy(entry)} onLinks={() => setDialog({ kind: "entryLinks", entry })} onReminder={selected.formats.find((item) => item.id === entry.formatId)?.fields.some((field) => ["DATE", "DATETIME"].includes(field.kind) && entry.values.some((value) => value.fieldId === field.id)) ? () => setDialog({ kind: "reminder", entry }) : undefined} />)}</div>}
               {(nextCursor || previousPages.length > 0) && <div className="more-entries">{previousPages.length > 0 && <Button variant="secondary" onClick={loadPreviousEntries} disabled={loadingMore}>{language === "fr" ? "Page précédente" : "Previous page"}</Button>}{nextCursor && <Button variant="secondary" onClick={loadMoreEntries} disabled={loadingMore}>{loadingMore ? t(language, "loading") : language === "fr" ? "Page suivante" : "Next page"}</Button>}</div>}
-            </> : <div className="empty-state entries-empty"><div className="empty-art"><BookOpen size={46} strokeWidth={1.4} /></div><h2>{search || filterFormatId || selectedView ? t(language, "noMatches") : t(language, "noEntries")}</h2><p>{search || filterFormatId || selectedView ? "" : t(language, "noEntriesDetail")}</p>{!search && !filterFormatId && !selectedView && <Button variant="secondary" onClick={() => setDialog({ kind: "entry" })}><Plus size={17} /> {t(language, "writeEntry")}</Button>}</div>}
+            </> : loadError ? null : <EntriesEmptyState language={language} filtered={filtersActive} onClear={clearFilters} onWrite={() => setDialog({ kind: "entry" })} />}
             </CollectionTabPanel>
             <CollectionTabPanel tab="formats" active={collectionTab === "formats"}><CollectionFormatsSection collection={selected} language={language} onAdd={() => setDialog({ kind: "addFormat" })} onEdit={(formatId) => setDialog({ kind: "editFormat", formatId })} onColor={(formatId) => setDialog({ kind: "formatColor", formatId })} onCopy={(formatId) => setDialog({ kind: "copyFormat", formatId })} onLink={(formatId) => setDialog({ kind: "linkFormat", formatId })} onReviewUpdate={(formatId) => setDialog({ kind: "linkedFormatUpdate", formatId })} /></CollectionTabPanel>
             <CollectionTabPanel tab="tools" active={collectionTab === "tools"}><CollectionToolsHub collection={selected} user={user} language={language} onOpenSection={setActiveSection} onOpenDialog={(kind) => setDialog({ kind })} /></CollectionTabPanel>

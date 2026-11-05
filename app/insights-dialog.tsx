@@ -443,8 +443,10 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
           <label>{fr ? "Horizon" : "Horizon"}<select value={forecastHorizon} onChange={(event) => setForecastHorizon(Number(event.target.value))}>{[1, 2, 3, 6, 12].map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
         </div>
         {(!measure || measure.startsWith("formula:") || !(dateFieldId || dateFields[0]?.id)) && <p className="action-help">{fr ? "Choisissez une mesure numérique et un champ date pour continuer." : "Choose a numeric measure and a date field to continue."}</p>}
-        <button type="button" className="btn secondary" disabled={busy || !measure || measure.startsWith("formula:") || !(dateFieldId || dateFields[0]?.id)} onClick={runForecast}>{fr ? "Estimer" : "Estimate"}</button>
-        <button type="button" className="btn secondary" disabled={busy || !measure || measure.startsWith("formula:") || !(dateFieldId || dateFields[0]?.id)} onClick={() => void queueForecast()}>{fr ? "Estimer en arrière-plan" : "Estimate in background"}</button>
+        <div className="forecast-actions">
+          <button type="button" className="btn secondary" disabled={busy || !measure || measure.startsWith("formula:") || !(dateFieldId || dateFields[0]?.id)} onClick={runForecast}>{fr ? "Estimer" : "Estimate"}</button>
+          <button type="button" className="btn secondary" disabled={busy || !measure || measure.startsWith("formula:") || !(dateFieldId || dateFields[0]?.id)} onClick={() => void queueForecast()}>{fr ? "Estimer en arrière-plan" : "Estimate in background"}</button>
+        </div>
         {forecastResult && <div className="forecast-results">
           <p>{fr ? "Sources" : "Sources"} : {forecastResult.sourceFrom} → {forecastResult.sourceTo} ({forecastResult.trainingCount} {fr ? "périodes d'apprentissage" : "training periods"}, {forecastResult.holdoutCount} {fr ? "périodes tenues à l'écart" : "held-out periods"}).</p>
           <p>{fr ? "Erreur moyenne sur la période tenue à l'écart" : "Mean error on held-out period"} : <strong>{forecastResult.holdoutMae} {forecastResult.unit}</strong> · {fr ? "Incertitude" : "Uncertainty"} : ±{forecastResult.uncertainty}</p>
