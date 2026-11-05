@@ -1,0 +1,56 @@
+/* Shared controls and presentation primitives. Color values live in theme.css. */
+button, input, select, textarea { font-family: inherit; }
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="range"]):not([type="color"]):not([type="image"]),
+select, textarea {
+  min-height: 44px;
+  border: 1px solid var(--control-border) !important;
+  border-radius: 10px;
+  background-color: var(--surface) !important;
+  color: var(--ink) !important;
+}
+select:not([multiple]) {
+  appearance: none;
+  padding-right: 38px !important;
+  background-image: var(--select-chevron) !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+}
+select option { background: var(--surface); color: var(--ink); }
+input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
+.input-label, .modal label, .starter-dialog label { color: var(--ink); }
+input:disabled, select:disabled, textarea:disabled { opacity: .64; cursor: not-allowed; }
+
+/* Saved IDs keep their own 24 colors; only presentation changes by theme. */
+html[data-theme="dark"] .app-shell .format-card,
+html[data-theme="dark"] .app-shell .entry-card.entry-row {
+  --format-accent: var(--format-marker-dark);
+  border-color: var(--control-border) !important;
+}
+html[data-theme="dark"] .app-shell .format-card { border-top-color: var(--format-marker-dark) !important; }
+html[data-theme="dark"] .app-shell .entry-card.entry-row { border-left-color: var(--format-marker-dark) !important; }
+html[data-theme="dark"] .app-shell .entry-row .entry-format-label {
+  background: var(--surface-elevated);
+  color: var(--ink);
+  border-color: var(--format-marker-dark);
+}
+html[data-theme="dark"] .app-shell .entry-row .entry-field-name,
+html[data-theme="dark"] .app-shell .entry-row .entry-date,
+html[data-theme="dark"] .app-shell .entry-row .entry-edited { color: var(--muted); }
+
+.modal { color: var(--ink); border-color: var(--line); }
+.modal-head, .modal-actions { border-color: var(--line); }
+.button { min-height: 44px; font-weight: 600; }
+.button-primary { background: var(--blue); color: var(--on-primary); }
+.button-secondary { background: var(--surface-elevated); color: var(--ink); border-color: var(--control-border); }
+.button-secondary:hover:not(:disabled) { background: var(--hover); }
+.button-danger { background: var(--danger-fill); color: var(--on-danger); }
+.empty-state { background: var(--surface); border-color: var(--line); }
+.empty-state p { color: var(--muted); }
+.ui-card { padding: 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); }
+.ui-empty-state { display: grid; justify-items: center; gap: 12px; padding: 32px 24px; text-align: center; border: 1px dashed var(--control-border); border-radius: 14px; background: var(--surface); color: var(--ink); }
+.ui-empty-state p { margin: 0; color: var(--muted); }
+.ui-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.ui-tab { min-height: 44px; padding: 8px 16px; background: transparent; border: 0; border-bottom: 3px solid transparent; color: var(--muted); white-space: nowrap; }
+.ui-tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--blue); font-weight: 600; }
+.ui-tab:hover { background: var(--hover); }
+@media (prefers-reduced-motion: reduce) { .ui-tab, .button { transition: none; } }

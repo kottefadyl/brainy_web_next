@@ -1,23 +1,41 @@
 :root {
   color-scheme: light;
   --bg: #F5F6F8;
+  --canvas: #F5F6F8;
+  --sidebar-surface: #EDF0F5;
   --background: #F5F6F8;
   --surface: #FFFFFF;
   --surface-elevated: #FFFFFF;
+  --dialog-surface: #FFFFFF;
   --surface-soft: #F5F6F8;
   --hover: #E9EDF3;
+  --selection: rgba(36, 99, 206, 0.10);
   --ink: #20242C;
   --foreground: #20242C;
   --muted: #545E6D;
   --line: #DDE2EA;
   --border: #DDE2EA;
   --control-border: #778293;
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23545E6D' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   --blue: #2463CE;
   --blue-dark: #1D52AE;
   --blue-soft: #E9F0FC;
+  --accent-soft: rgba(36, 99, 206, 0.10);
   --on-primary: #FFFFFF;
   --focus: #2463CE;
-  --green: #1E7A56;
+  --green: #1B7A45;
+  --success: #1B7A45;
+  --warning: #8A5A00;
+  --info: #2463CE;
+  --on-tint: #20242C;
+  --chart-1: #2463CE;
+  --chart-2: #0F8F72;
+  --chart-3: #B9730A;
+  --chart-4: #C2385A;
+  --chart-5: #7A4FD6;
+  --chart-6: #0B7FA3;
+  --chart-7: #6B8A12;
+  --chart-8: #A3399B;
   --danger: #B42332;
   --danger-fill: #B42332;
   --on-danger: #FFFFFF;
@@ -26,26 +44,44 @@
 
 html[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #19191B;
-  --background: #19191B;
-  --surface: #242427;
-  --surface-elevated: #2F2F33;
-  --surface-soft: #2A2A2E;
-  --hover: #39393E;
-  --ink: #F2F2F4;
-  --foreground: #F2F2F4;
-  --muted: #BFC0C6;
-  --line: #49494F;
-  --border: #49494F;
-  --control-border: #85858E;
+  --bg: #111317;
+  --canvas: #111317;
+  --background: #111317;
+  --sidebar-surface: #0D0F13;
+  --surface: #1A1D23;
+  --surface-elevated: #22262D;
+  --dialog-surface: #272B33;
+  --surface-soft: #22262D;
+  --hover: #2A2F38;
+  --selection: rgba(150, 189, 255, 0.14);
+  --ink: #F1F3F7;
+  --foreground: #F1F3F7;
+  --muted: #AAB3C2;
+  --line: #2A2F38;
+  --border: #2A2F38;
+  --control-border: #7A8597;
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23AAB3C2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   --blue: #96BDFF;
   --blue-dark: #B2D0FF;
-  --blue-soft: #263A59;
+  --blue-soft: rgba(150, 189, 255, 0.14);
+  --accent-soft: rgba(150, 189, 255, 0.14);
   --on-primary: #142443;
   --focus: #A9CBFF;
-  --green: #7EDCC5;
-  --danger: #FFB7C0;
-  --danger-fill: #FFB7C0;
+  --green: #7FD6A4;
+  --success: #7FD6A4;
+  --warning: #F2C26B;
+  --info: #96BDFF;
+  --on-tint: #F1F3F7;
+  --chart-1: #7FB0FF;
+  --chart-2: #5FD1B2;
+  --chart-3: #F2B968;
+  --chart-4: #F28FA6;
+  --chart-5: #B69CFF;
+  --chart-6: #6CCBE8;
+  --chart-7: #C5D87A;
+  --chart-8: #E8A0DA;
+  --danger: #FFADB5;
+  --danger-fill: #FFADB5;
   --on-danger: #3B1116;
   --shadow: 0 12px 28px rgba(0, 0, 0, 0.42);
 }
@@ -309,6 +345,12 @@ textarea {
 
 .google-button:hover {
   background: var(--hover);
+}
+
+.password-wrap button {
+  min-width: 44px;
+  min-height: 44px;
+  color: var(--blue);
 }
 
 .input-label {
@@ -629,37 +671,37 @@ textarea {
 .format-card {
   border-radius: 14px !important;
   box-shadow: none !important;
-  background: color-mix(in srgb, var(--format-color) 76%, #FFFFFF) !important;
-  border: 1px solid color-mix(in srgb, var(--format-color) 35%, #778293) !important;
+  background: var(--format-surface-light, var(--format-color)) !important;
+  border: 1px solid color-mix(in srgb, var(--format-color) 35%, var(--control-border)) !important;
 }
 
 .format-card strong {
-  color: #20242C;
+  color: var(--on-tint);
   font-size: 14px;
 }
 
 .format-card .format-tag {
-  background: rgba(255, 255, 255, 0.84);
-  border-color: rgba(119, 130, 147, 0.35);
-  color: #20242C;
+  background: color-mix(in srgb, var(--surface) 84%, transparent);
+  border-color: color-mix(in srgb, var(--control-border) 35%, transparent);
+  color: var(--on-tint);
 }
 
 .format-card .format-tag small {
-  color: #545E6D;
-  border-left-color: rgba(119, 130, 147, 0.3);
+  color: var(--muted);
+  border-left-color: color-mix(in srgb, var(--control-border) 30%, transparent);
 }
 
 .format-card-head button {
   min-width: 44px;
   min-height: 44px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(119, 130, 147, 0.45);
-  color: #20242C;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  border: 1px solid color-mix(in srgb, var(--control-border) 45%, transparent);
+  color: var(--on-tint);
 }
 
 .format-card-head button:hover {
-  background: #FFFFFF;
+  background: var(--surface);
 }
 
 .entries-heading h2 {
@@ -698,9 +740,9 @@ textarea {
   min-height: 48px;
   border-radius: 14px !important;
   box-shadow: none !important;
-  background: color-mix(in srgb, var(--format-color) 58%, #FFFFFF) !important;
-  border: 1px solid color-mix(in srgb, var(--format-color) 42%, #DDE2EA) !important;
-  border-left: 4px solid color-mix(in srgb, var(--format-color) 35%, #778293) !important;
+  background: var(--format-surface-light, var(--format-color)) !important;
+  border: 1px solid color-mix(in srgb, var(--format-color) 42%, var(--line)) !important;
+  border-left: 4px solid var(--format-marker-light, var(--control-border)) !important;
 }
 
 .entry-card.entry-row:hover {
@@ -710,26 +752,26 @@ textarea {
 }
 
 .entry-row .entry-title {
-  color: #20242C;
+  color: var(--on-tint);
 }
 
 .entry-row .entry-field-name,
 .entry-row .entry-date,
 .entry-row .entry-edited {
-  color: #545E6D;
+  color: var(--muted);
 }
 
 .entry-row .entry-field-value {
-  color: #20242C;
+  color: var(--on-tint);
 }
 
 .entry-row .small-action {
-  color: #545E6D;
+  color: var(--muted);
 }
 
 .entry-row .small-action:hover {
-  background: rgba(255, 255, 255, 0.75);
-  color: #20242C;
+  background: color-mix(in srgb, var(--surface) 75%, transparent);
+  color: var(--on-tint);
 }
 
 /* Modals & Dialogs */
@@ -740,7 +782,7 @@ textarea {
 
 .modal {
   border-radius: 18px;
-  background: var(--surface-elevated);
+  background: var(--dialog-surface);
   color: var(--ink);
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
@@ -920,9 +962,9 @@ textarea {
 
 /* Dark Theme Format & Entry Contrast Adaptation (brainy-ui-ux tokens.md) */
 html[data-theme="dark"] .format-card {
-  background: color-mix(in srgb, var(--format-color) 8%, #3D3D42) !important;
+  background: var(--format-surface-dark, var(--surface-elevated)) !important;
   border: 1px solid var(--line) !important;
-  border-left: 4px solid color-mix(in srgb, var(--format-color) 78%, #FFFFFF) !important;
+  border-left: 4px solid var(--format-marker-dark, var(--focus)) !important;
   color: var(--ink) !important;
 }
 
@@ -953,9 +995,9 @@ html[data-theme="dark"] .format-card-head button:hover {
 }
 
 html[data-theme="dark"] .entry-card.entry-row {
-  background: color-mix(in srgb, var(--format-color) 6%, #39393E) !important;
+  background: var(--format-surface-dark, var(--surface-elevated)) !important;
   border: 1px solid var(--line) !important;
-  border-left: 4px solid color-mix(in srgb, var(--format-color) 76%, #FFFFFF) !important;
+  border-left: 4px solid var(--format-marker-dark, var(--focus)) !important;
   color: var(--ink) !important;
 }
 

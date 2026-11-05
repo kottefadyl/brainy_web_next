@@ -7,6 +7,7 @@ import {
   RefreshCw, SlidersHorizontal, Sparkles, Sun, X,
 } from "lucide-react";
 import { api, ApiError } from "../lib/api";
+import { formatColorStyle } from "../lib/format-colors";
 import InsightsDialog from "./insights-dialog";
 import StockPanel from "./stock-panel";
 import ClassificationPanel from "./classification-panel";
@@ -661,7 +662,7 @@ function EntryCard({ entry, collection, language, onDetails, onEdit, onDelete, o
   const previewValue = preview && preview.kind !== "OBJECT_REF" && preview.kind !== "ATTACHMENT" ? formatFieldValue(preview, values[preview.id], language, entry.values.find((item) => item.fieldId === preview.id)?.unitSnapshot, collection) : null;
   const edited = Math.abs(new Date(entry.updatedAt).getTime() - new Date(entry.createdAt).getTime()) > 2000;
   return (
-    <article className="entry-card entry-row" style={{ "--format-color": format.color } as CSSProperties}>
+    <article className="entry-card entry-row" style={formatColorStyle(format.color)}>
       <div className="entry-row-body">
         <div className="entry-row-meta">
           <span className="entry-format-label">{formatDisplayName(format, language)}</span>

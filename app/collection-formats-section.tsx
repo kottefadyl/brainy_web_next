@@ -1,5 +1,5 @@
 import { Copy, Link2, Palette, Pencil, Plus } from "lucide-react";
-import type { CSSProperties } from "react";
+import { formatColorStyle } from "../lib/format-colors";
 import {
   fieldKindLabel, formatColors, formatDisplayName, t,
   type Collection, type Language,
@@ -29,7 +29,7 @@ export default function CollectionFormatsSection({ collection, language, onAdd, 
         {collection.formats.map((format) => {
           const name = formatDisplayName(format, language);
           return (
-            <div key={format.id} className="format-card" style={{ "--format-color": format.color } as CSSProperties}>
+            <div key={format.id} className="format-card" style={formatColorStyle(format.color)}>
               <div className="format-card-head">
                 <strong>{name}</strong>
                 <div className="format-card-actions">

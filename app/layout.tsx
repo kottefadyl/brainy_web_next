@@ -6,6 +6,7 @@ import "./theme.css";
 import "./quick-capture.css";
 import "./workspace-refresh.css";
 import "./workspace-data.css";
+import "./foundation.css";
 
 export const metadata: Metadata = {
   title: "Brainy — Your space to remember",
