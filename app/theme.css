@@ -1,9 +1,9 @@
 :root {
   color-scheme: light;
-  --bg: #F5F6F8;
-  --canvas: #F5F6F8;
+  --bg: #F3F6FB;
+  --canvas: #F3F6FB;
   --sidebar-surface: #EDF0F5;
-  --background: #F5F6F8;
+  --background: #F3F6FB;
   --surface: #FFFFFF;
   --surface-elevated: #FFFFFF;
   --dialog-surface: #FFFFFF;
@@ -23,6 +23,9 @@
   --accent-soft: rgba(36, 99, 206, 0.10);
   --on-primary: #FFFFFF;
   --focus: #2463CE;
+  --tool-structure: #6944A8;
+  --tool-governance: #087C83;
+  --tool-warm: #9A6111;
   --green: #1B7A45;
   --success: #1B7A45;
   --warning: #8A5A00;
@@ -68,6 +71,9 @@ html[data-theme="dark"] {
   --accent-soft: rgba(150, 189, 255, 0.14);
   --on-primary: #142443;
   --focus: #A9CBFF;
+  --tool-structure: #C9B5FF;
+  --tool-governance: #83DDE0;
+  --tool-warm: #F2C26B;
   --green: #7FD6A4;
   --success: #7FD6A4;
   --warning: #F2C26B;

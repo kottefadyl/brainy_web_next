@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    ".visual-checks/**",
+    ".phase-two-b-chrome/**",
+    ".phase-two-b-review-chrome/**",
   ]),
 ]);
 

@@ -18,6 +18,7 @@ import SensitivityPanel from "./sensitivity-panel";
 import CollectionToolsHub from "./collection-tools-hub";
 import { AppShell } from "./components/shell/AppShell";
 import Modal from "./components/ui/Modal";
+import { AccessibleListbox } from "./components/ui/AccessibleListbox";
 import { Sidebar } from "./components/shell/Sidebar";
 import { TopBar } from "./components/shell/TopBar";
 import { MobileCollectionDrawer } from "./components/shell/MobileCollectionDrawer";
@@ -1029,7 +1030,7 @@ export default function BrainyApp() {
     drawerTimer.current = window.setTimeout(() => { setDrawerMounted(false); drawerTimer.current = null; }, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 240);
   }
   useEffect(() => () => { if (drawerTimer.current !== null) window.clearTimeout(drawerTimer.current); }, []);
-  useEffect(() => { window.scrollTo(0, 0); }, [activeSection, selectedId]);
+  useEffect(() => { document.querySelector<HTMLElement>(".app-shell .workspace")?.scrollTo(0, 0); }, [activeSection, selectedId]);
   const selectedView = selected?.savedViews?.find((item) => item.id === selectedViewId);
   const filterFormat = selected?.formats.find((item) => item.id === filterFormatId);
   const filterField = filterFormat?.fields.find((item) => item.id === filterFieldId);
@@ -1215,7 +1216,7 @@ export default function BrainyApp() {
             </div>
             {!selectedView && <div className="entry-tools">
               <label>{t(language, "searchEntries")}<input type="search" value={searchText} onChange={(event) => setSearchText(event.target.value)} /></label>
-              <label>{t(language, "chooseFormat")}<select value={filterFormatId} onChange={(event) => { setFilterFormatId(event.target.value); setFilterFieldId(""); setFilterValueText(""); setFilterValue(""); }}><option value="">{t(language, "allFormats")}</option>{selected.formats.map((format) => <option key={format.id} value={format.id}>{formatDisplayName(format, language)}</option>)}</select></label>
+              <AccessibleListbox label={t(language, "chooseFormat")} value={filterFormatId} options={[{ id: "", label: t(language, "allFormats") }, ...selected.formats.map((format) => ({ id: format.id, label: formatDisplayName(format, language), swatch: format.color }))]} onChange={(value) => { setFilterFormatId(value); setFilterFieldId(""); setFilterValueText(""); setFilterValue(""); }} />
               {filterFormat && <label>{t(language, "filterField")}<select value={filterFieldId} onChange={(event) => { setFilterFieldId(event.target.value); setFilterOperator("EQ"); setFilterValueText(""); setFilterValue(""); }}><option value="">{t(language, "noFilter")}</option>{filterFormat.fields.map((field) => <option key={field.id} value={field.id}>{field.name}</option>)}</select></label>}
               {filterField && <><label>{t(language, "filterField")}<select value={filterOperator} onChange={(event) => setFilterOperator(event.target.value as EntryFilter["operator"])}><option value="EQ">{t(language, "equals")}</option>{["TITLE", "TEXT", "LONG_TEXT", "LINK", "CHARACTER", "ATTACHMENT"].includes(filterField.kind) && <option value="CONTAINS">{t(language, "contains")}</option>}{["NUMBER", "DURATION", "DATE", "DATETIME", "TIME"].includes(filterField.kind) && <><option value="GT">{t(language, "greaterThan")}</option><option value="LT">{t(language, "lessThan")}</option></>}</select></label><label>{t(language, "filterValue")}{filterField.kind === "BOOLEAN" || ["SELECT", "MULTI_SELECT"].includes(filterField.kind) ? <select value={filterValueText} onChange={(event) => setFilterValueText(event.target.value)}><option value="">—</option>{(filterField.kind === "BOOLEAN" ? ["true", "false"] : filterField.options ?? []).map((option) => <option key={option} value={option}>{option === "true" ? t(language, "yes") : option === "false" ? t(language, "no") : option}</option>)}</select> : <input value={filterValueText} onChange={(event) => setFilterValueText(event.target.value)} type={filterField.kind === "DATE" ? "date" : filterField.kind === "NUMBER" ? "number" : "text"} />}</label></>}
               {filtersActive && <Button variant="secondary" className="clear-filters" onClick={clearFilters}>{language === "fr" ? "Effacer les filtres" : "Clear filters"}</Button>}
@@ -1226,7 +1227,7 @@ export default function BrainyApp() {
               {(nextCursor || previousPages.length > 0) && <div className="more-entries">{previousPages.length > 0 && <Button variant="secondary" onClick={loadPreviousEntries} disabled={loadingMore}>{language === "fr" ? "Page précédente" : "Previous page"}</Button>}{nextCursor && <Button variant="secondary" onClick={loadMoreEntries} disabled={loadingMore}>{loadingMore ? t(language, "loading") : language === "fr" ? "Page suivante" : "Next page"}</Button>}</div>}
             </> : loadError ? null : <EntriesEmptyState language={language} filtered={filtersActive} onClear={clearFilters} onWrite={() => setDialog({ kind: "entry" })} />}
             </CollectionTabPanel>
-            <CollectionTabPanel tab="formats" active={collectionTab === "formats"}><CollectionFormatsSection collection={selected} language={language} onAdd={() => setDialog({ kind: "addFormat" })} onEdit={(formatId) => setDialog({ kind: "editFormat", formatId })} onColor={(formatId) => setDialog({ kind: "formatColor", formatId })} onCopy={(formatId) => setDialog({ kind: "copyFormat", formatId })} onLink={(formatId) => setDialog({ kind: "linkFormat", formatId })} onReviewUpdate={(formatId) => setDialog({ kind: "linkedFormatUpdate", formatId })} /></CollectionTabPanel>
+            <CollectionTabPanel tab="formats" active={collectionTab === "formats"}><CollectionFormatsSection collection={selected} language={language} entryCounts={Object.fromEntries(selected.formats.map((format) => [format.id, entries.filter((entry) => entry.formatId === format.id).length]))} countPartial={filtersActive || !!nextCursor || previousPages.length > 0 || loadingEntries} onAdd={() => setDialog({ kind: "addFormat" })} onAddEntry={(formatId) => setDialog({ kind: "entry", formatId })} onEdit={(formatId) => setDialog({ kind: "editFormat", formatId })} onColor={(formatId) => setDialog({ kind: "formatColor", formatId })} onCopy={(formatId) => setDialog({ kind: "copyFormat", formatId })} onLink={(formatId) => setDialog({ kind: "linkFormat", formatId })} onReviewUpdate={(formatId) => setDialog({ kind: "linkedFormatUpdate", formatId })} /></CollectionTabPanel>
             <CollectionTabPanel tab="tools" active={collectionTab === "tools"}><CollectionToolsHub collection={selected} user={user} language={language} onOpenSection={setActiveSection} onOpenDialog={(kind) => setDialog({ kind })} /></CollectionTabPanel>
           </>}
         </div>

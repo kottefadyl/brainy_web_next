@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { FolderHeart, Plus, Search, Settings2, SlidersHorizontal, Upload } from "lucide-react";
 import { t, type Collection, type Language } from "../lib/brainy";
 
@@ -19,11 +19,12 @@ type Props = {
 export default function CollectionSidebar({ collections, selectedId, loading, language, onSelect, onTemplate, onManual, onTransfer, onTools }: Props) {
   const [query, setQuery] = useState("");
   const visible = collections.filter((item) => item.name.toLocaleLowerCase(language).includes(query.trim().toLocaleLowerCase(language)));
+  const activeIndex = visible.findIndex((item) => item.id === selectedId);
   const fr = language === "fr";
   return <div className="collection-sidebar">
     <div className="sidebar-heading"><span>{t(language, "collections")}</span><span className="sidebar-total">{collections.length}</span></div>
     <label className="sidebar-search"><Search size={17} aria-hidden="true" /><span className="sr-only">{fr ? "Rechercher une collection" : "Search collections"}</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={fr ? "Rechercher…" : "Search…"} /></label>
-    <nav className="collection-nav" aria-label={t(language, "collections")}>
+    <nav className="collection-nav" aria-label={t(language, "collections")} data-active-visible={activeIndex >= 0} style={{ "--active-index": activeIndex } as CSSProperties}>
       {visible.map((collection) => <button type="button" key={collection.id} className={`nav-item ${selectedId === collection.id ? "active" : ""}`} aria-current={selectedId === collection.id ? "page" : undefined} aria-label={collection.name} title={collection.name} onClick={() => onSelect(collection.id)}><FolderHeart size={18} aria-hidden="true" /><span>{collection.name}</span><span className="nav-count" aria-hidden="true">{collection.formats.length}</span></button>)}
       {!loading && collections.length === 0 && <p className="sidebar-empty">{t(language, "noCollectionsDetail")}</p>}
       {query && visible.length === 0 && collections.length > 0 && <p className="sidebar-empty">{fr ? "Aucune collection trouvée" : "No matching collections"}</p>}

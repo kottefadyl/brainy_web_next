@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local visual review artifacts and temporary fixture route
+/.visual-checks/
+/.phase-two-b-chrome/
+/.phase-two-b-review-chrome/
+/app/phase-two-b-preview/

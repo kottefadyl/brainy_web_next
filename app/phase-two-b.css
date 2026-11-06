@@ -1,0 +1,252 @@
+/* Phase 2b: fixed workspace, warmer surfaces, and local motion. */
+html:has(.app-shell), body:has(.app-shell) { height: 100dvh; overflow: hidden; }
+html[data-theme] .app-shell {
+  height: 100dvh; min-height: 0; overflow: hidden;
+  grid-template-columns: 280px minmax(0, 1fr);
+}
+html[data-theme] .app-shell .sidebar {
+  position: relative; top: auto; height: 100dvh; min-height: 0;
+  align-self: stretch; overflow: visible;
+}
+html[data-theme] .app-shell .collection-sidebar,
+html[data-theme] .app-shell .collection-nav { min-height: 0; }
+html[data-theme] .app-shell .collection-nav { flex: 1 1 auto; overflow-y: auto; scrollbar-width: thin; }
+html[data-theme] .app-shell .sidebar-actions,
+html[data-theme] .app-shell .sidebar-bottom { flex: none; }
+html[data-theme] .app-shell .workspace {
+  min-width: 0; min-height: 0; height: 100dvh;
+  overflow-x: hidden; overflow-y: auto; scrollbar-gutter: stable;
+  overscroll-behavior-y: contain;
+}
+html[data-theme] .app-shell .topbar {
+  position: sticky; top: 0; z-index: 30;
+}
+html[data-theme] .app-shell .sidebar-more-options { position: absolute; bottom: calc(100% + 8px); z-index: 50; }
+
+html[data-theme] .app-shell .collection-hero,
+html[data-theme="dark"] .app-shell .collection-hero,
+html[data-theme] .app-shell .entries-empty,
+html[data-theme] .app-shell .first-empty {
+  background: linear-gradient(130deg, var(--accent-soft), var(--surface) 58%) !important;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--ink) 7%, transparent);
+}
+html[data-theme] .app-shell .collection-icon {
+  background: var(--accent-soft); color: var(--blue-dark); border-color: var(--accent-soft);
+}
+html[data-theme] .auth-shell .auth-form-side {
+  background-image: linear-gradient(145deg, var(--accent-soft), var(--surface) 58%);
+}
+html[data-theme] .app-shell .section-overline,
+html[data-theme] .app-shell .collection-tools-group-heading {
+  color: var(--muted); font-size: 13px; font-weight: 600;
+}
+html[data-theme] .app-shell .section-overline::before,
+html[data-theme] .app-shell .collection-tools-group-heading::before {
+  content: ""; display: inline-block; width: 6px; height: 6px;
+  margin-right: 8px; vertical-align: 2px; border-radius: 50%; background: var(--blue);
+}
+html[data-theme] .app-shell .collection-tools-group:nth-child(2) .collection-tools-group-heading::before { background: var(--tool-structure); }
+html[data-theme] .app-shell .collection-tools-group:nth-child(3) .collection-tools-group-heading::before { background: var(--tool-governance); }
+html[data-theme] .app-shell .collection-tools-group:nth-child(2) .collection-hub-icon {
+  background: color-mix(in srgb, var(--tool-structure) 14%, var(--surface));
+  color: var(--tool-structure);
+}
+html[data-theme] .app-shell .collection-tools-group:nth-child(3) .collection-hub-icon {
+  background: color-mix(in srgb, var(--tool-governance) 14%, var(--surface));
+  color: var(--tool-governance);
+}
+html[data-theme] .app-shell .collection-tools-group:nth-child(3) .collection-hub-card:nth-child(3) .collection-hub-icon {
+  background: color-mix(in srgb, var(--tool-warm) 14%, var(--surface));
+  color: var(--tool-warm);
+}
+html[data-theme] .app-shell .collection-tools-drawer {
+  padding: 12px 0; border: 0; background: transparent; box-shadow: none;
+}
+
+html[data-theme] .app-shell .format-cards {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 16px; align-items: stretch;
+}
+html[data-theme] .app-shell .format-card {
+  display: flex; flex-direction: column; min-width: 0;
+  border: 1px solid var(--line) !important;
+  border-top: 3px solid var(--format-marker-light, var(--focus)) !important;
+  border-radius: 14px !important;
+  padding: 18px !important;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--ink) 6%, transparent) !important;
+  transition: transform 160ms ease-out, box-shadow 160ms ease-out;
+}
+html[data-theme="dark"] .app-shell .format-card {
+  border-top-color: var(--format-marker-dark, var(--focus)) !important;
+  box-shadow: none !important;
+}
+html[data-theme] .app-shell .format-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 9px 24px color-mix(in srgb, var(--ink) 11%, transparent) !important;
+}
+html[data-theme] .app-shell .format-card:active { transform: scale(.98); }
+html[data-theme] .app-shell .format-card-head { align-items: flex-start; }
+html[data-theme] .app-shell .format-card-title strong { margin: 0; font-size: 18px; line-height: 1.3; }
+html[data-theme] .app-shell .format-card-subtitle { display: block; margin-top: 4px; color: var(--muted); font-size: 13px; }
+html[data-theme] .app-shell .format-card-fields { flex: 1 0 auto; align-content: start; margin: 16px 0; }
+html[data-theme] .app-shell .format-card .format-tag {
+  background: color-mix(in srgb, var(--surface-elevated) 72%, transparent);
+  border: 0; border-radius: 8px;
+}
+html[data-theme] .app-shell .format-card-footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+html[data-theme] .app-shell .format-add-entry {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 44px; padding: 0 14px; border: 1px solid var(--control-border);
+  border-radius: 10px; background: color-mix(in srgb, var(--format-surface-light) 75%, var(--surface));
+  color: var(--ink); font-weight: 600;
+}
+html[data-theme="dark"] .app-shell .format-add-entry {
+  background: color-mix(in srgb, var(--format-surface-dark) 75%, var(--surface-elevated));
+  border-color: color-mix(in srgb, var(--control-border) 80%, var(--format-marker-dark));
+}
+html[data-theme] .app-shell .format-card:has(.format-card-more[open]) { z-index: 21; position: relative; }
+html[data-theme] .app-shell .format-card-more { position: relative; }
+html[data-theme] .app-shell .format-card-more summary {
+  display: grid; place-items: center; width: 44px; height: 44px; list-style: none;
+  border: 0; border-radius: 10px; background: transparent; color: var(--ink); cursor: pointer;
+}
+html[data-theme] .app-shell .format-card-more summary::-webkit-details-marker { display: none; }
+html[data-theme] .app-shell .format-card-more summary::after { display: none; }
+html[data-theme] .app-shell .format-card-more summary:hover,
+html[data-theme] .app-shell .format-card-more[open] summary { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+html[data-theme] .app-shell .format-card-menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 20;
+  width: max-content; min-width: 190px; max-width: min(300px, calc(100vw - 72px)); padding: 6px;
+  border: 1px solid var(--control-border); border-radius: 12px;
+  background: var(--surface-elevated); box-shadow: var(--shadow);
+}
+html[data-theme] .app-shell .format-card-menu button {
+  display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px;
+  padding: 8px 12px; border: 0; border-radius: 8px;
+  background: transparent; color: var(--ink); text-align: left;
+}
+html[data-theme] .app-shell .format-card-menu button:hover { background: var(--hover); }
+html[data-theme] .brainy-listbox { position: relative; display: grid; gap: 6px; min-width: 0; }
+html[data-theme] .app-shell .entry-tools .brainy-listbox { flex: 1 1 190px; }
+html[data-theme] .brainy-listbox-label { color: var(--ink); font-size: 13px; font-weight: 600; }
+html[data-theme] .brainy-listbox-trigger {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  width: 100%; min-width: 0; min-height: 44px; padding: 0 12px;
+  border: 1px solid var(--control-border); border-radius: 10px;
+  background: var(--surface-elevated); color: var(--ink); text-align: left; font-weight: 500;
+}
+html[data-theme] .brainy-listbox-value { display: inline-flex; align-items: center; gap: 9px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+html[data-theme] .brainy-listbox-swatch {
+  display: inline-block; flex: none; width: 17px; height: 17px;
+  border: 1px solid var(--control-border); border-radius: 5px;
+}
+html[data-theme] .brainy-listbox-options {
+  position: absolute; top: calc(100% + 5px); left: 0; right: 0; z-index: 60;
+  max-height: min(260px, 45dvh); overflow-y: auto; padding: 5px;
+  border: 1px solid var(--control-border); border-radius: 10px;
+  background: var(--surface-elevated); box-shadow: var(--shadow);
+  animation: brainy-fade 160ms ease-out both;
+}
+html[data-theme] .brainy-listbox-options button {
+  display: flex; align-items: center; gap: 9px; width: 100%; min-height: 44px;
+  padding: 8px 10px; border: 0; border-radius: 8px;
+  background: transparent; color: var(--ink); text-align: left;
+}
+html[data-theme] .brainy-listbox-options button span:not(.brainy-listbox-swatch) { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+html[data-theme] .brainy-listbox-options button:hover,
+html[data-theme] .brainy-listbox-options button[aria-selected="true"] { background: var(--accent-soft); }
+html[data-theme] .brainy-listbox :is(button,button[role="option"]):focus-visible {
+  outline: 2px solid var(--focus); outline-offset: 2px;
+}
+html[data-theme] .format-color-current { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); font-size: 14px; font-weight: 600; }
+html[data-theme] .format-color-swatch { display: inline-block; width: 20px; height: 20px; border: 1px solid var(--control-border); border-radius: 5px; }
+html[data-theme] .analysis-page .insights-chart { min-height: 0; height: auto; background: var(--surface); border-color: var(--line); }
+html[data-theme] .analysis-page .analysis-line-chart svg { display: block; width: 100%; height: 210px; }
+html[data-theme] .analysis-line-chart { min-width: 0; }
+html[data-theme] .analysis-line-chart circle:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+html[data-theme] .analysis-chart-legend { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+html[data-theme] .analysis-chart-key { width: 20px; height: 3px; border-radius: 3px; background: var(--chart-1); }
+html[data-theme] .analysis-key-figure {
+  display: grid; gap: 6px; width: fit-content; min-width: min(100%, 260px);
+  margin: 12px 0; padding: 18px 22px;
+  border: 1px solid var(--line); border-radius: 14px;
+  background: var(--surface);
+}
+html[data-theme] .analysis-key-figure > strong { display: flex; align-items: baseline; gap: 6px; color: var(--ink); font-size: clamp(32px, 4vw, 44px); line-height: 1.1; }
+html[data-theme] .analysis-key-figure > strong small { font-size: 16px; font-weight: 600; }
+html[data-theme] .analysis-key-figure > span:last-child { color: var(--muted); font-size: 13px; }
+html[data-theme] .analysis-technical { margin: 8px 0 14px; }
+html[data-theme] .analysis-technical summary { min-height: 44px; width: fit-content; color: var(--muted); }
+html[data-theme] .analysis-technical p { color: var(--muted); font-size: 13px; }
+html[data-theme] .analysis-line-path { stroke-dasharray: 1500; stroke-dashoffset: 1500; animation: brainy-chart-draw 400ms ease-out forwards; }
+@keyframes brainy-chart-draw { to { stroke-dashoffset: 0; } }
+
+html[data-theme] .app-shell :is(.entry-card.entry-row,.collection-hub-card) {
+  transition: transform 120ms ease-out, box-shadow 120ms ease-out, background-color 120ms ease-out;
+}
+html[data-theme] .app-shell :is(.entry-card.entry-row,.collection-hub-card):hover { transform: translateY(-2px); box-shadow: 0 8px 18px color-mix(in srgb, var(--ink) 9%, transparent) !important; }
+html[data-theme] .app-shell :is(.entry-card.entry-row,.collection-hub-card):active { transform: scale(.98); }
+html[data-theme] :is(button,.button,summary) { transition: background-color 140ms ease-out, box-shadow 140ms ease-out, color 140ms ease-out; }
+html[data-theme] .modal-backdrop { animation: brainy-fade 200ms ease-out both; }
+html[data-theme] .modal { animation: brainy-dialog 200ms ease-out both; }
+html[data-theme] .app-shell .collection-tab-panel:not([hidden]) { animation: brainy-enter 180ms ease-out both; }
+html[data-theme] .app-shell .collection-tab-panel.first-reveal :is(.format-card,.entry-card):nth-child(-n+8) {
+  animation: brainy-enter 180ms ease-out both;
+}
+html[data-theme] .app-shell .collection-tab-panel.first-reveal :is(.format-card,.entry-card):nth-child(2) { animation-delay: 30ms; }
+html[data-theme] .app-shell .collection-tab-panel.first-reveal :is(.format-card,.entry-card):nth-child(3) { animation-delay: 60ms; }
+html[data-theme] .app-shell .collection-tab-panel.first-reveal :is(.format-card,.entry-card):nth-child(4) { animation-delay: 90ms; }
+html[data-theme] .app-shell .collection-tab-panel.first-reveal :is(.format-card,.entry-card):nth-child(5) { animation-delay: 120ms; }
+html[data-theme] .app-shell .collection-tab-panel.first-reveal :is(.format-card,.entry-card):nth-child(6) { animation-delay: 150ms; }
+html[data-theme] .app-shell .collection-tab-panel.first-reveal :is(.format-card,.entry-card):nth-child(7) { animation-delay: 180ms; }
+html[data-theme] .app-shell .collection-tab-panel.first-reveal :is(.format-card,.entry-card):nth-child(8) { animation-delay: 210ms; }
+html[data-theme] .app-shell .workspace-body > .analysis-page { animation: brainy-enter 180ms ease-out both; }
+html[data-theme] .app-shell .entries-skeleton-row span { animation: brainy-shimmer 1.4s ease-in-out infinite alternate; }
+html[data-theme] .toast { animation: brainy-enter 220ms ease-out both; }
+html[data-theme] .toast svg { animation: brainy-check 180ms ease-out both; }
+html[data-theme] .theme-toggle svg { transition: transform 200ms ease-out; }
+html[data-theme] .theme-toggle:hover svg { transform: rotate(22deg); }
+html[data-theme] :is(body,.app-shell,.sidebar,.workspace,.topbar) { transition: background-color 200ms ease-out; }
+html[data-theme] details { interpolate-size: allow-keywords; }
+html[data-theme] details:not(:is(.sidebar-more,.format-card-more,.entry-more,.language-picker,.collection-hero-more))::details-content {
+  height: 0; overflow: clip;
+  transition: height 200ms ease-out, content-visibility 200ms allow-discrete;
+}
+html[data-theme] details[open]:not(:is(.sidebar-more,.format-card-more,.entry-more,.language-picker,.collection-hero-more))::details-content { height: auto; }
+html[data-theme] .app-shell .collection-nav { position: relative; }
+html[data-theme] .app-shell .collection-nav[data-active-visible="true"]::before {
+  content: ""; position: absolute; left: 0; top: 0; width: 3px; height: 44px;
+  border-radius: 3px; background: var(--blue);
+  transform: translateY(calc(var(--active-index) * 48px)); transition: transform 220ms ease-out;
+}
+html[data-theme] .app-shell .sidebar .nav-item { min-height: 44px; height: 44px; flex: 0 0 44px; border-left-color: transparent; }
+html[data-theme] .app-shell .sidebar .nav-item.active { border-left-color: transparent; }
+html[data-theme] .app-shell .collection-section-nav { position: relative; }
+html[data-theme] .app-shell .collection-section-nav .ui-tab[aria-selected="true"] { border-bottom-color: transparent; }
+html[data-theme] .app-shell .collection-section-nav .ui-tabs-indicator {
+  position: absolute; left: 0; bottom: 0; height: 3px; width: var(--indicator-width, 0px);
+  border-radius: 3px; background: var(--blue); pointer-events: none;
+  transform: translateX(var(--indicator-x, 0px));
+  transition: transform 220ms ease-out, width 220ms ease-out;
+}
+@keyframes brainy-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes brainy-dialog { from { opacity: 0; transform: scale(.98); } to { opacity: 1; transform: scale(1); } }
+@keyframes brainy-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes brainy-check { from { transform: scale(.8); } to { transform: scale(1); } }
+@keyframes brainy-shimmer { from { opacity: .46; } to { opacity: .9; } }
+@media (max-width: 760px) {
+  html[data-theme] .app-shell { display: block; grid-template-columns: none; }
+  html[data-theme] .app-shell .sidebar { display: none; }
+  html[data-theme] .app-shell .workspace { height: 100dvh; }
+  html[data-theme] .app-shell .entry-tools .brainy-listbox { flex-basis: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .app-shell *, html[data-theme] .app-shell *::before, html[data-theme] .app-shell *::after,
+  html[data-theme] .modal, html[data-theme] .modal-backdrop, html[data-theme] .toast {
+    transition-duration: 0ms !important; animation-duration: 80ms !important;
+    animation-name: brainy-fade !important;
+  }
+  html[data-theme] .app-shell :is(.format-card,.entry-card.entry-row,.collection-hub-card):is(:hover,:active),
+  html[data-theme] .theme-toggle:hover svg { transform: none !important; }
+  html[data-theme] .analysis-line-path { animation: none !important; stroke-dashoffset: 0 !important; }
+}

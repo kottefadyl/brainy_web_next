@@ -3,6 +3,8 @@
 import { useMemo, useRef, useState } from "react";
 import { api } from "../lib/api";
 import type { AnalysisInput, AnalysisOperationId, AnalysisResult, Collection, EntryFilter, ForecastResult, Formula, Language } from "../lib/brainy";
+import { AnalysisResultChart } from "./analysis-result-chart";
+import { AccessibleListbox } from "./components/ui/AccessibleListbox";
 
 type Props = {
   collection: Collection;
@@ -318,11 +320,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
           </button>
         </div>
       )}
-      <label>{fr ? "Format de données" : "Data format"}
-        <select value={format?.id ?? ""} onChange={(event) => { setFormatId(event.target.value); setResult(null); setFilters([]); }}>
-          {collection.formats.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-        </select>
-      </label>
+      <AccessibleListbox label={fr ? "Format de données" : "Data format"} value={format?.id ?? ""} options={collection.formats.map((item) => ({ id: item.id, label: item.name, swatch: item.color }))} onChange={(value) => { setFormatId(value); setResult(null); setFilters([]); }} />
 
       <details className="insights-section insights-formulas">
         <summary>{fr ? "Formules enregistrées" : "Saved formulas"}</summary>
@@ -461,34 +459,25 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
       {backgroundNotice && <p role="status">{backgroundNotice}</p>}
       {result ? (
         <section ref={resultsRef} className="insights-section insights-results">
-          <h3>{fr ? "Résultats" : "Results"} ({result.unit ?? (fr ? "sans unité" : "no unit")}) · v{result.operationVersion}</h3>
-          <p>{fr ? "Mis à jour" : "Updated"} {new Date(result.refreshedAt).toLocaleString(language)}{result.explanation ? ` · ${result.explanation}` : ""}{result.slope ? ` · ${fr ? "Pente" : "Slope"} : ${result.slope}` : ""}{(result.skippedMissingCount ?? 0) > 0 ? ` · ${result.skippedMissingCount} ${fr ? "valeurs manquantes ignorées" : "missing values skipped"}` : ""}</p>
-          <label>{fr ? "Affichage" : "Display"}
-            <select value={effectiveChart} onChange={(event) => setChart(event.target.value as typeof chart)}>
-              <option value="TABLE">{fr ? "Tableau" : "Table"}</option>
-              {nonnegative && <option value="BAR">{fr ? "Barres" : "Bars"}</option>}
-              {canLine && <option value="LINE">{fr ? "Courbe" : "Line"}</option>}
-              {nonnegative && total > 0 && <option value="PIE">{fr ? "Répartition" : "Shares"}</option>}
-            </select>
-          </label>
-          {effectiveChart === "BAR" && (
+          <h3>{OPERATIONS.find((item) => item.id === result.operation)?.[fr ? "fr" : "en"] ?? result.operation} · {rows.length === 1 ? `${rows[0].value} ${result.unit ?? ""} · ` : ""}{rows.reduce((sum, row) => sum + row.count, 0)} {fr ? "entrées" : "entries"} · {result.skippedMissingCount ?? 0} {fr ? "ignorées" : "skipped"}</h3>
+          <p>{fr ? "Mis à jour" : "Updated"} {new Date(result.refreshedAt).toLocaleString(language)}</p>
+          <details className="analysis-technical"><summary>{fr ? "Détails techniques" : "Technical details"}</summary><p>v{result.operationVersion}{result.explanation ? ` · ${result.explanation}` : ""}{result.slope ? ` · ${fr ? "Pente" : "Slope"} : ${result.slope}` : ""}</p></details>
+          <AccessibleListbox label={fr ? "Affichage" : "Display"} value={effectiveChart} options={[
+            { id: "TABLE", label: fr ? "Tableau" : "Table" },
+            ...(nonnegative ? [{ id: "BAR", label: fr ? "Barres" : "Bars" }] : []),
+            ...(canLine ? [{ id: "LINE", label: fr ? "Courbe" : "Line" }] : []),
+            ...(nonnegative && total > 0 ? [{ id: "PIE", label: fr ? "Répartition" : "Shares" }] : []),
+          ]} onChange={(value) => setChart(value as typeof chart)} />
+          {rows.length === 1 && <AnalysisResultChart rows={rows} unit={result.unit} language={language} />}
+          {rows.length > 1 && effectiveChart === "BAR" && (
             <div className="insights-chart" role="img" aria-label={fr ? "Graphique en barres" : "Bar chart"}>
               {rows.map((row) => <div key={row.group} className="insights-bar"><span>{row.label}</span><div><i style={{ width: `${Math.abs(Number(row.value) || 0) / max * 100}%` }} /></div><strong>{row.value} {result.unit ?? ""}</strong></div>)}
             </div>
           )}
-          {effectiveChart === "LINE" && (
-            <div className="insights-chart">
-              <div className="insights-axis-label">{result.unit ?? result.dimension ?? (fr ? "Valeur" : "Value")} (0 – {max})</div>
-              <svg viewBox="0 0 500 170" preserveAspectRatio="none" role="img" aria-label={fr ? "Courbe" : "Line chart"}>
-                <polyline fill="none" stroke="var(--chart-1)" strokeWidth="3" points={rows.map((row, idx) => `${20 + idx * 460 / Math.max(1, rows.length - 1)},${150 - (Number(row.value) || 0) / max * 130}`).join(" ")} />
-                {rows.map((row, idx) => <circle key={row.group} cx={20 + idx * 460 / Math.max(1, rows.length - 1)} cy={150 - (Number(row.value) || 0) / max * 130} r="4" fill="var(--chart-1)" />)}
-              </svg>
-              <div className="insights-axis-label">{rows.map((row) => row.label).join(" · ")}</div>
-            </div>
-          )}
-          {effectiveChart === "PIE" && (
+          {rows.length > 1 && effectiveChart === "LINE" && <AnalysisResultChart rows={rows} unit={result.unit} language={language} />}
+          {rows.length > 1 && effectiveChart === "PIE" && (
             <div className="insights-chart insights-pie-layout" role="img" aria-label={fr ? "Graphique de répartition" : "Share chart"}>
-              <div className="insights-pie" style={{ background: `conic-gradient(${rows.map((row, idx) => { const colors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"]; const start = rows.slice(0, idx).reduce((sum, item) => sum + Math.max(0, Number(item.value) || 0), 0) / total * 360; const end = start + Math.max(0, Number(row.value) || 0) / total * 360; return `${colors[idx % colors.length]} ${start}deg ${end}deg`; }).join(", ")})` }} />
+              <div className="insights-pie" style={{ background: `conic-gradient(${rows.map((row, idx) => { const colors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)", "var(--chart-6)", "var(--chart-7)", "var(--chart-8)"]; const start = rows.slice(0, idx).reduce((sum, item) => sum + Math.max(0, Number(item.value) || 0), 0) / total * 360; const end = start + Math.max(0, Number(row.value) || 0) / total * 360; return `${colors[idx % colors.length]} ${start}deg ${end}deg`; }).join(", ")})` }} />
               <div className="insights-pie-list">{rows.map((row) => <div key={row.group}><span>{row.label}</span><strong>{row.value} {result.unit ?? ""}</strong></div>)}</div>
             </div>
           )}
