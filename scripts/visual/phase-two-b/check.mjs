@@ -114,16 +114,18 @@ try {
             cards:cards.length,
             title:min(cards.map(e=>ratio([css(e.querySelector('strong')).color],[css(e).backgroundColor]))),
             metadata:min(cards.map(e=>ratio([css(e.querySelector('.format-card-subtitle')).color],[css(e).backgroundColor]))),
-            marker:min(cards.map(e=>ratio([css(e).borderTopColor],[css(e).backgroundColor]))),
+            marker:min(cards.map(e=>{const icon=e.querySelector('.format-card-symbol');return ratio([css(icon).color],[css(icon).backgroundColor])})),
             control:min(cards.map(e=>ratio([css(e.querySelector('.format-add-entry')).borderTopColor],[css(e).backgroundColor]))),
             focus:min(cards.map(e=>ratio([css(e).getPropertyValue('--focus')],[css(e).backgroundColor]))),
             icons:min(icons.map(e=>ratio([css(e).color],[css(e.closest('.collection-hub-card')).backgroundColor,css(e).backgroundColor]))),
             axis:chart?+(13*chart.getBoundingClientRect().width/chart.viewBox.baseVal.width).toFixed(1):null,
             chartContrast:chart?+ratio([css(chart.querySelector('polyline')).stroke],[css(chart.parentElement).backgroundColor]).toFixed(2):null,
+            navigation:ratio([css(document.querySelector('.sidebar-top p')).color],[css(document.querySelector('.sidebar')).backgroundColor]),
           };
         })()`);
         report.push({ width, theme, view, ...metrics });
         assert(!metrics.overflow && !metrics.clipped, `Overflow: ${width}/${theme}/${view}`);
+        assert(metrics.navigation >= 4.5, "Blue navigation contrast");
         if (view === "formats") {
           assert.equal(metrics.cards, 24);
           assert(metrics.title >= 4.5 && metrics.metadata >= 4.5 && metrics.marker >= 3 && metrics.control >= 3 && metrics.focus >= 3, "Format contrasts");

@@ -13,4 +13,6 @@ Run from `brainy_web_app` with Node 24 and Chrome installed:
 
 The checks assert 48 combinations of viewport (320, 390, 640, 1280), theme and view; contrast across 24 data format colors; readable chart axes; keyboard selection and typeahead; Escape within a modal; mobile drawer focus; reduced motion indicator placement; enlarged root text; independent scrolling. A 640 CSS px viewport also exercises reflow equivalent to a 1280 px viewport at 200% browser zoom; it does not change the browser zoom setting.
 
+The blue navigation update also checks navigation text contrast and data format icon contrast. Each synthetic data format has six fields to exercise the compact preview and expandable field list.
+
 The generated route is excluded from Git. Screenshots, metrics and browser profiles are excluded from Git, lint and TypeScript. Cleanup also retires the generated `.next/dev/types` cache, which otherwise keeps a validator importing the removed fixture route. No new dependencies are required. Do not run the development server concurrently with the final build.

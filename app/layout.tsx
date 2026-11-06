@@ -11,6 +11,7 @@ import "./shell.css";
 import "./dialog-fixes.css";
 import "./phase-two.css";
 import "./phase-two-b.css";
+import "./workspace-identity.css";
 
 export const metadata: Metadata = {
   title: "Brainy — Your space to remember",

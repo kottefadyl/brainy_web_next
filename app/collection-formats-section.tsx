@@ -1,4 +1,4 @@
-import { Copy, Link2, MoreHorizontal, Palette, Pencil, Plus } from "lucide-react";
+import { Copy, Layers3, Link2, MoreHorizontal, Palette, Pencil, Plus } from "lucide-react";
 import { formatColorStyle } from "../lib/format-colors";
 import {
   fieldKindLabel, formatColors, formatDisplayName, t,
@@ -41,10 +41,11 @@ export default function CollectionFormatsSection({ collection, language, entryCo
         const fieldText = fr ? `${format.fields.length} ${format.fields.length === 1 ? "champ" : "champs"}` : `${format.fields.length} ${format.fields.length === 1 ? "field" : "fields"}`;
         const entryText = fr ? `${count} ${count === 1 ? "entrée" : "entrées"}${countPartial ? count === 1 ? " affichée" : " affichées" : ""}` : `${count} ${count === 1 ? "entry" : "entries"}${countPartial ? " shown" : ""}`;
         return <article key={format.id} className="format-card" style={formatColorStyle(format.color)}>
-          <div className="format-card-head"><div className="format-card-title"><strong>{name}</strong><span className="format-card-subtitle">{fieldText} · {entryText}</span></div></div>
+          <div className="format-card-head"><span className="format-card-symbol" aria-hidden="true"><Layers3 size={18} /></span><div className="format-card-title"><strong>{name}</strong><span className="format-card-subtitle">{fieldText} · {entryText}</span></div></div>
           {format.linkedSource && <div className="format-linked-source"><span>{fr ? "Version source acceptée" : "Accepted source version"}: {format.linkedSource.acceptedVersion}</span><button type="button" onClick={() => onReviewUpdate(format.id)}>{fr ? "Voir les mises à jour" : "Review updates"}</button></div>}
           <div className="format-card-fields">
-            {format.fields.map((field) => <span key={field.id} className="format-tag">{field.name}<small>{fieldKindLabel(language, field.kind)}{field.unit ? ` · ${field.unit}` : ""}</small></span>)}
+            {format.fields.slice(0, 3).map((field) => <span key={field.id} className="format-tag">{field.name}<small>{fieldKindLabel(language, field.kind)}{field.unit ? ` · ${field.unit}` : ""}</small></span>)}
+            {format.fields.length > 3 && <details className="format-fields-extra"><summary>{fr ? `${format.fields.length - 3} autre${format.fields.length > 4 ? "s champs" : " champ"}` : `${format.fields.length - 3} more field${format.fields.length > 4 ? "s" : ""}`}</summary><div>{format.fields.slice(3).map((field) => <span key={field.id} className="format-tag">{field.name}<small>{fieldKindLabel(language, field.kind)}{field.unit ? ` · ${field.unit}` : ""}</small></span>)}</div></details>}
           </div>
           <div className="format-card-footer">
             <button type="button" className="format-add-entry" onClick={() => onAddEntry(format.id)}><Plus size={17} aria-hidden="true" /> {fr ? "Ajouter une entrée" : "Add entry"}</button>

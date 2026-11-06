@@ -16,7 +16,7 @@ import { formatColors, type Collection, type Entry, type Language } from "../../
 
 const formats: Collection["formats"] = formatColors.map((color, i) => ({
   id: `f${i}`, name: ["Observations", "Livres", "Notes"][i] ?? `Données personnelles ${i + 1}`, color,
-  fields: [{ id: `title${i}`, name: "Titre", kind: "TITLE" }, { id: `text${i}`, name: "Description", kind: "TEXT" }],
+  fields: [{ id: `title${i}`, name: "Titre", kind: "TITLE" }, { id: `text${i}`, name: "Description", kind: "TEXT" }, ...[0, 1, 2, 3].map((j) => ({ id: `extra${i}-${j}`, name: ["Équipement", "Instructions", "Durée", "Commentaires"][j], kind: "TEXT" as const }))],
 }));
 const collection: Collection = { id: "c", ownerId: "u", name: "Une très longue collection de démonstration",
   fields: [], formats, codeLists: [], units: [], exchangeRates: [], sharedObjects: [], savedViews: [], formulas: [] };

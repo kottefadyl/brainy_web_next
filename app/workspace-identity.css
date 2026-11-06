@@ -1,0 +1,157 @@
+/* Blue navigation, quiet data surfaces, a restrained red brand accent. */
+:root {
+  --navigation-surface: #173f7a;
+  --navigation-field: #204b86;
+  --navigation-raised: #214b83;
+  --navigation-hover: #2b5590;
+  --navigation-selection: #315d99;
+  --navigation-ink: #ffffff;
+  --navigation-muted: #d4e3fa;
+  --navigation-border: #94b3df;
+  --brand-red: #f1919d;
+}
+html[data-theme="dark"] {
+  --navigation-surface: #122b4d;
+  --navigation-field: #19375c;
+  --navigation-raised: #1c3b62;
+  --navigation-hover: #24476f;
+  --navigation-selection: #2b507a;
+  --navigation-ink: #f2f6ff;
+  --navigation-muted: #c2d5ed;
+  --navigation-border: #86a7d0;
+}
+html[data-theme] .app-shell .sidebar,
+html[data-theme] .mobile-drawer-panel {
+  --sidebar-surface: var(--navigation-surface);
+  --surface: var(--navigation-field);
+  --surface-elevated: var(--navigation-raised);
+  --ink: var(--navigation-ink);
+  --muted: var(--navigation-muted);
+  --blue: var(--navigation-ink);
+  --blue-dark: var(--navigation-ink);
+  --focus: var(--navigation-ink);
+  --accent-soft: var(--navigation-selection);
+  --hover: var(--navigation-hover);
+  --line: #ffffff26;
+  --control-border: var(--navigation-border);
+  background: var(--navigation-surface);
+  color: var(--navigation-ink);
+}
+html[data-theme] .app-shell .sidebar { border-right: 0; }
+html[data-theme] .app-shell .sidebar-top { padding-bottom: 20px; }
+html[data-theme] .app-shell .sidebar .brand-dot { color: var(--brand-red); }
+html[data-theme] .app-shell .sidebar-top::after {
+  content: ""; display: block; width: 24px; height: 3px;
+  margin-top: 16px; border-radius: 4px; background: var(--brand-red);
+}
+html[data-theme] .app-shell .sidebar-new-collection,
+html[data-theme] .mobile-drawer-actions .mobile-drawer-create {
+  background: var(--navigation-ink); color: var(--navigation-surface);
+  border-color: var(--navigation-ink); box-shadow: 0 3px 8px #061b3b1a;
+}
+html[data-theme] .app-shell .sidebar-new-collection:hover,
+html[data-theme] .mobile-drawer-actions .mobile-drawer-create:hover { background: #e3edfc; }
+html[data-theme] .app-shell .sidebar .profile-avatar { background: var(--navigation-selection); }
+html[data-theme] .app-shell .sidebar :is(button,summary):focus-visible,
+html[data-theme] .mobile-drawer-panel :is(button,summary):focus-visible {
+  outline: 2px solid var(--navigation-ink); outline-offset: 2px;
+}
+html[data-theme] .mobile-drawer-head strong::after {
+  content: ""; display: inline-block; width: 7px; height: 7px;
+  margin-left: 8px; border-radius: 50%; background: var(--brand-red);
+}
+html[data-theme] .app-shell .format-cards { gap: 14px; }
+html[data-theme] .app-shell .format-card {
+  --data-marker: var(--format-marker-light);
+  --data-surface: var(--format-surface-light);
+  padding: 16px !important;
+  border: 1px solid color-mix(in srgb, var(--data-marker) 16%, var(--data-surface)) !important;
+  background: var(--data-surface) !important;
+  box-shadow: 0 2px 6px #17263a04 !important;
+}
+html[data-theme="dark"] .app-shell .format-card {
+  --data-marker: var(--format-marker-dark);
+  --data-surface: var(--format-surface-dark);
+}
+html[data-theme] .app-shell .format-card-head { align-items: center; gap: 10px; }
+html[data-theme] .app-shell .format-card-symbol {
+  display: grid; place-items: center; flex: 0 0 36px; height: 36px;
+  color: var(--data-marker); border-radius: 10px;
+  background: color-mix(in srgb, var(--data-marker) 8%, var(--data-surface));
+}
+html[data-theme] .app-shell .format-card-title { min-width: 0; flex: 1; text-align: left; }
+html[data-theme] .app-shell .format-card-title strong { font-size: 16px; overflow-wrap: anywhere; }
+html[data-theme] .app-shell .format-card-subtitle { margin-top: 3px; line-height: 1.5; }
+html[data-theme] .app-shell .format-card-fields { margin: 14px 0 12px; gap: 6px 12px; }
+html[data-theme] .app-shell .format-card .format-tag {
+  padding: 2px 0; background: transparent; border: 0;
+  gap: 6px; max-width: 100%; flex-wrap: wrap; overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+html[data-theme] .app-shell .format-tag small { border: 0; padding-left: 0; }
+html[data-theme] .app-shell .format-tag small::before { content: "· "; }
+html[data-theme] .app-shell .format-fields-extra { flex-basis: 100%; width: 100%; }
+html[data-theme] .app-shell .format-fields-extra summary {
+  display: flex; align-items: center; min-height: 44px; width: fit-content;
+  gap: 8px; color: var(--muted); font-size: 13px; cursor: pointer;
+}
+html[data-theme] .app-shell .format-fields-extra > div { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+html[data-theme] .app-shell .format-card-footer { padding-top: 8px; border-top: 1px solid color-mix(in srgb, var(--data-marker) 12%, transparent); }
+html[data-theme] .app-shell .format-add-entry {
+  background: color-mix(in srgb, var(--surface) 65%, var(--data-surface));
+  color: var(--blue-dark); padding-inline: 12px; font-size: 13px;
+}
+html[data-theme] .app-shell .format-add-entry:hover { background: var(--surface); }
+html[data-theme] .app-shell .format-card:hover,
+html[data-theme] .app-shell .format-card:focus-within {
+  border-color: color-mix(in srgb, var(--data-marker) 45%, var(--data-surface)) !important;
+  box-shadow: 0 5px 14px #1424430d !important;
+}
+html[data-theme] .app-shell .format-card:active { transform: none; }
+html[data-theme] .app-shell .entry-card.entry-row {
+  --data-marker: var(--format-marker-light);
+  --data-surface: var(--format-surface-light);
+  padding: 10px 14px; border: 1px solid color-mix(in srgb, var(--data-marker) 14%, var(--data-surface)) !important;
+  background: var(--data-surface) !important;
+}
+html[data-theme="dark"] .app-shell .entry-card.entry-row {
+  --data-marker: var(--format-marker-dark);
+  --data-surface: var(--format-surface-dark);
+}
+html[data-theme] .app-shell .entry-row .entry-format-label {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0; border: 0; background: transparent; font-weight: 500;
+}
+html[data-theme] .app-shell .entry-format-label::before {
+  content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--data-marker);
+}
+html[data-theme] .app-shell .entry-card.entry-row:hover {
+  border-color: color-mix(in srgb, var(--data-marker) 45%, var(--data-surface)) !important;
+  box-shadow: 0 4px 12px #1424430d !important;
+}
+html[data-theme] .app-shell .entry-card.entry-row:active { transform: none; }
+html[data-theme] .app-shell .entry-row .small-action:hover { background: color-mix(in srgb, var(--surface) 70%, transparent); }
+html[data-theme] .app-shell .entry-row:has(.entry-more[open]) { position: relative; z-index: 22; }
+html[data-theme] .app-shell .entry-row-body {
+  grid-template-areas: "content actions" "meta meta";
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 8px;
+}
+html[data-theme] .app-shell .entry-row .entry-actions { justify-self: end; gap: 0; }
+@media (max-width: 400px) {
+  html[data-theme] .app-shell .entry-row .entry-details-action span { display: none; }
+}
+@media (max-width: 760px) {
+  html[data-theme] .app-shell .topbar {
+    --surface: var(--navigation-surface); --ink: var(--navigation-ink);
+    --muted: var(--navigation-muted); --blue: var(--navigation-ink);
+    --control-border: var(--navigation-border); --focus: var(--navigation-ink);
+    --hover: var(--navigation-hover); --line: transparent;
+    color: var(--navigation-ink);
+  }
+  html[data-theme] .app-shell .topbar .brand-dot { color: var(--brand-red); }
+  html[data-theme] .app-shell .entry-card.entry-row { padding: 10px 12px; }
+}
+@media (hover: none) {
+  html[data-theme] .app-shell :is(.format-card,.entry-card.entry-row):hover { transform: none; box-shadow: none !important; }
+}
