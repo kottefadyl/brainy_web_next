@@ -40,7 +40,7 @@ html[data-theme="dark"] .app-shell .entry-row .entry-edited { color: var(--muted
 .modal { color: var(--ink); border-color: var(--line); }
 .modal-head, .modal-actions { border-color: var(--line); }
 .button { min-height: 44px; font-weight: 600; }
-.button-primary { background: var(--blue); color: var(--on-primary); }
+.button-primary { background: var(--primary); color: var(--on-primary); }
 .button-secondary { background: var(--surface-elevated); color: var(--ink); border-color: var(--control-border); }
 .button-secondary:hover:not(:disabled) { background: var(--hover); }
 .button-danger { background: var(--danger-fill); color: var(--on-danger); }

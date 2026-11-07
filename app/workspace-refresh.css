@@ -420,8 +420,8 @@ html[data-theme="dark"] .app-shell .entries-heading .button-secondary {
 }
 
 html[data-theme="dark"] .app-shell .collection-nav + .sidebar-create {
-  background: var(--blue);
-  border-color: var(--blue);
+  background: var(--primary);
+  border-color: var(--primary);
   color: var(--on-primary);
 }
 
@@ -455,8 +455,8 @@ html[data-theme="dark"] .app-shell .collection-meta {
 }
 
 html[data-theme="dark"] .app-shell .collection-hero-actions .hero-add-entry {
-  background: var(--blue);
-  border-color: var(--blue);
+  background: var(--primary);
+  border-color: var(--primary);
   color: var(--on-primary);
 }
 
@@ -556,8 +556,8 @@ html[data-theme="dark"] .app-shell .empty-state .empty-art {
 }
 
 html[data-theme="dark"] .app-shell .empty-state .button-secondary {
-  background: var(--blue);
-  border-color: var(--blue);
+  background: var(--primary);
+  border-color: var(--primary);
   color: var(--on-primary);
 }
 
@@ -744,8 +744,8 @@ html[data-theme="dark"] .app-shell .sidebar-search {
 html[data-theme="dark"] .app-shell .sidebar-search input::placeholder { color: var(--muted); }
 html[data-theme="dark"] .app-shell .sidebar-total { background: var(--surface-elevated); color: var(--ink); }
 html[data-theme="dark"] .app-shell .sidebar-new-collection {
-  background: var(--blue);
-  border-color: var(--blue);
+  background: var(--primary);
+  border-color: var(--primary);
   color: var(--on-primary);
 }
 html[data-theme="dark"] .app-shell .sidebar-new-collection:hover { background: var(--blue-dark); }

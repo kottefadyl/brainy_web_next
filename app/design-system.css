@@ -1,0 +1,600 @@
+/* ==========================================================================
+   Brainy design system — final visual layer (imported last).
+   Palette: white, black, red, blue, green. Blue = action and "you are here";
+   red = brand accent and danger; green = success and positive state; black and
+   white = text and surfaces. Data-format pastels stay data identity only.
+   Base values live in --c-* so scoped areas (sidebar, header, auth panel) can
+   remap the public roles without self-referencing cycles.
+   ========================================================================== */
+
+html[data-theme] {
+  color-scheme: light;
+  --c-canvas: #F6F7F9;
+  --c-sidebar: #FBFBFC;
+  --c-surface: #FFFFFF;
+  --c-raised: #FFFFFF;
+  --c-soft: #F2F4F7;
+  --c-hover: #EEF0F4;
+  --c-ink: #0E1116;
+  --c-muted: #586070;
+  --c-line: #E4E7EC;
+  --c-line-strong: #D0D5DD;
+  --c-control: #8A92A1;
+  --c-accent: #1F4FD8;
+  --c-accent-soft: #EEF3FE;
+  --c-focus: #2454E6;
+
+  --bg: var(--c-canvas);
+  --canvas: var(--c-canvas);
+  --background: var(--c-canvas);
+  --sidebar-surface: var(--c-sidebar);
+  --surface: var(--c-surface);
+  --surface-elevated: var(--c-raised);
+  --dialog-surface: var(--c-surface);
+  --surface-soft: var(--c-soft);
+  --hover: var(--c-hover);
+  --selection: rgba(36, 84, 230, 0.10);
+  --ink: var(--c-ink);
+  --foreground: var(--c-ink);
+  --muted: var(--c-muted);
+  --line: var(--c-line);
+  --border: var(--c-line);
+  --line-strong: var(--c-line-strong);
+  --control-border: var(--c-control);
+  --blue: var(--c-accent);
+  --blue-dark: #183FB0;
+  --blue-soft: var(--c-accent-soft);
+  --accent-soft: rgba(36, 84, 230, 0.08);
+  --focus: var(--c-focus);
+
+  --primary: #2454E6;
+  --primary-hover: #1C45C7;
+  --on-primary: #FFFFFF;
+  --primary-fill: var(--primary);
+  --on-primary-fill: #FFFFFF;
+  --danger: #C8202F;
+  --danger-fill: #C8202F;
+  --on-danger: #FFFFFF;
+  --danger-soft: #FDEDEE;
+  --green: #157F3B;
+  --success: #157F3B;
+  --success-fill: #16A34A;
+  --success-soft: #EAF7EF;
+  --warning: #8A5A00;
+  --info: var(--c-accent);
+
+  --brand-blue: #2454E6;
+  --brand-red: #E5383B;
+  --logo-red: #E5383B;
+  --brand-ink: #0E1116;
+  --brand-tile: transparent;
+
+  --tool-structure: #1F4FD8;
+  --tool-governance: #157F3B;
+  --tool-warm: #B42318;
+
+  --nav-active: var(--c-accent-soft);
+  --on-nav-active: var(--c-accent);
+  --accent-tint: #EEF3FE;
+  --on-accent-tint: #1F4FD8;
+  --hero-surface: var(--c-surface);
+  --hero-border: var(--c-line);
+  --on-hero: var(--c-ink);
+  --scrollbar: #C3C8D1;
+
+  --navigation-surface: var(--c-sidebar);
+  --navigation-field: #FFFFFF;
+  --navigation-raised: #FFFFFF;
+  --navigation-hover: #EEF0F4;
+  --navigation-selection: var(--c-accent-soft);
+  --navigation-ink: var(--c-ink);
+  --navigation-muted: var(--c-muted);
+  --navigation-border: var(--c-control);
+
+  --overlay: rgba(14, 17, 22, 0.42);
+  --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 14px rgba(16, 24, 40, 0.05);
+  --shadow-hover: 0 2px 4px rgba(16, 24, 40, 0.05), 0 10px 24px rgba(16, 24, 40, 0.08);
+  --shadow-lg: 0 24px 48px -12px rgba(16, 24, 40, 0.18), 0 4px 10px rgba(16, 24, 40, 0.05);
+  --glow-blue: rgba(36, 84, 230, 0.10);
+  --glow-green: rgba(22, 163, 74, 0.07);
+  --glow-red: rgba(229, 56, 59, 0.05);
+  --pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='180' fill='none' stroke='%232454E6' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 40h60l20 20h70M60 100h50l20-20h60l20 20h20M40 150h90l20-20h40'/%3E%3Ccircle cx='170' cy='60' r='4'/%3E%3Ccircle cx='240' cy='100' r='4'/%3E%3Ccircle cx='190' cy='130' r='4'/%3E%3Ccircle cx='20' cy='40' r='3'/%3E%3Ccircle cx='40' cy='150' r='3'/%3E%3C/svg%3E");
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --c-canvas: #0F1012;
+  --c-sidebar: #0B0C0E;
+  --c-surface: #17181B;
+  --c-raised: #1E1F23;
+  --c-soft: #1E1F23;
+  --c-hover: #26272C;
+  --c-ink: #F3F4F6;
+  --c-muted: #A3A8B2;
+  --c-line: #2A2C31;
+  --c-line-strong: #3A3C43;
+  --c-control: #6F7480;
+  --c-accent: #8CB0FF;
+  --c-accent-soft: rgba(91, 140, 255, 0.14);
+  --c-focus: #8CB0FF;
+
+  --dialog-surface: #1C1D21;
+  --selection: rgba(91, 140, 255, 0.16);
+  --blue-dark: #A9C4FF;
+  --accent-soft: rgba(91, 140, 255, 0.14);
+
+  --primary: #3366EE;
+  --primary-hover: #2756DB;
+  --on-primary: #FFFFFF;
+  --danger: #FF8A8F;
+  --danger-fill: #D93A40;
+  --on-danger: #FFFFFF;
+  --danger-soft: rgba(255, 90, 95, 0.12);
+  --green: #5EDC8C;
+  --success: #5EDC8C;
+  --success-fill: #22A55A;
+  --success-soft: rgba(52, 210, 123, 0.12);
+  --warning: #F2C26B;
+
+  --brand-blue: #4C7DF5;
+  --brand-red: #FF5A5F;
+  --logo-red: #FF5A5F;
+  --brand-ink: #F3F4F6;
+
+  --tool-structure: #8CB0FF;
+  --tool-governance: #5EDC8C;
+  --tool-warm: #FF8A8F;
+
+  --nav-active: rgba(91, 140, 255, 0.14);
+  --on-nav-active: #F3F4F6;
+  --accent-tint: #1C2A47;
+  --on-accent-tint: #CFE0FF;
+  --scrollbar: #3F424A;
+
+  --navigation-field: #17181B;
+  --navigation-raised: #1E1F23;
+  --navigation-hover: #18191C;
+  --navigation-border: #5A5E68;
+
+  --overlay: rgba(0, 0, 0, 0.6);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 18px rgba(0, 0, 0, 0.25);
+  --shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.4), 0 12px 28px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 28px 56px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --glow-blue: rgba(76, 125, 245, 0.16);
+  --glow-green: rgba(52, 210, 123, 0.08);
+  --glow-red: rgba(255, 90, 95, 0.07);
+  --pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='180' fill='none' stroke='%238CB0FF' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 40h60l20 20h70M60 100h50l20-20h60l20 20h20M40 150h90l20-20h40'/%3E%3Ccircle cx='170' cy='60' r='4'/%3E%3Ccircle cx='240' cy='100' r='4'/%3E%3Ccircle cx='190' cy='130' r='4'/%3E%3Ccircle cx='20' cy='40' r='3'/%3E%3Ccircle cx='40' cy='150' r='3'/%3E%3C/svg%3E");
+}
+
+/* ---------- Base ---------- */
+html[data-theme] body {
+  background: var(--c-canvas);
+  color: var(--c-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "cv11", "ss01";
+}
+html[data-theme] ::selection { background: color-mix(in srgb, var(--primary) 24%, transparent); }
+html[data-theme] * { scrollbar-width: thin; scrollbar-color: var(--scrollbar) transparent; }
+html[data-theme] :is(h1, h2, h3) { letter-spacing: -0.015em; }
+html[data-theme] a:not(.button) { color: var(--c-accent); text-underline-offset: 3px; }
+
+/* ---------- Buttons ---------- */
+html[data-theme] .button {
+  min-height: 40px; padding: 0 16px; border-radius: 10px;
+  font-size: 14px; font-weight: 600; letter-spacing: -0.005em;
+  transition: background-color .14s var(--ease), border-color .14s var(--ease), box-shadow .14s var(--ease), transform .12s var(--ease), color .14s;
+}
+html[data-theme] .button:not(:disabled):hover { transform: translateY(-1px); }
+html[data-theme] .button:not(:disabled):active { transform: scale(.98); }
+html[data-theme] .button-primary,
+html[data-theme] .auth-submit {
+  background: var(--primary); border-color: var(--primary); color: var(--on-primary);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .12), inset 0 1px 0 rgba(255, 255, 255, .14);
+}
+html[data-theme] .button-primary:not(:disabled):hover,
+html[data-theme] .auth-submit:not(:disabled):hover {
+  background: var(--primary-hover); border-color: var(--primary-hover);
+  box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--primary) 45%, transparent), inset 0 1px 0 rgba(255, 255, 255, .14);
+}
+html[data-theme] .button-secondary {
+  background: var(--c-surface); border-color: var(--c-line-strong); color: var(--c-ink); box-shadow: var(--shadow-xs);
+}
+html[data-theme] .button-secondary:not(:disabled):hover { background: var(--c-soft); border-color: var(--c-control); }
+html[data-theme] .button-subtle { background: transparent; color: var(--c-ink); }
+html[data-theme] .button-subtle:not(:disabled):hover { background: var(--c-hover); }
+html[data-theme] .button-danger { background: var(--danger-fill); border-color: var(--danger-fill); color: var(--on-danger); }
+html[data-theme] .button-danger:not(:disabled):hover { background: color-mix(in srgb, var(--danger-fill) 88%, #000); }
+html[data-theme] .icon-button { border-radius: 10px; color: var(--c-muted); transition: background-color .14s, color .14s; }
+html[data-theme] .icon-button:hover { background: var(--c-hover); color: var(--c-ink); }
+
+/* ---------- Form controls ---------- */
+html[data-theme] .brainy-listbox-trigger { font-size: 14px; border-radius: 10px; }
+html[data-theme] :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="color"]), select, textarea) {
+  border-radius: 10px; border-color: var(--c-control); background: var(--c-surface); color: var(--c-ink);
+  transition: border-color .14s var(--ease), box-shadow .14s var(--ease);
+}
+html[data-theme] :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea):hover:not(:disabled):not(:focus) { border-color: var(--c-ink); }
+html[data-theme] :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea):focus-visible {
+  border-color: var(--c-focus); outline: 2px solid var(--c-focus) !important; outline-offset: 1px !important;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--c-focus) 16%, transparent) !important;
+}
+html[data-theme] ::placeholder { color: color-mix(in srgb, var(--c-muted) 85%, var(--c-surface)); opacity: 1; }
+html[data-theme] input[type="checkbox"]:not([role="switch"]):checked,
+html[data-theme] input[role="switch"]:checked { border-color: var(--primary); background-color: var(--primary); }
+html[data-theme] .form-error,
+html[data-theme] .load-error,
+html[data-theme] .contribution-error,
+html[data-theme] .workflow-error {
+  border-radius: var(--radius); border: 1px solid color-mix(in srgb, var(--danger-fill) 30%, transparent);
+  background: var(--danger-soft); color: var(--danger);
+}
+html[data-theme] .toast {
+  border-radius: var(--radius); background: var(--c-ink); color: var(--c-canvas);
+  box-shadow: var(--shadow-lg); border-left: 4px solid var(--success-fill);
+  animation: ds-toast .24s var(--ease) both;
+}
+
+/* ---------- Sidebar (desktop) and drawer (mobile) ---------- */
+html[data-theme] .app-shell .sidebar,
+html[data-theme] .mobile-drawer-panel {
+  --sidebar-surface: var(--c-sidebar);
+  --surface: var(--navigation-field);
+  --surface-elevated: var(--navigation-raised);
+  --ink: var(--c-ink);
+  --muted: var(--c-muted);
+  --blue: var(--c-accent);
+  --blue-dark: var(--c-accent);
+  --focus: var(--c-focus);
+  --accent-soft: var(--c-accent-soft);
+  --hover: var(--navigation-hover);
+  --line: var(--c-line);
+  --control-border: var(--navigation-border);
+  background: var(--c-sidebar);
+  color: var(--c-ink);
+}
+html[data-theme] .app-shell .sidebar { border-right: 1px solid var(--c-line); box-shadow: none; }
+html[data-theme] .app-shell .sidebar .brand,
+html[data-theme] .mobile-drawer-panel .brand { color: var(--c-ink); }
+html[data-theme] .app-shell .sidebar-top::after { width: 28px; height: 3px; background: linear-gradient(90deg, var(--brand-red), color-mix(in srgb, var(--brand-red) 30%, transparent)); }
+html[data-theme] .app-shell .sidebar-heading { color: var(--c-muted); letter-spacing: .08em; font-size: 12px; font-weight: 700; }
+html[data-theme] .app-shell .sidebar-total { background: var(--c-soft); color: var(--c-muted); border-radius: 999px; }
+html[data-theme] .app-shell .sidebar-search { background: var(--navigation-field); border-color: var(--c-line-strong); color: var(--c-ink); border-radius: 10px; }
+html[data-theme] .app-shell .sidebar-search:focus-within { border-color: var(--c-focus); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-focus) 14%, transparent); }
+html[data-theme] .app-shell .sidebar .nav-item,
+html[data-theme] .mobile-drawer-panel .mobile-menu-list button {
+  border-radius: 10px; color: var(--c-ink); font-weight: 500;
+  transition: background-color .14s var(--ease), color .14s;
+}
+html[data-theme] .app-shell .sidebar .nav-item:not(.active):hover,
+html[data-theme] .mobile-drawer-panel .mobile-menu-list button:not([aria-current="page"]):hover { background: var(--navigation-hover); }
+html[data-theme] .app-shell .sidebar .nav-item.active,
+html[data-theme] .mobile-drawer-panel .mobile-menu-list button[aria-current="page"] {
+  background: var(--nav-active); color: var(--on-nav-active); font-weight: 600; box-shadow: none;
+}
+html[data-theme] .app-shell .sidebar .nav-item.active svg { color: var(--c-accent); }
+html[data-theme] .app-shell .sidebar .nav-count { color: var(--c-muted); font-variant-numeric: tabular-nums; }
+html[data-theme] .app-shell .sidebar .nav-item.active .nav-count { color: var(--c-accent); }
+html[data-theme] .app-shell .collection-nav[data-active-visible="true"]::before { background: var(--primary); }
+html[data-theme] .app-shell .sidebar-bottom { border-top-color: var(--c-line); }
+html[data-theme] .app-shell .sidebar-new-collection,
+html[data-theme] .mobile-drawer-actions .mobile-drawer-create {
+  background: var(--primary); border-color: var(--primary); color: var(--on-primary);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .12), inset 0 1px 0 rgba(255, 255, 255, .14);
+}
+html[data-theme] .app-shell .sidebar-new-collection:hover,
+html[data-theme] .mobile-drawer-actions .mobile-drawer-create:hover { background: var(--primary-hover); color: var(--on-primary); }
+html[data-theme] .app-shell .sidebar-more summary { background: transparent; border-color: var(--c-line-strong); color: var(--c-ink); }
+html[data-theme] .app-shell .sidebar-more summary:hover { background: var(--navigation-hover); }
+html[data-theme] .app-shell .sidebar .profile-avatar,
+html[data-theme] .mobile-drawer-panel .profile-avatar {
+  background: linear-gradient(135deg, var(--primary), color-mix(in srgb, var(--primary) 55%, var(--success-fill)));
+  color: #FFFFFF; font-weight: 700;
+}
+html[data-theme] .mobile-drawer-head strong::after { background: var(--brand-red); }
+html[data-theme] .mobile-drawer-backdrop,
+html[data-theme] .quick-overlay { background: var(--overlay); }
+
+/* ---------- Top bar ---------- */
+html[data-theme] .app-shell .topbar {
+  background: color-mix(in srgb, var(--c-canvas) 92%, transparent);
+  border-bottom: 1px solid var(--c-line);
+}
+html[data-theme] .app-shell .topbar-path { color: var(--c-muted); font-size: 14px; }
+html[data-theme] .app-shell .topbar-current { color: var(--c-ink); font-weight: 600; }
+html[data-theme] .app-shell .topbar .slash { color: var(--c-line-strong); }
+html[data-theme] .app-shell .topbar-right { gap: 4px; }
+html[data-theme] .app-shell .topbar :is(.theme-toggle, .language-picker summary, .refresh-button) {
+  background: transparent; border-color: transparent; color: var(--c-ink); box-shadow: none; min-height: 40px; border-radius: 10px;
+}
+html[data-theme] .app-shell .topbar :is(.theme-toggle, .language-picker summary, .refresh-button):hover { background: var(--c-hover); }
+html[data-theme] .app-shell .topbar .quick-topbar {
+  min-height: 40px; padding: 0 14px; border-radius: 10px; margin-right: 6px;
+  background: var(--c-accent-soft); border: 1px solid transparent; color: var(--c-accent); font-weight: 600;
+}
+html[data-theme] .app-shell .topbar .quick-topbar:hover { background: color-mix(in srgb, var(--primary) 16%, transparent); }
+@media (max-width: 760px) {
+  html[data-theme] .app-shell .topbar {
+    --surface: var(--c-surface); --ink: var(--c-ink); --muted: var(--c-muted); --blue: var(--c-accent);
+    --control-border: var(--c-line-strong); --focus: var(--c-focus); --hover: var(--c-hover);
+    background: var(--c-surface); color: var(--c-ink);
+  }
+  html[data-theme] .app-shell .topbar :is(.theme-toggle, .language-picker summary, .refresh-button, .mobile-menu-button) {
+    border: 1px solid var(--c-line); background: var(--c-surface); color: var(--c-ink);
+  }
+}
+
+/* ---------- Collection header ---------- */
+html[data-theme] .app-shell .collection-hero {
+  --ink: var(--c-ink); --muted: var(--c-muted); --blue: var(--c-accent); --focus: var(--c-focus);
+  position: relative; isolation: isolate; overflow: hidden;
+  border: 1px solid var(--c-line); border-radius: var(--radius-xl);
+  background:
+    radial-gradient(90% 140% at 0% 0%, var(--glow-blue), transparent 55%),
+    radial-gradient(70% 120% at 100% 100%, var(--glow-green), transparent 60%),
+    var(--c-surface);
+  color: var(--c-ink); box-shadow: var(--shadow);
+  animation: ds-rise .32s var(--ease) both;
+}
+html[data-theme] .app-shell .collection-hero:has(.collection-hero-more[open]) { overflow: visible; }
+html[data-theme] .app-shell .collection-hero::after {
+  content: ""; position: absolute; z-index: -1; right: -10px; top: 50%; width: 300px; height: 210px;
+  transform: translateY(-50%); background: var(--pattern) no-repeat center / contain; opacity: .16;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 60%); mask-image: linear-gradient(90deg, transparent, #000 60%);
+  pointer-events: none;
+}
+html[data-theme] .app-shell .collection-hero .eyebrow { color: var(--c-accent); font-weight: 700; letter-spacing: .1em; }
+html[data-theme] .app-shell .collection-hero h1,
+html[data-theme] .app-shell .collection-hero h2 { color: var(--c-ink); font-weight: 750; letter-spacing: -0.025em; }
+html[data-theme] .app-shell .collection-hero :is(p, small, .collection-hero-meta) { color: var(--c-muted); }
+html[data-theme] .app-shell .collection-hero .collection-icon {
+  background: linear-gradient(140deg, var(--primary), color-mix(in srgb, var(--primary) 70%, #0E1116));
+  color: #FFFFFF; border-radius: 14px; box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--primary) 55%, transparent);
+}
+html[data-theme] .app-shell .collection-hero-actions .button {
+  background: var(--c-surface); color: var(--c-ink); border-color: var(--c-line-strong); box-shadow: var(--shadow-xs);
+}
+html[data-theme] .app-shell .collection-hero-actions .button:hover:not(:disabled),
+html[data-theme] .app-shell .collection-hero-more[open] summary { background: var(--c-soft); border-color: var(--c-control); }
+html[data-theme] .app-shell .collection-hero-actions .hero-add-entry {
+  background: var(--primary); border-color: var(--primary); color: var(--on-primary);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .12), inset 0 1px 0 rgba(255, 255, 255, .14);
+}
+html[data-theme] .app-shell .collection-hero-actions .hero-add-entry:hover:not(:disabled) { background: var(--primary-hover); border-color: var(--primary-hover); color: var(--on-primary); }
+html[data-theme] .collection-hero-menu { border-radius: var(--radius); box-shadow: var(--shadow-lg); border: 1px solid var(--c-line); }
+html[data-theme] .collection-hero-menu-danger { color: var(--danger) !important; }
+
+/* ---------- Tabs ---------- */
+html[data-theme] .app-shell .collection-section-nav .ui-tab {
+  background: transparent; color: var(--c-muted); font-weight: 500; border-radius: 10px 10px 0 0;
+  transition: color .14s, background-color .14s;
+}
+html[data-theme] .app-shell .collection-section-nav .ui-tab:hover { background: var(--c-hover); color: var(--c-ink); }
+html[data-theme] .app-shell .collection-section-nav .ui-tab[aria-selected="true"] { background: transparent; color: var(--c-ink); font-weight: 650; }
+html[data-theme] .app-shell .collection-section-nav .ui-tabs-indicator { background: var(--primary); height: 3px; border-radius: 3px 3px 0 0; }
+html[data-theme] .app-shell [role="tabpanel"] { animation: ds-fade .24s var(--ease) both; }
+
+/* ---------- Section headings ---------- */
+html[data-theme] .section-overline { color: var(--c-muted); letter-spacing: .1em; font-weight: 700; }
+html[data-theme] .entries-heading h2,
+html[data-theme] .entries-heading h3 { color: var(--c-ink); font-weight: 750; letter-spacing: -0.02em; }
+
+/* ---------- Panels and cards (shared surface recipe) ---------- */
+html[data-theme] :is(.entry-tools, .insights-section, .insights-formulas, .insights-quick-start, .insights-chart, .profile-card, .collection-tools-group, .workspace-tools-section, .collection-hub-card, .stock-panel, .ledger-panel, .workflow-page section) {
+  border-color: var(--c-line); border-radius: var(--radius-lg); background: var(--c-surface);
+}
+html[data-theme] .entry-tools { box-shadow: var(--shadow-xs); }
+
+/* ---------- Entry rows ---------- */
+/* A softened rule of the data-format marker: identifies without weighing. */
+html[data-theme] .app-shell :is(.entry-card.entry-row, .format-card) { --data-rule: color-mix(in srgb, var(--data-marker) 45%, var(--data-surface)); }
+html[data-theme="dark"] .app-shell :is(.entry-card.entry-row, .format-card) { --data-rule: color-mix(in srgb, var(--data-marker) 70%, var(--data-surface)); }
+html[data-theme] .app-shell .entry-card.entry-row {
+  border-radius: 14px !important;
+  box-shadow: inset 3px 0 0 var(--data-rule), var(--shadow-xs) !important;
+  transition: transform .16s var(--ease), box-shadow .16s var(--ease), border-color .16s !important;
+}
+html[data-theme] .app-shell .entry-card.entry-row:hover {
+  transform: translateY(-1px);
+  box-shadow: inset 3px 0 0 var(--data-rule), var(--shadow-hover) !important;
+}
+html[data-theme] .app-shell .entry-card.entry-row .entry-title,
+html[data-theme] .app-shell .entry-card.entry-row .entry-title button { font-weight: 650; letter-spacing: -0.01em; color: var(--c-ink); }
+html[data-theme] .app-shell .entry-card.entry-row .entry-preview { color: var(--c-muted); }
+html[data-theme] .app-shell .entry-row .entry-format-label { font-weight: 600; }
+html[data-theme] .app-shell .entry-row .entry-details-action { color: var(--c-ink); border-radius: 10px; }
+html[data-theme] .app-shell .entry-row .entry-details-action:hover { background: color-mix(in srgb, var(--c-surface) 75%, transparent); }
+html[data-theme] .app-shell .entry-grid > :nth-child(-n+8) { animation: ds-rise .28s var(--ease) both; }
+html[data-theme] .app-shell .entry-grid > :nth-child(2) { animation-delay: 30ms; }
+html[data-theme] .app-shell .entry-grid > :nth-child(3) { animation-delay: 60ms; }
+html[data-theme] .app-shell .entry-grid > :nth-child(4) { animation-delay: 90ms; }
+html[data-theme] .app-shell .entry-grid > :nth-child(5) { animation-delay: 120ms; }
+html[data-theme] .app-shell .entry-grid > :nth-child(6) { animation-delay: 150ms; }
+html[data-theme] .app-shell .entry-grid > :nth-child(7) { animation-delay: 180ms; }
+html[data-theme] .app-shell .entry-grid > :nth-child(8) { animation-delay: 210ms; }
+
+/* ---------- Data-format cards ---------- */
+html[data-theme] .app-shell .format-card {
+  border-radius: var(--radius-lg) !important;
+  box-shadow: inset 0 2px 0 var(--data-rule), var(--shadow-xs) !important;
+  transition: transform .18s var(--ease), box-shadow .18s var(--ease), border-color .18s !important;
+}
+html[data-theme] .app-shell .format-card:hover,
+html[data-theme] .app-shell .format-card:focus-within {
+  transform: translateY(-2px);
+  box-shadow: inset 0 2px 0 var(--data-rule), var(--shadow-hover) !important;
+}
+html[data-theme] .app-shell .format-card-symbol { background: color-mix(in srgb, var(--data-marker) 14%, var(--data-surface)); }
+html[data-theme] .app-shell .format-card-title strong { font-weight: 650; }
+html[data-theme] .app-shell .format-add-entry { border-radius: 10px; font-weight: 600; color: var(--c-accent); }
+html[data-theme] .format-card-menu[popover],
+html[data-theme] .entry-more-menu,
+html[data-theme] .entry-more > div,
+html[data-theme] .language-picker-menu { border-radius: var(--radius); box-shadow: var(--shadow-lg); border-color: var(--c-line); }
+
+/* ---------- Tools hub ---------- */
+html[data-theme] .collection-tools-toggle,
+html[data-theme] .app-shell .collection-tools-toggle {
+  border-radius: var(--radius-lg); border-color: var(--c-line); background: var(--c-surface); box-shadow: var(--shadow-xs);
+  transition: border-color .16s, box-shadow .16s var(--ease);
+}
+html[data-theme] .app-shell .collection-tools-toggle:hover { border-color: var(--c-line-strong); box-shadow: var(--shadow-hover); }
+html[data-theme] .app-shell .tools-toggle-icon { background: var(--c-accent-soft); color: var(--c-accent); }
+html[data-theme] .app-shell .tools-badge { background: var(--c-accent-soft); color: var(--c-accent); }
+html[data-theme] .collection-hub-card {
+  box-shadow: var(--shadow-xs);
+  transition: transform .16s var(--ease), box-shadow .16s var(--ease), border-color .16s;
+}
+html[data-theme] .collection-hub-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); border-color: var(--c-line-strong); }
+html[data-theme] .collection-hub-arrow { color: var(--c-muted); transition: transform .16s var(--ease), color .16s; }
+html[data-theme] .collection-hub-card:hover .collection-hub-arrow { transform: translateX(3px); color: var(--c-accent); }
+
+/* ---------- Empty and loading states ---------- */
+html[data-theme] .app-shell .empty-state {
+  position: relative; overflow: hidden; isolation: isolate;
+  border: 1px solid var(--c-line); border-radius: var(--radius-xl);
+  background:
+    radial-gradient(60% 90% at 50% 0%, var(--glow-blue), transparent 70%),
+    radial-gradient(40% 60% at 90% 100%, var(--glow-green), transparent 70%),
+    var(--c-surface);
+  box-shadow: var(--shadow);
+  animation: ds-rise .32s var(--ease) both;
+}
+html[data-theme] .app-shell .empty-state .empty-art {
+  background: linear-gradient(140deg, var(--primary), color-mix(in srgb, var(--primary) 70%, #0E1116));
+  color: #FFFFFF; border-radius: 18px; box-shadow: 0 12px 28px -8px color-mix(in srgb, var(--primary) 55%, transparent);
+}
+html[data-theme] .app-shell .empty-state .button-secondary { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+html[data-theme] :is(.entries-skeleton-row, .skeleton) {
+  background: linear-gradient(90deg, var(--c-soft) 0%, var(--c-hover) 50%, var(--c-soft) 100%);
+  background-size: 200% 100%; animation: ds-shimmer 1.4s linear infinite;
+}
+
+/* ---------- Dialogs ---------- */
+html[data-theme] .modal-backdrop,
+html[data-theme] .modal-overlay { background: var(--overlay); animation: ds-fade .18s ease both; }
+html[data-theme] .modal,
+html[data-theme] .quick-dialog {
+  border: 1px solid var(--c-line); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg);
+  background: var(--dialog-surface); animation: ds-pop .2s var(--ease) both;
+}
+html[data-theme] .modal-head { padding-block: 18px; }
+html[data-theme] .modal-head :is(h2, h3) { font-size: 19px; font-weight: 700; letter-spacing: -0.015em; }
+html[data-theme] .modal-actions { background: color-mix(in srgb, var(--c-soft) 60%, var(--dialog-surface)); border-top: 1px solid var(--c-line); }
+html[data-theme] .modal :is(label, legend) { font-weight: 600; }
+html[data-theme] .starter-grid button {
+  border-radius: 14px; border-color: var(--c-line); background: var(--c-surface);
+  transition: border-color .14s, box-shadow .14s var(--ease), transform .14s var(--ease);
+}
+html[data-theme] .starter-grid button:hover { border-color: var(--c-line-strong); box-shadow: var(--shadow-hover); transform: translateY(-1px); }
+html[data-theme] .starter-grid button:is([aria-pressed="true"], [aria-checked="true"], .selected) {
+  border-color: var(--primary); background: var(--c-accent-soft); box-shadow: 0 0 0 1px var(--primary);
+}
+
+/* ---------- Sign in / sign up ---------- */
+html[data-theme] .auth-shell { background: var(--c-canvas); }
+html[data-theme] .auth-visual {
+  --brand-ink: #F3F4F6; --ink: #F3F4F6; --muted: #B4B9C3;
+  position: relative; isolation: isolate; overflow: hidden; color: #F3F4F6;
+  background:
+    radial-gradient(60% 50% at 85% 15%, rgba(76, 125, 245, .34), transparent 70%),
+    radial-gradient(45% 40% at 10% 90%, rgba(34, 197, 94, .16), transparent 70%),
+    radial-gradient(35% 30% at 70% 95%, rgba(255, 90, 95, .14), transparent 70%),
+    #0B0C0E;
+}
+html[data-theme] .auth-visual::before {
+  content: ""; display: block; position: absolute; inset: 0; z-index: -1;
+  background-image: radial-gradient(rgba(255, 255, 255, .07) 1px, transparent 1px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(80% 70% at 50% 40%, #000, transparent); mask-image: radial-gradient(80% 70% at 50% 40%, #000, transparent);
+}
+html[data-theme] .auth-visual .brand { color: #F3F4F6; }
+html[data-theme] .auth-visual .brand-dot { color: #FF5A5F; }
+html[data-theme] .auth-visual .eyebrow { color: #A9C4FF; letter-spacing: .12em; }
+html[data-theme] .auth-visual h1 { color: #FFFFFF; letter-spacing: -0.035em; }
+html[data-theme] .auth-visual h1 em { font-style: normal; background: linear-gradient(90deg, #8CB0FF, #5EDC8C); -webkit-background-clip: text; background-clip: text; color: transparent; }
+html[data-theme] .auth-visual p { color: #C3C7CF; }
+html[data-theme] .auth-visual :is(.theme-toggle, .language-picker summary) {
+  background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .16); color: #F3F4F6;
+}
+html[data-theme] .auth-visual :is(.theme-toggle, .language-picker summary):hover { background: rgba(255, 255, 255, .12); }
+html[data-theme] .auth-visual .story-preview {
+  border: 1px solid rgba(255, 255, 255, .1); border-radius: 18px; background: rgba(255, 255, 255, .04);
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .6); animation: ds-float 7s ease-in-out infinite;
+}
+html[data-theme] .auth-visual-foot { color: #9AA0AB; }
+html[data-theme] .auth-form-side {
+  background:
+    radial-gradient(50% 40% at 80% 0%, var(--glow-blue), transparent 70%),
+    var(--c-canvas);
+}
+html[data-theme] .auth-card {
+  border: 1px solid var(--c-line); border-radius: 22px; background: var(--c-surface);
+  box-shadow: var(--shadow-lg); animation: ds-pop .28s var(--ease) both;
+}
+html[data-theme] .auth-card h2 { color: var(--c-ink); font-weight: 750; letter-spacing: -0.025em; }
+html[data-theme] .auth-icon {
+  background: linear-gradient(140deg, var(--primary), color-mix(in srgb, var(--primary) 70%, #0E1116));
+  color: #FFFFFF; box-shadow: 0 10px 24px -8px color-mix(in srgb, var(--primary) 60%, transparent);
+}
+html[data-theme] .google-button { background: var(--c-surface); border-color: var(--c-line-strong); color: var(--c-ink); box-shadow: var(--shadow-xs); }
+html[data-theme] .google-button:hover { background: var(--c-soft); }
+html[data-theme] .auth-divider { color: var(--c-muted); }
+html[data-theme] .auth-switch button,
+html[data-theme] .auth-switch a { color: var(--c-accent); font-weight: 650; }
+
+/* ---------- Profile onboarding ---------- */
+html[data-theme] .profile-shell {
+  background:
+    radial-gradient(40% 40% at 10% 0%, var(--glow-blue), transparent 70%),
+    radial-gradient(35% 35% at 100% 100%, var(--glow-green), transparent 70%),
+    var(--c-canvas);
+}
+html[data-theme] .profile-card { box-shadow: var(--shadow-lg); border-radius: 22px; overflow: hidden; animation: ds-pop .28s var(--ease) both; }
+html[data-theme] .profile-intro {
+  background: linear-gradient(170deg, var(--c-accent-soft), transparent 70%);
+  border-right: 1px solid var(--c-line);
+}
+html[data-theme] .profile-intro h1,
+html[data-theme] .profile-intro h2 { color: var(--c-ink); letter-spacing: -0.03em; }
+html[data-theme] .profile-shell .profile-info { border-radius: var(--radius); border: 1px solid color-mix(in srgb, var(--success-fill) 30%, transparent); background: var(--success-soft); color: var(--c-ink); }
+html[data-theme] .profile-signout { color: var(--c-muted); }
+
+/* ---------- Insights / analysis ---------- */
+html[data-theme] .analysis-page .insights-actions .primary,
+html[data-theme] .workflow-page .workflow-primary { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+html[data-theme] .analysis-back { color: var(--c-accent); font-weight: 600; }
+html[data-theme] .analysis-page .insights-section { box-shadow: var(--shadow-xs); }
+
+/* ---------- Status accents (green success, red danger) ---------- */
+html[data-theme] :is(.unit-result, .success, .is-success, .sync-ok) { color: var(--success); }
+html[data-theme] :is(.danger, .is-danger, .entry-delete, .collection-hero-menu-danger) { color: var(--danger); }
+
+/* ---------- Motion ---------- */
+@keyframes ds-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ds-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes ds-pop { from { opacity: 0; transform: translateY(6px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes ds-toast { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes ds-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@keyframes ds-float { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-6px) rotate(-2deg); } }
+
+@media (hover: none) {
+  html[data-theme] :is(.format-card, .entry-card.entry-row, .collection-hub-card, .starter-grid button, .button):hover { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] *, html[data-theme] *::before, html[data-theme] *::after {
+    animation-duration: 80ms !important; animation-iteration-count: 1 !important; animation-delay: 0ms !important;
+    transition-duration: 80ms !important;
+  }
+  html[data-theme] :is(.format-card, .entry-card.entry-row, .collection-hub-card, .button, .starter-grid button):hover { transform: none !important; }
+  html[data-theme] .auth-visual .story-preview { animation: none !important; }
+}

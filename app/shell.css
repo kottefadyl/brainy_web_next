@@ -249,8 +249,8 @@ html[data-theme="dark"] .app-shell .collection-hero-actions .button:hover:not(:d
 html[data-theme] .app-shell .collection-hero-more[open] summary { background: var(--hover); border-color: var(--control-border); }
 html[data-theme] .app-shell .collection-hero-actions .hero-add-entry,
 html[data-theme="dark"] .app-shell .collection-hero-actions .hero-add-entry {
-  border-color: var(--blue);
-  background: var(--blue);
+  border-color: var(--primary);
+  background: var(--primary);
   color: var(--on-primary);
 }
 html[data-theme] .app-shell .collection-hero-actions .hero-add-entry:hover:not(:disabled),

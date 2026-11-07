@@ -41,7 +41,7 @@ html[data-theme] .app-shell .collection-tools-group-heading {
 html[data-theme] .app-shell .section-overline::before,
 html[data-theme] .app-shell .collection-tools-group-heading::before {
   content: ""; display: inline-block; width: 6px; height: 6px;
-  margin-right: 8px; vertical-align: 2px; border-radius: 50%; background: var(--blue);
+  margin-right: 8px; vertical-align: 2px; border-radius: 50%; background: var(--primary);
 }
 html[data-theme] .app-shell .collection-tools-group:nth-child(2) .collection-tools-group-heading::before { background: var(--tool-structure); }
 html[data-theme] .app-shell .collection-tools-group:nth-child(3) .collection-tools-group-heading::before { background: var(--tool-governance); }

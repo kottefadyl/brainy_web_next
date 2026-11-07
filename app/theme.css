@@ -279,8 +279,8 @@ textarea {
 }
 
 .button-primary {
-  background: var(--blue);
-  border-color: var(--blue);
+  background: var(--primary);
+  border-color: var(--primary);
   color: var(--on-primary);
   box-shadow: none;
 }
@@ -970,8 +970,8 @@ textarea {
   min-height: 44px;
   padding: 0 16px;
   border-radius: 10px;
-  border: 1px solid var(--blue);
-  background: var(--blue);
+  border: 1px solid var(--primary);
+  background: var(--primary);
   color: var(--on-primary);
   font-weight: 600;
 }
@@ -997,7 +997,7 @@ textarea {
 }
 
 .insights-bar i {
-  background: var(--blue);
+  background: var(--primary);
   border-radius: 6px;
 }
 

@@ -20,7 +20,7 @@ html[data-theme] .modal :is(.local-unit-list button,.object-list button,.object-
 html[data-theme] .modal .unit-result { border-color: var(--success); background: var(--surface-elevated); color: var(--ink); }
 html[data-theme] .modal :is(.form-disclosure,.unit-editor-form) { border-top-color: var(--line); }
 html[data-theme] .modal :is(.form-disclosure summary,.form-text-action,.object-model-toggle) { color: var(--ink); }
-html[data-theme] .modal :is(.unit-converter .unit-form > button,.unit-editor-form > button[type=submit],.starter-dialog .modal-actions button:last-child) { border-color: var(--blue); background: var(--blue); color: var(--on-primary); }
+html[data-theme] .modal :is(.unit-converter .unit-form > button,.unit-editor-form > button[type=submit],.starter-dialog .modal-actions button:last-child) { border-color: var(--primary); background: var(--primary); color: var(--on-primary); }
 
 html[data-theme] .analysis-page .insights-fields { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
 html[data-theme] .insights-section { border-color: var(--line); background: var(--surface); color: var(--ink); }
@@ -32,7 +32,7 @@ html[data-theme] .analysis-page :is(p,small,.insights-axis-label,.insights-empty
 html[data-theme] .analysis-page .insights-empty-result { border-style: dashed; gap: 12px; }
 html[data-theme] .analysis-page .insights-empty-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 12px; background: var(--accent-soft); color: var(--blue); font-size: 26px; }
 html[data-theme] .analysis-page .insights-empty-result .btn { margin-top: 8px; border-color: var(--control-border); background: var(--surface-elevated); color: var(--ink); }
-html[data-theme] .analysis-page .insights-actions .primary { border-color: var(--blue); background: var(--blue); color: var(--on-primary); }
+html[data-theme] .analysis-page .insights-actions .primary { border-color: var(--primary); background: var(--primary); color: var(--on-primary); }
 html[data-theme] .analysis-page .insights-quick-start .insights-quick,
 html[data-theme] .analysis-page .insights-actions :is(.secondary,.insights-quick),
 html[data-theme] .analysis-page .forecast-section .secondary { border-color: var(--control-border); background: var(--surface-elevated); color: var(--ink); }
@@ -55,7 +55,7 @@ html[data-theme] .format-color-option:disabled { opacity: 1; border-style: dashe
 html[data-theme] .contribution-check { min-height: 44px; align-items: center; cursor: pointer; }
 html[data-theme] .contribution-check input,
 html[data-theme] :is(.view-choices,.share-properties,.workflow-required,.sensitivity-box) input[type=checkbox] { appearance: none; width: 22px; height: 22px; flex: none; margin: 0; border: 2px solid var(--control-border); border-radius: 5px; background: var(--surface); cursor: pointer; }
-html[data-theme] :is(.contribution-check,.view-choices,.share-properties,.workflow-required,.sensitivity-box) input[type=checkbox]:checked { border-color: var(--blue); background: var(--blue); box-shadow: inset 0 0 0 4px var(--surface); }
+html[data-theme] :is(.contribution-check,.view-choices,.share-properties,.workflow-required,.sensitivity-box) input[type=checkbox]:checked { border-color: var(--primary); background: var(--primary); box-shadow: inset 0 0 0 4px var(--surface); }
 html[data-theme] :is(.contribution-check,.view-choices,.share-properties,.workflow-required,.sensitivity-box) input[type=checkbox]:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 html[data-theme] :is(.view-choices,.share-properties,.workflow-required,.sensitivity-box) label:has(> input[type=checkbox]) { min-height: 44px; display: inline-flex; align-items: center; gap: 10px; }
 

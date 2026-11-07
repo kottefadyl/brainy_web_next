@@ -142,14 +142,14 @@
 }
 
 .quick-dialog footer button:last-child {
-  background: var(--blue, #2463CE);
-  border-color: var(--blue, #2463CE);
+  background: var(--primary, #2454E6);
+  border-color: var(--primary, #2454E6);
   color: var(--on-primary, #FFFFFF);
 }
 
 .quick-dialog footer button:last-child:hover:not(:disabled) {
-  background: var(--blue-dark, #1D52AE);
-  border-color: var(--blue-dark, #1D52AE);
+  background: var(--primary-hover, #1C45C7);
+  border-color: var(--primary-hover, #1C45C7);
 }
 
 .quick-subtle {
@@ -197,7 +197,7 @@
 .quick-field-options input {
   width: 15px;
   height: 15px;
-  accent-color: var(--blue, #2463CE);
+  accent-color: var(--primary, #2454E6);
 }
 
 .quick-dialog [role="alert"] {

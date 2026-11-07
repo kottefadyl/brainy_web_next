@@ -6,7 +6,7 @@
 .contribution-box h2{margin:0;font-size:1.2rem}.contribution-box p{margin:0}.contribution-box label{display:grid;gap:6px;font-weight:600}
 .contribution-box input:not([type=checkbox]),.contribution-box textarea,.contribution-box select{width:100%;max-width:100%;min-height:44px;border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--surface);color:inherit;font:inherit}
 .contribution-box textarea{min-height:90px}.contribution-box button,.contribution-panel header button,.contribution-public-head button{min-height:44px;border:1px solid var(--border);border-radius:8px;padding:8px 14px;background:var(--surface);color:inherit;cursor:pointer;font:inherit}
-.contribution-box button[type=submit],.contribution-actions button:first-child{background:var(--blue);border-color:var(--blue);color:var(--on-primary)}.contribution-box button:disabled{opacity:1;background:var(--surface-elevated);color:var(--muted);cursor:not-allowed}
+.contribution-box button[type=submit],.contribution-actions button:first-child{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}.contribution-box button:disabled{opacity:1;background:var(--surface-elevated);color:var(--muted);cursor:not-allowed}
 .contribution-box :focus-visible,.contribution-panel header :focus-visible,.contribution-public-head :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .contribution-check{display:flex!important;align-items:flex-start;gap:10px!important}.contribution-check input{width:20px;height:20px;flex:none}
 .contribution-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.contribution-row,.contribution-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.contribution-row h2{flex:1}
