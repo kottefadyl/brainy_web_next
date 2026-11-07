@@ -2,9 +2,9 @@ import { FileText, FolderHeart } from "lucide-react";
 import { t, type Collection, type Language } from "../../../lib/brainy";
 import CollectionHeroActions from "../../collection-hero-actions";
 
-type Props = { collection: Collection; entryCount: number; language: Language; onNewEntry: () => void; onInsights: () => void; onRename: () => void; onDelete: () => void };
+type Props = { collection: Collection; entryCount: number; language: Language; onNewEntry: () => void; onInsights: () => void; onRename: () => void; onDelete: () => void; onPackages?: () => void };
 
-export function CollectionHeader({ collection, entryCount, language, onNewEntry, onInsights, onRename, onDelete }: Props) {
+export function CollectionHeader({ collection, entryCount, language, onNewEntry, onInsights, onRename, onDelete, onPackages }: Props) {
   return <section className="collection-hero" aria-label={t(language, "collection")}>
     <div className="collection-hero-main">
       <div className="collection-icon" aria-hidden="true"><FolderHeart size={27} /></div>
@@ -18,6 +18,6 @@ export function CollectionHeader({ collection, entryCount, language, onNewEntry,
         </div>
       </div>
     </div>
-    <CollectionHeroActions language={language} onNewEntry={onNewEntry} onInsights={onInsights} onRename={onRename} onDelete={onDelete} />
+    <CollectionHeroActions language={language} onNewEntry={onNewEntry} onInsights={onInsights} onRename={onRename} onDelete={onDelete} onPackages={onPackages} />
   </section>;
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ChartNoAxesCombined, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChartNoAxesCombined, Package, Pencil, Plus, Trash2 } from "lucide-react";
 import { t, type Language } from "../lib/brainy";
 
 type Props = {
@@ -10,9 +10,10 @@ type Props = {
   onInsights: () => void;
   onRename: () => void;
   onDelete: () => void;
+  onPackages?: () => void;
 };
 
-export default function CollectionHeroActions({ language, onNewEntry, onInsights, onRename, onDelete }: Props) {
+export default function CollectionHeroActions({ language, onNewEntry, onInsights, onRename, onDelete, onPackages }: Props) {
   const menuRef = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
     const closeOnOutside = (event: PointerEvent) => {
@@ -48,6 +49,7 @@ export default function CollectionHeroActions({ language, onNewEntry, onInsights
         <summary className="button button-secondary"> {language === "fr" ? "Gérer" : "Manage"}</summary>
         <div className="collection-hero-menu">
           <button type="button" onClick={() => runMenuAction(onRename)}><Pencil size={16} /> {t(language, "rename")}</button>
+          {onPackages && <button type="button" onClick={() => runMenuAction(onPackages)}><Package size={16} /> {language === "fr" ? "Paquets de domaine" : "Domain packages"}</button>}
           <button type="button" className="collection-hero-menu-danger" onClick={() => runMenuAction(onDelete)}><Trash2 size={16} /> {t(language, "delete")}</button>
         </div>
       </details>

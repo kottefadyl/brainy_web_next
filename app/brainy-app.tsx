@@ -36,6 +36,7 @@ import WorkspaceToolsDialog from "./workspace-tools-dialog";
 import { GeoFieldInput } from "./geo-fields";
 import "./geo-classification.css";
 import StarterDialog from "./starter-dialog";
+import DomainPackagesDialog from "./domain-packages-dialog";
 import EntryLinksDialog from "./entry-links-dialog";
 import OfflineSyncPanel from "./offline-sync-panel";
 import { queueEntry, reviseQueuedEntry } from "../lib/offline-queue";
@@ -50,6 +51,7 @@ import {
 
 type Dialog =
   | { kind: "starter" }
+  | { kind: "packages" }
   | { kind: "entryLinks"; entry: Entry }
   | { kind: "collection" }
   | { kind: "addFormat" }
@@ -1174,7 +1176,7 @@ export default function BrainyApp() {
             <OfflineSyncPanel userId={user.id} collections={collections} language={language} onSynced={() => { void refresh(); }} />
 
 
-            <CollectionHeader collection={selected} entryCount={entries.length} language={language} onNewEntry={() => setDialog({ kind: "entry" })} onInsights={() => setActiveSection("insights")} onRename={() => { setRename(selected.name); setDialogError(""); setDialog({ kind: "rename" }); }} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteCollection" }); }} />
+            <CollectionHeader collection={selected} entryCount={entries.length} language={language} onNewEntry={() => setDialog({ kind: "entry" })} onInsights={() => setActiveSection("insights")} onRename={() => { setRename(selected.name); setDialogError(""); setDialog({ kind: "rename" }); }} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteCollection" }); }} onPackages={() => setDialog({ kind: "packages" })} />
             <CollectionTabs language={language} value={collectionTab} onChange={(tab) => setTabSelection({ collectionId: selectedId, tab })} />
             <CollectionTabPanel tab="entries" active={collectionTab === "entries"}>
             <div id="collection-entries" className="entries-heading"><div><span className="section-overline">{t(language, "savedEntries")}</span><h2>{t(language, "entries")} <span>{entries.length} {language === "fr" ? entries.length === 1 ? "entrée" : "entrées" : entries.length === 1 ? "entry" : "entries"}</span></h2></div><Button variant="secondary" onClick={() => setQuickEntry(true)}>{language === "fr" ? "Saisie rapide" : "Quick entry"}</Button></div>
@@ -1204,7 +1206,8 @@ export default function BrainyApp() {
       {notice && <div className="toast" role="status"><Check size={18} />{notice}</div>}
       {quickCapture && <QuickCaptureDialog collections={collections} userId={user.id} language={language} incoming={sharedContent} onClose={() => setQuickCapture(false)} onSaved={(collectionId, entry) => { setQuickCapture(false); setSelectedId(collectionId); if (selectedId === collectionId) setEntries((current) => [entry, ...current]); }} onOpen={(collectionId, entry) => { setQuickCapture(false); setSelectedId(collectionId); setDialog({ kind: "entry", entry }); }} />}
       {quickEntry && selected && <QuickEntryDialog collection={selected} userId={user.id} language={language} onClose={() => setQuickEntry(false)} onFullEntry={(formatId) => { setQuickEntry(false); setDialog({ kind: "entry", formatId }); }} onSaved={(entry) => { setEntries((current) => [entry, ...current]); setQuickEntry(false); }} />}
-      {dialog?.kind === "starter" && <Modal title={language === "fr" ? "Choisir un modèle" : "Choose a template"} closeLabel={t(language, "close")} onClose={() => setDialog(null)} size="wide"><StarterDialog language={language} onClose={() => setDialog(null)} onCreated={(collection) => { setCollections((current) => [collection, ...current]); setSelectedId(collection.id); setDialog(null); }} /></Modal>}
+      {dialog?.kind === "starter" && <Modal title={language === "fr" ? "Choisir un modèle" : "Choose a template"} closeLabel={t(language, "close")} onClose={() => setDialog(null)} size="wide"><StarterDialog language={language} onPackages={() => setDialog({ kind: "packages" })} onClose={() => setDialog(null)} onCreated={(collection) => { setCollections((current) => [collection, ...current]); setSelectedId(collection.id); setDialog(null); }} /></Modal>}
+      {dialog?.kind === "packages" && <DomainPackagesDialog collections={collections} current={selected} userId={user.id} userName={user.name} language={language} onClose={() => setDialog(null)} onInstalled={(collectionId) => { setDialog(null); void api.collections().then((items) => { setCollections(items); selectCollection(collectionId); }); }} />}
       {dialog?.kind === "entryLinks" && selected && <Modal title={language === "fr" ? "Liens entre entrées" : "Entry links"} closeLabel={t(language, "close")} onClose={() => setDialog(null)} size="wide"><EntryLinksDialog collection={selected} entry={dialog.entry} language={language} onClose={() => setDialog(null)} onOpenEntry={(entry) => setDialog({ kind: "entry", entry })} /></Modal>}
       {dialog?.kind === "collection" && <CollectionEditor language={language} onClose={() => setDialog(null)} onSaved={(collection) => { setCollections((current) => [collection, ...current]); setSelectedId(collection.id); setDialog(null); }} />}
       {dialog?.kind === "addFormat" && selected && <CollectionEditor key={selected.id} collection={selected} language={language} onClose={() => setDialog(null)} onSaved={(updated) => { setCollections((current) => current.map((item) => item.id === updated.id ? updated : item)); setDialog(null); }} />}

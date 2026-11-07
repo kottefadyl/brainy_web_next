@@ -1,0 +1,71 @@
+/* T45 — domain packages dialog. Uses shared design tokens only (light and dark). */
+.domain-packages { display: grid; gap: 16px; min-width: 0; }
+.domain-packages .package-panel { display: grid; gap: 12px; padding-top: 4px; }
+.domain-packages .package-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.domain-packages .package-card {
+  display: grid; align-content: start; gap: 6px; min-height: 128px; padding: 14px; text-align: left;
+  border: 1px solid var(--line); border-radius: var(--radius-lg, 14px); background: var(--surface-elevated); color: var(--ink);
+  box-shadow: var(--shadow-xs); cursor: pointer; transition: transform 120ms var(--ease, ease-out), box-shadow 120ms var(--ease, ease-out), border-color 120ms;
+}
+.domain-packages .package-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); border-color: var(--line-strong); }
+.domain-packages .package-card:active { transform: scale(.98); }
+.domain-packages .package-card[aria-pressed="true"] { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary), var(--shadow-xs); }
+.domain-packages .package-card:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.domain-packages .package-card strong { font-weight: 600; font-size: 15px; }
+.domain-packages .package-card span:not(.package-tile) { color: var(--muted); font-size: 13px; line-height: 1.4; }
+.domain-packages .package-card small { color: var(--muted); font-size: 13px; margin-top: auto; }
+.domain-packages .package-tile {
+  display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; color: var(--tool-structure);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--tool-structure) 14%, var(--surface)), color-mix(in srgb, var(--tool-structure) 6%, var(--surface)));
+}
+.domain-packages .package-skeleton { min-height: 128px; border-radius: var(--radius-lg, 14px); }
+.domain-packages .package-skeleton-wide { min-height: 160px; }
+.domain-packages .package-file {
+  display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 12px 14px; cursor: pointer;
+  border: 1px dashed var(--line-strong); border-radius: var(--radius, 12px); background: var(--surface-soft, var(--surface)); color: var(--ink);
+}
+.domain-packages .package-file:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+.domain-packages .package-file input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.domain-packages .package-link { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; }
+.domain-packages .package-link .input-label { flex: 1 1 240px; }
+.domain-packages .package-link .button { min-height: 44px; }
+.domain-packages .package-preview { display: grid; gap: 14px; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-lg, 14px); background: var(--surface); }
+.domain-packages .package-target { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; align-items: end; }
+.domain-packages .package-details { display: grid; gap: 12px; }
+.domain-packages .package-details header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; }
+.domain-packages .package-details h3 { margin: 0; font-size: 17px; font-weight: 600; }
+.domain-packages .package-details header p { margin: 4px 0 0; color: var(--muted); }
+.domain-packages .package-mode { align-self: start; padding: 4px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; background: var(--accent-soft); color: var(--ink); }
+.domain-packages .package-provenance { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0; }
+.domain-packages .package-provenance div { display: grid; gap: 2px; }
+.domain-packages .package-provenance dt { color: var(--muted); font-size: 13px; }
+.domain-packages .package-provenance dd { margin: 0; display: inline-flex; align-items: center; gap: 4px; overflow-wrap: anywhere; }
+.domain-packages .signature-valid { color: var(--success); }
+.domain-packages .signature-invalid { color: var(--danger); font-weight: 600; }
+.domain-packages .package-notice { margin: 0; padding: 10px 12px; border-radius: var(--radius-sm, 8px); background: var(--surface-soft, var(--surface)); border: 1px solid var(--line); line-height: 1.5; }
+.domain-packages .package-alert { display: flex; gap: 8px; padding: 10px 12px; border-radius: var(--radius-sm, 8px); border: 1px solid var(--line); }
+.domain-packages .package-alert ul, .domain-packages .package-groups ul, .domain-packages .package-dependencies ul { margin: 4px 0 0; padding-left: 18px; }
+.domain-packages .package-conflicts { background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 40%, transparent); color: var(--ink); }
+.domain-packages .package-conflicts svg { color: var(--danger); flex: none; margin-top: 2px; }
+.domain-packages .package-adjustments { background: color-mix(in srgb, var(--warning) 12%, var(--surface)); border-color: color-mix(in srgb, var(--warning) 35%, transparent); }
+.domain-packages .package-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.domain-packages .package-groups h4 { margin: 0; font-size: 14px; font-weight: 600; }
+.domain-packages .package-groups h4 span { color: var(--muted); font-weight: 500; }
+.domain-packages .package-groups li, .domain-packages .package-groups p { font-size: 14px; overflow-wrap: anywhere; }
+.domain-packages .package-groups p { margin: 4px 0 0; color: var(--muted); }
+.domain-packages .package-dependencies summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 600; }
+.domain-packages .package-blocked { color: var(--ink); }
+.domain-packages .package-manage h3 { margin: 4px 0 0; font-size: 16px; font-weight: 600; }
+.domain-packages .package-installs { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.domain-packages .package-installs li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius, 12px); background: var(--surface-elevated); }
+.domain-packages .package-installs li > div:first-child { display: grid; gap: 2px; min-width: 0; }
+.domain-packages .package-installs li span { color: var(--muted); font-size: 13px; }
+.domain-packages .package-confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.domain-packages .package-export { display: grid; gap: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.domain-packages .package-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.domain-packages .package-form-grid small { color: var(--muted); font-size: 13px; font-weight: 400; }
+.domain-packages .package-wide { grid-column: 1 / -1; }
+.domain-packages .package-done { margin: 0; color: var(--success); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) {
+  .domain-packages .package-card, .domain-packages .package-card:hover, .domain-packages .package-card:active { transform: none; transition: opacity 80ms; }
+}

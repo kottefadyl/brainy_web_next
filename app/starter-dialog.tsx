@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Package } from "lucide-react";
 import { api } from "../lib/api";
+import { Button } from "./components/ui/Button";
 import type { Collection, Language } from "../lib/brainy";
 
-export default function StarterDialog({ language, onClose, onCreated }: { language: Language; onClose: () => void; onCreated: (collection: Collection) => void }) {
+export default function StarterDialog({ language, onClose, onCreated, onPackages }: { language: Language; onClose: () => void; onCreated: (collection: Collection) => void; onPackages?: () => void }) {
   const fr = language === "fr";
   const [templates, setTemplates] = useState<{ id: string; name: string; description: string }[]>([]);
   const [selected, setSelected] = useState("");
@@ -15,6 +17,7 @@ export default function StarterDialog({ language, onClose, onCreated }: { langua
   async function create() { if (!name.trim() || !selected) return; setBusy(true); setError(""); try { onCreated(await api.createFromTemplate(selected, name.trim(), language)); } catch (cause) { setError(String(cause)); } finally { setBusy(false); } }
   return <form className="starter-dialog" onSubmit={(event) => { event.preventDefault(); void create(); }}>
     <p className="modal-intro">{fr ? "Choisissez un point de départ. Les formats de données restent modifiables et la collection n’a pas de type permanent." : "Choose a starting point. Data formats stay editable and the collection has no permanent type."}</p>
+    {onPackages && <Button variant="subtle" className="starter-packages" onClick={onPackages}><Package size={16} aria-hidden="true" /> {fr ? "Installer un paquet de domaine (fichier, lien ou paquet Brainy)…" : "Install a domain package (file, link or Brainy package)…"}</Button>}
     <label className="starter-name">{fr ? "Nom de la collection" : "Collection name"}<input value={name} maxLength={80} required onChange={(event) => setName(event.target.value)} /></label>
     <fieldset className="starter-choices"><legend>{fr ? "Point de départ" : "Starting point"}</legend><div className="starter-grid">{templates.map((template) => <button type="button" aria-pressed={selected === template.id} className={selected === template.id ? "selected" : ""} key={template.id} onClick={() => { setName((current) => current === templates.find((item) => item.id === selected)?.name ? template.name : current); setSelected(template.id); }}><strong>{template.name}</strong><span>{template.description}</span></button>)}</div></fieldset>
     {error && <p className="form-error" role="alert">{error}</p>}
