@@ -23,8 +23,6 @@ html[data-theme] .app-shell .topbar {
 }
 html[data-theme] .app-shell .sidebar-more-options { position: absolute; bottom: calc(100% + 8px); z-index: 50; }
 
-html[data-theme] .app-shell .collection-hero,
-html[data-theme="dark"] .app-shell .collection-hero,
 html[data-theme] .app-shell .entries-empty,
 html[data-theme] .app-shell .first-empty {
   background: linear-gradient(130deg, var(--accent-soft), var(--surface) 58%) !important;

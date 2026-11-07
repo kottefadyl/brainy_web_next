@@ -1,4 +1,5 @@
-import { Copy, Layers3, Link2, MoreHorizontal, Palette, Pencil, Plus } from "lucide-react";
+import { Copy, Layers3, Link2, Palette, Pencil, Plus } from "lucide-react";
+import { ActionPopover } from "./components/ui/ActionPopover";
 import { formatColorStyle } from "../lib/format-colors";
 import {
   fieldKindLabel, formatColors, formatDisplayName, t,
@@ -21,11 +22,6 @@ type Props = {
 
 export default function CollectionFormatsSection({ collection, language, entryCounts, countPartial, onAdd, onAddEntry, onEdit, onColor, onCopy, onLink, onReviewUpdate }: Props) {
   const fr = language === "fr";
-  const action = (event: React.MouseEvent<HTMLButtonElement>, callback: () => void) => {
-    const details = event.currentTarget.closest("details");
-    if (details) details.open = false;
-    callback();
-  };
   return <section className="format-strip" aria-label={t(language, "formats")}>
     <div className="format-strip-head">
       <div><span className="section-overline">{t(language, "formats")}</span><p>{t(language, "formatHelp")}</p></div>
@@ -49,15 +45,12 @@ export default function CollectionFormatsSection({ collection, language, entryCo
           </div>
           <div className="format-card-footer">
             <button type="button" className="format-add-entry" onClick={() => onAddEntry(format.id)}><Plus size={17} aria-hidden="true" /> {fr ? "Ajouter une entrée" : "Add entry"}</button>
-            <details className="format-card-more" onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); event.currentTarget.open = false; event.currentTarget.querySelector("summary")?.focus(); } }}>
-              <summary aria-label={fr ? `Actions pour le format de données ${name}` : `Actions for data format ${name}`} title={fr ? "Autres actions" : "More actions"}><MoreHorizontal size={20} aria-hidden="true" /></summary>
-              <div className="format-card-menu">
-                <button type="button" onClick={(event) => action(event, () => onEdit(format.id))}><Pencil size={16} aria-hidden="true" />{t(language, "editFormat")}</button>
-                <button type="button" onClick={(event) => action(event, () => onColor(format.id))}><Palette size={16} aria-hidden="true" />{t(language, "changeColor")}</button>
-                <button type="button" onClick={(event) => action(event, () => onCopy(format.id))}><Copy size={16} aria-hidden="true" />{fr ? "Copier vers une collection" : "Copy to a collection"}</button>
-                <button type="button" onClick={(event) => action(event, () => onLink(format.id))}><Link2 size={16} aria-hidden="true" />{fr ? "Partager par lien" : "Share by link"}</button>
-              </div>
-            </details>
+            <ActionPopover label={fr ? `Actions pour le format de données ${name}` : `Actions for data format ${name}`} actions={[
+              { label: t(language, "editFormat"), icon: <Pencil size={16} aria-hidden="true" />, onSelect: () => onEdit(format.id) },
+              { label: t(language, "changeColor"), icon: <Palette size={16} aria-hidden="true" />, onSelect: () => onColor(format.id) },
+              { label: fr ? "Copier vers une collection" : "Copy to a collection", icon: <Copy size={16} aria-hidden="true" />, onSelect: () => onCopy(format.id) },
+              { label: fr ? "Partager par lien" : "Share by link", icon: <Link2 size={16} aria-hidden="true" />, onSelect: () => onLink(format.id) },
+            ]} />
           </div>
         </article>;
       })}

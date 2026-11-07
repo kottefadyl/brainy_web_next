@@ -168,11 +168,10 @@ try {
   assert.equal(await evaluate("document.activeElement?.textContent"), "Collections");
 
   await control("formats");
-  await click(".format-card-more summary");
-  assert(await evaluate("document.querySelector('.format-card-more').open"));
-  await evaluate("document.querySelector('.format-card-more summary').focus()");
+  await click(".format-menu-trigger");
+  assert(await evaluate("!!document.querySelector('.format-card-menu:popover-open')"));
   await key("Escape");
-  assert(await evaluate("!document.querySelector('.format-card-more').open"));
+  assert(await evaluate("!document.querySelector('.format-card-menu:popover-open') && document.activeElement.matches('.format-menu-trigger')"));
   await send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: "reduce" }] });
   await evaluate("document.querySelector('#collection-tab-entries').focus()");
   await key("ArrowRight");
