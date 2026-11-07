@@ -1,0 +1,194 @@
+/* ==========================================================================
+   Brainy accents — typography, measured colour and motion (imported after
+   design-system.css). Blue leads (action, place), green supports (growth,
+   success), red is a rare spark (brand). Data-format pastels are untouched.
+   ========================================================================== */
+
+/* ---------- Typography: Inter for interface text, Plus Jakarta Sans for display ---------- */
+html[data-theme] body,
+html[data-theme] :is(button, input, select, textarea) { font-family: var(--font-sans), ui-sans-serif, -apple-system, "Segoe UI", sans-serif; }
+html[data-theme] :is(h1, h2, .brand, .auth-card h2, .modal-head h2, .modal-head h3, .entries-heading h2, .collection-hero h1, .empty-state h2, .empty-state h3, .profile-intro h1, .analysis-page h2, .format-card-title strong, .workspace-greeting h1) {
+  font-family: var(--font-display), var(--font-sans), ui-sans-serif, sans-serif;
+}
+html[data-theme] .brand { letter-spacing: -0.04em; font-weight: 800; }
+html[data-theme] :is(.nav-count, .sidebar-total, .entries-heading h2 span, .collection-meta, .entry-date, .tools-badge) { font-variant-numeric: tabular-nums; }
+
+/* ---------- Palette helpers ---------- */
+html[data-theme] {
+  --spark-blue: #2454E6;
+  --spark-green: #16A34A;
+  --spark-red: #E5383B;
+  --tint-blue: #EEF3FE;
+  --tint-green: #E9F7EF;
+  --tint-red: #FDEEEE;
+  --tint-ink: #EEF0F3;
+  --ink-blue: #1F4FD8;
+  --ink-green: #157F3B;
+  --ink-red: #B42318;
+  --ink-black: #0E1116;
+  --brand-gradient: linear-gradient(90deg, #2454E6 0%, #3B82F6 35%, #16A34A 70%, #E5383B 100%);
+}
+html[data-theme="dark"] {
+  --tint-blue: rgba(91, 140, 255, .14);
+  --tint-green: rgba(52, 210, 123, .13);
+  --tint-red: rgba(255, 90, 95, .13);
+  --tint-ink: rgba(255, 255, 255, .08);
+  --ink-blue: #8CB0FF;
+  --ink-green: #5EDC8C;
+  --ink-red: #FF8A8F;
+  --ink-black: #F3F4F6;
+}
+
+/* ---------- Workspace canvas: a quiet aurora behind the content ---------- */
+html[data-theme] .app-shell .workspace {
+  background:
+    radial-gradient(900px 520px at 100% -10%, rgba(36, 84, 230, .09), transparent 70%),
+    radial-gradient(700px 480px at -10% 105%, rgba(22, 163, 74, .07), transparent 70%),
+    var(--c-canvas);
+}
+html[data-theme="dark"] .app-shell .workspace {
+  background:
+    radial-gradient(900px 520px at 100% -10%, rgba(76, 125, 245, .08), transparent 70%),
+    radial-gradient(700px 480px at -10% 105%, rgba(52, 210, 123, .05), transparent 70%),
+    var(--c-canvas);
+}
+
+/* ---------- Brand ---------- */
+html[data-theme] .app-shell .sidebar-top::after { width: 44px; background: var(--brand-gradient); background-size: 200% 100%; animation: ds-flow 8s linear infinite; }
+html[data-theme] .brand .brainy-logo circle { transform-box: fill-box; transform-origin: center; transition: transform .3s var(--ease); }
+html[data-theme] .brand:hover .brainy-logo circle { transform: scale(1.25); }
+html[data-theme] .brand:hover .brainy-logo circle:nth-of-type(2) { transition-delay: 40ms; }
+html[data-theme] .brand:hover .brainy-logo circle:nth-of-type(3) { transition-delay: 80ms; }
+html[data-theme] .brand:hover .brainy-logo circle:nth-of-type(4) { transition-delay: 120ms; }
+html[data-theme] .brand:hover .brainy-logo circle:nth-of-type(5) { transition-delay: 160ms; }
+
+/* ---------- Sidebar: coloured icon tile per collection (blue, green, red, black) ---------- */
+html[data-theme] .app-shell .collection-nav .nav-item > svg:first-child,
+html[data-theme] .mobile-drawer-panel .mobile-menu-list button > svg:first-child {
+  box-sizing: content-box; padding: 5px; border-radius: 8px; flex: none;
+  color: var(--ink-blue); background: var(--tint-blue);
+  transition: transform .18s var(--ease);
+}
+html[data-theme] .app-shell .collection-nav .nav-item:nth-child(4n+2) > svg:first-child { color: var(--ink-green); background: var(--tint-green); }
+html[data-theme] .app-shell .collection-nav .nav-item:nth-child(4n+3) > svg:first-child { color: var(--ink-red); background: var(--tint-red); }
+html[data-theme] .app-shell .collection-nav .nav-item:nth-child(4n+4) > svg:first-child { color: var(--ink-black); background: var(--tint-ink); }
+html[data-theme] .app-shell .collection-nav .nav-item:hover > svg:first-child { transform: rotate(-6deg) scale(1.06); }
+html[data-theme] .app-shell .sidebar .nav-item.active .nav-count {
+  min-width: 22px; padding: 0 7px; border-radius: 999px; background: var(--primary); color: var(--on-primary); text-align: center;
+}
+html[data-theme] .app-shell .sidebar-total { background: var(--tint-blue); color: var(--ink-blue); font-weight: 700; }
+
+/* ---------- Collection header: living gradient strip, coloured stat chips ---------- */
+html[data-theme] .app-shell .collection-hero::before {
+  display: block;
+  content: ""; position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: auto !important;
+  width: auto !important; height: 4px !important; z-index: 1; border-radius: 0 !important; transform: none !important;
+  filter: none !important; opacity: 1 !important; margin: 0 !important; box-shadow: none !important;
+  padding: 0 !important; border: 0 !important; outline: 0 !important; min-height: 0 !important; box-sizing: border-box !important;
+  background: var(--brand-gradient); background-size: 200% 100%; animation: ds-flow 10s linear infinite;
+}
+html[data-theme] .app-shell .collection-hero {
+  background:
+    radial-gradient(70% 140% at 0% 0%, rgba(36, 84, 230, .13), transparent 60%),
+    radial-gradient(55% 120% at 100% 100%, rgba(22, 163, 74, .11), transparent 62%),
+    radial-gradient(30% 60% at 85% 0%, rgba(229, 56, 59, .05), transparent 70%),
+    var(--c-surface);
+  background-size: 140% 140%, 140% 140%, 100% 100%, 100% 100%;
+  animation: ds-rise .32s var(--ease) both, ds-drift 18s ease-in-out infinite alternate;
+}
+html[data-theme="dark"] .app-shell .collection-hero {
+  background:
+    radial-gradient(70% 140% at 0% 0%, rgba(76, 125, 245, .18), transparent 60%),
+    radial-gradient(55% 120% at 100% 100%, rgba(52, 210, 123, .09), transparent 62%),
+    radial-gradient(30% 60% at 85% 0%, rgba(255, 90, 95, .06), transparent 70%),
+    var(--c-surface);
+  background-size: 140% 140%, 140% 140%, 100% 100%, 100% 100%;
+}
+html[data-theme] .app-shell .collection-hero .collection-icon {
+  background: linear-gradient(140deg, #3B82F6, #2454E6 55%, #1A3FB0);
+  transition: transform .25s var(--ease);
+}
+html[data-theme] .app-shell .collection-hero:hover .collection-icon { transform: rotate(-4deg) scale(1.04); }
+html[data-theme] .app-shell .collection-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+html[data-theme] .app-shell .collection-meta > span:not(.collection-meta-separator) {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border-radius: 999px;
+  font-size: 13px; font-weight: 600;
+}
+html[data-theme] .app-shell .collection-meta > span:first-child { background: var(--tint-blue); color: var(--ink-blue); }
+html[data-theme] .app-shell .collection-meta > span:last-child { background: var(--tint-green); color: var(--ink-green); }
+html[data-theme] .app-shell .collection-meta-separator { display: none; }
+html[data-theme] .app-shell .collection-hero-actions .button:not(.hero-add-entry) svg { color: var(--ink-green); }
+html[data-theme] .app-shell .collection-hero-more summary svg { color: inherit; }
+html[data-theme] .app-shell .collection-hero-actions .hero-add-entry,
+html[data-theme] .app-shell .sidebar-new-collection,
+html[data-theme] .button-primary,
+html[data-theme] .auth-submit {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, 0));
+}
+
+/* ---------- Tabs and section headings ---------- */
+html[data-theme] .app-shell .collection-section-nav .ui-tabs-indicator { background: linear-gradient(90deg, #2454E6, #3B82F6 60%, #16A34A); }
+html[data-theme] .section-overline { color: var(--ink-blue); }
+html[data-theme] .format-strip .section-overline { color: var(--ink-green); }
+html[data-theme] .entries-heading h2 span { background: var(--tint-blue); color: var(--ink-blue); border-radius: 999px; padding: 2px 9px; font-weight: 700; }
+
+/* ---------- Entry rows: format chip carries its colour ---------- */
+html[data-theme] .app-shell .entry-row .entry-format-label {
+  padding: 2px 9px 2px 7px; border-radius: 999px;
+  background: color-mix(in srgb, var(--data-marker) 12%, var(--c-surface)); color: var(--c-ink);
+}
+html[data-theme="dark"] .app-shell .entry-row .entry-format-label { background: color-mix(in srgb, var(--data-marker) 18%, transparent); }
+html[data-theme] .app-shell .entry-row .entry-date svg,
+html[data-theme] .app-shell .entry-row .entry-details-action svg { color: var(--ink-blue); }
+html[data-theme] .app-shell .entry-row .entry-edited svg { color: var(--ink-green); }
+
+/* ---------- Tool hub: palette tiles ---------- */
+html[data-theme] .collection-hub-icon { background: var(--tint-blue); color: var(--ink-blue); transition: transform .2s var(--ease); }
+html[data-theme] .collection-tools-group:nth-child(2) .collection-hub-icon { background: var(--tint-green); color: var(--ink-green); }
+html[data-theme] .collection-tools-group:nth-child(3) .collection-hub-icon { background: var(--tint-red); color: var(--ink-red); }
+html[data-theme] .collection-hub-card:hover .collection-hub-icon { transform: scale(1.08) rotate(-4deg); }
+html[data-theme] .app-shell .tools-toggle-icon { background: linear-gradient(140deg, var(--tint-blue), var(--tint-green)); }
+
+/* ---------- Top bar quick capture ---------- */
+html[data-theme] .app-shell .topbar .quick-topbar { background: linear-gradient(135deg, var(--tint-blue), var(--tint-green)); }
+
+/* ---------- Empty state: floating art with a soft halo ---------- */
+html[data-theme] .app-shell .empty-state .empty-art { position: relative; animation: ds-float-y 5s ease-in-out infinite; }
+html[data-theme] .app-shell .empty-state .empty-art::after {
+  content: ""; position: absolute; inset: -8px; border-radius: 24px;
+  border: 2px solid rgba(36, 84, 230, .3);
+  animation: ds-halo 2.8s var(--ease) infinite;
+}
+
+/* ---------- Auth, profile, dialogs: brand gradient accents ---------- */
+html[data-theme] .auth-form-side {
+  background:
+    radial-gradient(50% 40% at 85% 0%, rgba(36, 84, 230, .12), transparent 70%),
+    radial-gradient(40% 35% at 10% 100%, rgba(22, 163, 74, .09), transparent 70%),
+    var(--c-canvas);
+}
+html[data-theme] .auth-card,
+html[data-theme] .profile-card { position: relative; overflow: hidden; }
+html[data-theme] .auth-card::before,
+html[data-theme] .profile-card::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 4px;
+  background: var(--brand-gradient); background-size: 200% 100%; animation: ds-flow 10s linear infinite;
+}
+html[data-theme] .modal { overflow: hidden; }
+html[data-theme] .modal-head { position: relative; }
+html[data-theme] .modal-head::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--brand-gradient); }
+
+@keyframes ds-flow { from { background-position: 0% 0; } to { background-position: 200% 0; } }
+@keyframes ds-drift { from { background-position: 0% 0%, 100% 100%, 0 0, 0 0; } to { background-position: 30% 20%, 70% 80%, 0 0, 0 0; } }
+@keyframes ds-float-y { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes ds-halo { 0% { opacity: .9; transform: scale(.92); } 100% { opacity: 0; transform: scale(1.18); } }
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .app-shell .sidebar-top::after,
+  html[data-theme] .app-shell .collection-hero,
+  html[data-theme] .app-shell .collection-hero::before,
+  html[data-theme] .auth-card::before,
+  html[data-theme] .profile-card::before,
+  html[data-theme] .app-shell .empty-state .empty-art,
+  html[data-theme] .app-shell .empty-state .empty-art::after { animation: none !important; }
+}

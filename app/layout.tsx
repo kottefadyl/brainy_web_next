@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import "./formats.css";
 import "./profile.css";
@@ -13,6 +14,10 @@ import "./phase-two.css";
 import "./phase-two-b.css";
 import "./workspace-identity.css";
 import "./design-system.css";
+import "./design-accents.css";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+const display = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-display", weight: ["500", "600", "700", "800"], display: "swap" });
 
 export const metadata: Metadata = {
   title: "Brainy — Your space to remember",
@@ -24,7 +29,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${display.variable}`} suppressHydrationWarning>
       <head><script dangerouslySetInnerHTML={{ __html: "try{var saved=localStorage.getItem('brainy_theme');document.documentElement.dataset.theme=saved==='light'||saved==='dark'?saved:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch(e){}" }} /></head>
       <body>{children}</body>
     </html>

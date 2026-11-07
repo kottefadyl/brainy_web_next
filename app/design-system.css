@@ -347,6 +347,7 @@ html[data-theme] .app-shell .collection-hero {
 }
 html[data-theme] .app-shell .collection-hero:has(.collection-hero-more[open]) { overflow: visible; }
 html[data-theme] .app-shell .collection-hero::after {
+  display: block;
   content: ""; position: absolute; z-index: -1; right: -10px; top: 50%; width: 300px; height: 210px;
   transform: translateY(-50%); background: var(--pattern) no-repeat center / contain; opacity: .16;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 60%); mask-image: linear-gradient(90deg, transparent, #000 60%);

@@ -12,9 +12,9 @@ export function CollectionHeader({ collection, entryCount, language, onNewEntry,
         <span className="eyebrow">{t(language, "collection")}</span>
         <h1 title={collection.name}>{collection.name}</h1>
         <div className="collection-meta">
-          <span><FileText size={15} aria-hidden="true" /> {entryCount} {t(language, "entries")}</span>
+          <span><FileText size={15} aria-hidden="true" /> {entryCount} {t(language, entryCount === 1 ? "entry" : "entries").toLocaleLowerCase(language)}</span>
           <span className="collection-meta-separator" aria-hidden="true">·</span>
-          <span>{collection.formats.length} {t(language, collection.formats.length === 1 ? "format" : "formats")}</span>
+          <span>{collection.formats.length} {t(language, collection.formats.length === 1 ? "format" : "formats").toLocaleLowerCase(language)}</span>
         </div>
       </div>
     </div>

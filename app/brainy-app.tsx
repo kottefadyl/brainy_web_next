@@ -1008,13 +1008,15 @@ export default function BrainyApp() {
     setFilterFieldId(""); setFilterValueText(""); setFilterValue(""); setFilterOperator("EQ");
   }
 
+  const languageLoaded = useRef(false);
   useEffect(() => {
     const stored = window.localStorage.getItem("brainy_language");
     const next: Language = stored === "fr" || stored === "en" ? stored : navigator.language.toLowerCase().startsWith("fr") ? "fr" : "en";
-    queueMicrotask(() => setLanguage(next));
+    queueMicrotask(() => { languageLoaded.current = true; setLanguage(next); });
     api.me().then(setUser).catch(() => {}).finally(() => setBooting(false));
   }, []);
-  useEffect(() => { document.documentElement.lang = language; window.localStorage.setItem("brainy_language", language); }, [language]);
+  // Persist only once the saved choice has been read, so the default never overwrites it.
+  useEffect(() => { document.documentElement.lang = language; if (languageLoaded.current) window.localStorage.setItem("brainy_language", language); }, [language]);
   useEffect(() => {
     if (!user?.profileCompleted) return;
     const url = new URL(window.location.href);

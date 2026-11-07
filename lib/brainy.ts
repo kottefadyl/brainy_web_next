@@ -577,7 +577,9 @@ export function formatNumber(value: string, unit: string | null | undefined, lan
   const number = language === "fr" ? value.replaceAll(".", ",") : value;
   if (!unit) return number;
   const symbol = unitSymbol(unit);
-  return ["EUR", "USD", "GBP", "NGN"].includes(unit) ? `${symbol} ${number}` : `${number} ${symbol}`;
+  // French writes the currency after the amount (19,99 €); English before it (€19.99 style kept as "€ 19.99").
+  if (["EUR", "USD", "GBP", "NGN"].includes(unit)) return language === "fr" ? `${number} ${symbol}` : `${symbol} ${number}`;
+  return `${number} ${symbol}`;
 }
 
 export function formatFieldValue(field: Field, value: string, language: Language, snapshot?: UnitSnapshot | null, collection?: Collection): string {
@@ -590,7 +592,8 @@ export function formatFieldValue(field: Field, value: string, language: Language
   if (field.kind === "NUMBER" || field.kind === "MEASURE") {
     if (snapshot) {
       const number = language === "fr" ? value.replaceAll(".", ",") : value;
-      return snapshot.dimension === "CURRENCY" ? `${snapshot.symbol} ${number}` : `${number} ${snapshot.symbol}`;
+      if (snapshot.dimension === "CURRENCY") return language === "fr" ? `${number} ${snapshot.symbol}` : `${snapshot.symbol} ${number}`;
+      return `${number} ${snapshot.symbol}`;
     }
     return formatNumber(value, field.unit, language);
   }
