@@ -61,7 +61,7 @@ try {
       await pause(260);
       const hero = await evaluate(`(()=>{${contrastHelpers}const e=document.querySelector('.collection-hero'),c=css(e),r=e.getBoundingClientRect();return {contrast:ratio(css(e.querySelector('h1')).color,c.backgroundColor),metadata:ratio(css(e.querySelector('.collection-meta')).color,c.backgroundColor),blue:c.backgroundColor,width:r.width,height:r.height,fits:r.left>=0&&r.right<=innerWidth}})()`);
       assert(hero.contrast >= 4.5 && hero.metadata >= 4.5 && hero.fits, JSON.stringify({ width, theme, hero }));
-      assert(hero.blue === (theme === 'dark' ? 'rgb(48, 79, 96)' : 'rgb(214, 238, 249)'), hero.blue);
+      assert(hero.blue === 'rgb(8, 75, 196)', hero.blue);
       if (width === 1280) assert(hero.height >= 184 && hero.width >= 900, 'Collection header must be spacious');
       await capture(`collection-${theme}-${language}-${width}`);
       await click('.collection-hero-more summary');

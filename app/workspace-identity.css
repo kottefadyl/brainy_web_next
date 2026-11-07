@@ -1,14 +1,14 @@
-/* Ice-blue navigation, quiet data surfaces, a restrained red brand accent. */
+/* Deeper-blue navigation, quiet data surfaces, a restrained red brand accent. */
 :root {
-  --navigation-surface: #e0f2fa;
-  --navigation-field: #f2faff;
-  --navigation-raised: #f2faff;
-  --navigation-hover: #cce8f5;
-  --navigation-selection: #bddfed;
-  --navigation-ink: #21485c;
-  --navigation-muted: #456477;
-  --navigation-border: #628395;
-  --hero-surface: #d6eef9;
+  --navigation-surface: #084bc4;
+  --navigation-field: #0641ad;
+  --navigation-raised: #0641ad;
+  --navigation-hover: #0644b4;
+  --navigation-selection: #06378f;
+  --navigation-ink: #ffffff;
+  --navigation-muted: #f4f8ff;
+  --navigation-border: #d0e0ff;
+  --hero-surface: #084bc4;
   --brand-red: #f1919d;
   /* Resolve these at the root so blue navigation cannot recolor a menu. */
   --floating-ink: var(--ink);
@@ -19,17 +19,7 @@
   --floating-line: var(--control-border);
   --floating-soft: var(--accent-soft);
 }
-html[data-theme="dark"] {
-  --navigation-surface: #253e4b;
-  --navigation-field: #2d4856;
-  --navigation-raised: #2d4856;
-  --navigation-hover: #365563;
-  --navigation-selection: #3b5d6d;
-  --navigation-ink: #e3f5ff;
-  --navigation-muted: #bdd9e8;
-  --navigation-border: #88adbf;
-  --hero-surface: #304f60;
-}
+
 html[data-theme] .app-shell .sidebar,
 html[data-theme] .mobile-drawer-panel {
   --sidebar-surface: var(--navigation-surface);
@@ -60,7 +50,7 @@ html[data-theme] .mobile-drawer-actions .mobile-drawer-create {
   border-color: var(--navigation-ink); box-shadow: 0 3px 8px #061b3b1a;
 }
 html[data-theme] .app-shell .sidebar-new-collection:hover,
-html[data-theme] .mobile-drawer-actions .mobile-drawer-create:hover { background: color-mix(in srgb, var(--navigation-ink) 90%, var(--navigation-surface)); }
+html[data-theme] .mobile-drawer-actions .mobile-drawer-create:hover { background: color-mix(in srgb, var(--navigation-ink) 98%, var(--navigation-surface)); }
 html[data-theme] .app-shell .sidebar .profile-avatar { background: var(--navigation-selection); }
 html[data-theme] .app-shell .sidebar :is(button,summary):focus-visible,
 html[data-theme] .mobile-drawer-panel :is(button,summary):focus-visible {
@@ -165,7 +155,7 @@ html[data-theme] .app-shell .collection-hero-actions .hero-add-entry {
   background: var(--navigation-ink); border-color: var(--navigation-ink); color: var(--hero-surface);
 }
 html[data-theme] .app-shell .collection-hero-actions .hero-add-entry:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--navigation-ink) 90%, var(--hero-surface)); color: var(--hero-surface);
+  background: color-mix(in srgb, var(--navigation-ink) 98%, var(--hero-surface)); color: var(--hero-surface);
 }
 html[data-theme] .app-shell .entry-card.entry-row {
   --data-marker: var(--format-marker-light);
