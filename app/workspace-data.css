@@ -178,24 +178,24 @@ html[data-theme="dark"] .app-shell .entry-tools {
 html[data-theme="dark"] .app-shell .entry-row .entry-field-name,
 html[data-theme="dark"] .app-shell .entry-row .entry-date,
 html[data-theme="dark"] .app-shell .entry-row .entry-edited {
-  color: #C4C4CA;
+  color: var(--muted);
 }
 
 html[data-theme="dark"] .app-shell .entry-row .entry-format-label {
-  background: #303034;
+  background: var(--surface-elevated);
   border-color: var(--format-accent);
-  color: #F2F2F4;
+  color: var(--ink);
 }
 
 html[data-theme="dark"] .app-shell .entry-more[open] summary,
 html[data-theme="dark"] .app-shell .entry-row .small-action:hover {
-  background: #444449;
-  color: #FFFFFF;
+  background: var(--hover);
+  color: var(--ink);
 }
 
 html[data-theme="dark"] .app-shell .entry-more-fields {
-  background: #303034;
-  color: #E2E2E8;
+  background: var(--surface-elevated);
+  color: var(--ink);
 }
 
 @media (max-width: 760px) {
@@ -291,9 +291,9 @@ html[data-theme="dark"] .app-shell .entry-more-fields {
 .entry-detail-fields dd { margin: 0; color: var(--ink); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; white-space: pre-wrap; }
 .entry-detail-fields dd a { display: inline-flex; align-items: center; gap: 5px; }
 .entry-detail-actions { padding: 8px 22px 20px; }
-html[data-theme="dark"] .app-shell .entry-preview { color: #d0d3dc; }
-html[data-theme="dark"] .app-shell .entry-row .entry-details-action { color: #e1e8ff; }
-html[data-theme="dark"] .entry-detail-format { background: color-mix(in srgb, var(--format-color) 22%, #303034); color: #f2f2f4; }
+html[data-theme="dark"] .app-shell .entry-preview { color: var(--muted); }
+html[data-theme="dark"] .app-shell .entry-row .entry-details-action { color: var(--blue); }
+html[data-theme="dark"] .entry-detail-format { background: color-mix(in srgb, var(--format-color) 22%, var(--surface-elevated)); color: var(--ink); }
 @media (max-width: 760px) {
   .app-shell .entry-row-body { grid-template-areas: "content actions" "meta meta"; grid-template-columns: minmax(0, 1fr) auto; }
   .app-shell .entry-row-content { grid-column: auto; grid-row: auto; flex-wrap: nowrap; }

@@ -31,7 +31,7 @@ export function formatColorStyle(color: string): CSSProperties {
     "--format-color": color,
     "--format-surface-light": presentation?.lightSurface ?? color,
     "--format-marker-light": presentation?.lightMarker ?? "#20242C",
-    "--format-surface-dark": presentation?.darkSurface ?? "#22262D",
+    "--format-surface-dark": presentation?.darkSurface ?? "#232327",
     "--format-marker-dark": presentation?.darkMarker ?? "#A9CBFF",
   } as CSSProperties;
 }

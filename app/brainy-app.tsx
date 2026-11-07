@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
+import { BrainyLogo } from "./components/brand/BrainyLogo";
 import {
   ArrowLeft, ArrowRight, Bell, BookOpen, ChartNoAxesCombined, Check, ChevronDown,
   FolderHeart, Pencil, Plus, Sparkles, X,
@@ -122,9 +123,7 @@ async function downloadAttachment(entryId: string, fieldId: string): Promise<voi
 function Brand({ compact = false }: { compact?: boolean }) {
   return (
     <div className={`brand ${compact ? "brand-compact" : ""}`}>
-      {/* The mark comes from the Brainy logo supplied for this project. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/brainy-mark.png" alt="" className="brand-mark" />
+      <BrainyLogo className="brand-mark" />
       <span>brainy<span className="brand-dot">.</span></span>
     </div>
   );

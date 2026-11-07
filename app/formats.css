@@ -504,7 +504,7 @@ html[data-theme="dark"] .collection-tools-drawer,html[data-theme="dark"] .worksp
 html[data-theme="dark"] .collection-tools-group-grid .collection-hub-card{background:var(--surface-elevated);border-color:var(--line);color:var(--ink)}
 html[data-theme="dark"] .collection-tools-group-grid .collection-hub-card:hover{background:var(--hover);border-color:var(--blue)}
 html[data-theme="dark"] .collection-tools-group-grid .collection-hub-icon{background:var(--blue-soft);color:var(--blue)}
-html[data-theme="dark"] .collection-tools-group-grid .collection-hub-featured{background:#302d36;border-color:#625b72}
+html[data-theme="dark"] .collection-tools-group-grid .collection-hub-featured{background:var(--surface-elevated);border-color:var(--line-strong)}
 html[data-theme="dark"] .collection-hub-copy small,html[data-theme="dark"] .collection-hub-arrow{color:var(--muted)}
 html[data-theme="dark"] .saved-view-table-wrap{background:var(--surface);border-color:var(--line)}
 html[data-theme="dark"] .saved-view-table th{background:var(--surface-elevated);color:var(--ink)}

@@ -71,7 +71,7 @@ html[data-theme] .app-shell .format-card {
 }
 html[data-theme="dark"] .app-shell .format-card {
   --data-marker: var(--format-marker-dark);
-  --data-surface: var(--format-surface-dark);
+  --data-surface: color-mix(in srgb, var(--format-surface-dark) 55%, var(--surface-elevated));
 }
 html[data-theme] .app-shell .format-card-head { align-items: center; gap: 10px; }
 html[data-theme] .app-shell .format-card-symbol {
@@ -165,7 +165,7 @@ html[data-theme] .app-shell .entry-card.entry-row {
 }
 html[data-theme="dark"] .app-shell .entry-card.entry-row {
   --data-marker: var(--format-marker-dark);
-  --data-surface: var(--format-surface-dark);
+  --data-surface: color-mix(in srgb, var(--format-surface-dark) 55%, var(--surface-elevated));
 }
 html[data-theme] .app-shell .entry-row .entry-format-label {
   display: inline-flex; align-items: center; gap: 6px;
@@ -205,3 +205,36 @@ html[data-theme] .app-shell .entry-row .entry-actions { justify-self: end; gap: 
 @media (hover: none) {
   html[data-theme] .app-shell :is(.format-card,.entry-card.entry-row):hover { transform: none; box-shadow: none !important; }
 }
+
+/* Dark: charcoal navigation and header (user reference); blue only marks the
+   current place and the primary action, red stays the brand accent. */
+html[data-theme="dark"] {
+  --navigation-surface: #101012;
+  --navigation-field: #1B1B1E;
+  --navigation-raised: #232327;
+  --navigation-hover: #222226;
+  --navigation-selection: #1F3354;
+  --navigation-ink: #F2F2F4;
+  --navigation-muted: #ABABB4;
+  --navigation-border: #6A6A73;
+  --hero-surface: #1B1B1E;
+  --primary-fill: #96BDFF;
+  --on-primary-fill: #142443;
+}
+html[data-theme="dark"] .app-shell .sidebar { box-shadow: inset -1px 0 0 var(--line-strong); }
+html[data-theme="dark"] .app-shell .sidebar .nav-item.active { box-shadow: inset 3px 0 0 var(--primary-fill); }
+html[data-theme="dark"] .app-shell .sidebar-new-collection,
+html[data-theme="dark"] .mobile-drawer-actions .mobile-drawer-create,
+html[data-theme="dark"] .app-shell .collection-hero-actions .hero-add-entry {
+  background: var(--primary-fill); border-color: var(--primary-fill); color: var(--on-primary-fill); box-shadow: none;
+}
+html[data-theme="dark"] .app-shell .sidebar-new-collection:hover,
+html[data-theme="dark"] .mobile-drawer-actions .mobile-drawer-create:hover,
+html[data-theme="dark"] .app-shell .collection-hero-actions .hero-add-entry:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--primary-fill) 88%, #FFFFFF); color: var(--on-primary-fill);
+}
+html[data-theme="dark"] .app-shell .collection-hero {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--brand-blue) 12%, var(--hero-surface)), var(--hero-surface) 60%);
+  border: 1px solid var(--line-strong);
+}
+html[data-theme="dark"] .app-shell .collection-hero .collection-icon { background: var(--accent-tint); color: var(--on-accent-tint); }
