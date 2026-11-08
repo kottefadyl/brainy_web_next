@@ -21,4 +21,6 @@ Run `node scripts/visual/phase-two-b/date-focus.mjs` after step 4 for 12 combina
 
 Run `node scripts/visual/phase-two-b/chart.mjs` after step 4 for 12 combinations of width (320, 390, 1280), theme and language on the analysis chart: real pointer hover, keyboard path, tooltip content and position, legend isolation, line and bar views, SVG, PNG and CSV exports, and a thinned 500-point series. Add `--logic` to check only the sampling, scale, alignment and CSV logic, without a browser. Screenshots are in `.visual-checks/chart/`.
 
+Run `node scripts/visual/phase-two-b/osm-map.mjs` after step 4 for 12 combinations of width, theme and language on the map. Tile requests are intercepted, so nothing reaches OpenStreetMap; the bench proves none is made before consent, then drives dragging, wheel and button zoom, fit, marker popups, keyboard paths and the offline background. Add `--logic` to check only the Web Mercator arithmetic, without a browser.
+
 The generated route is excluded from Git. Screenshots, metrics and browser profiles are excluded from Git, lint and TypeScript. Cleanup also retires the generated `.next/dev/types` cache, which otherwise keeps a validator importing the removed fixture route. No new dependencies are required. Do not run the development server concurrently with the final build.

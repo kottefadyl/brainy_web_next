@@ -17,6 +17,7 @@ import "./design-system.css";
 import "./design-accents.css";
 import "./date-input.css";
 import "./analysis-chart.css";
+import "./osm-map.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const display = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-display", weight: ["500", "600", "700", "800"], display: "swap" });

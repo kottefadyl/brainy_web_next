@@ -1,0 +1,57 @@
+/* Interactive map (osm-map.tsx). Tiles stay light in both themes: they are images. */
+.osm-map { display: grid; gap: 8px; min-width: 0; --pin: var(--format-marker-light, var(--chart-1)); }
+html[data-theme="dark"] .osm-map:not([data-tiles="on"]) { --pin: var(--format-marker-dark, var(--chart-1)); }
+
+.osm-map-viewport {
+  position: relative; height: clamp(300px, 56vh, 480px); overflow: hidden; border: 1px solid var(--border); border-radius: 12px; cursor: grab; touch-action: none; user-select: none;
+  background-color: var(--surface-soft);
+  background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+.osm-map-viewport:active { cursor: grabbing; }
+html[data-theme] .osm-map-viewport:focus-visible { outline: 2px solid var(--focus) !important; outline-offset: 2px !important; }
+.osm-map-tiles { position: absolute; inset: 0; pointer-events: none; }
+.osm-map-tile { position: absolute; display: block; max-width: none; user-select: none; }
+
+html[data-theme] .osm-map-viewport button { margin: 0; box-shadow: none; }
+html[data-theme] .osm-map-marker {
+  position: absolute; top: 0; left: 0; display: flex; align-items: flex-end; justify-content: center; width: 44px; height: 44px; min-height: 0; padding: 0; border: 0; background: none; cursor: pointer;
+}
+html[data-theme] .osm-map-marker:hover { background: none; }
+.osm-map-marker svg { display: block; overflow: visible; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .45)); transform-origin: 50% 100%; transition: transform .12s; }
+.osm-map-marker svg path { fill: var(--pin); stroke: #fff; stroke-width: 2; }
+.osm-map-marker svg circle { fill: #fff; }
+.osm-map-marker:hover svg, .osm-map-marker[aria-expanded="true"] svg { transform: scale(1.12); }
+.osm-map-marker[data-selected="true"] svg { transform: scale(1.2); }
+.osm-map-marker[data-selected="true"] svg circle { fill: var(--danger-fill); }
+html[data-theme] .osm-map-marker:focus-visible { outline: 2px solid var(--focus) !important; outline-offset: -2px !important; border-radius: 8px; }
+
+.osm-map-controls { position: absolute; top: 8px; right: 8px; display: grid; gap: 4px; }
+html[data-theme] .osm-map-controls button {
+  display: grid; place-items: center; width: 44px; height: 44px; min-height: 0; padding: 0; border: 1px solid var(--line-strong); border-radius: 10px;
+  background: var(--dialog-surface); color: var(--ink);
+}
+html[data-theme] .osm-map-controls button:hover:not(:disabled) { background: var(--hover); }
+
+.osm-map-popup {
+  position: absolute; top: 0; left: 0; z-index: 3; display: grid; gap: 6px; box-sizing: border-box; width: max-content; max-width: min(260px, calc(100% - 16px)); padding: 10px 12px;
+  border: 1px solid var(--line-strong); border-radius: 12px; background: var(--dialog-surface); color: var(--ink); box-shadow: 0 10px 28px rgba(0, 0, 0, .28); cursor: default; user-select: text;
+}
+.osm-map-popup strong { padding-inline-end: 30px; overflow-wrap: anywhere; font-weight: 650; }
+.osm-map-popup span { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+html[data-theme] .osm-map-popup .osm-map-popup-close { position: absolute; top: 2px; right: 2px; display: grid; place-items: center; width: 36px; height: 36px; min-height: 0; padding: 0; border: 0; background: transparent; color: var(--muted); }
+html[data-theme] .osm-map-popup .osm-map-popup-close:hover { background: var(--hover); color: var(--ink); }
+html[data-theme] .osm-map-popup .osm-map-popup-open { min-height: 44px; border: 0; background: var(--primary); color: var(--on-primary); font-weight: 600; }
+html[data-theme] .osm-map-popup .osm-map-popup-open:hover { background: var(--primary-hover); }
+
+.osm-map-consent {
+  position: absolute; left: 8px; bottom: 8px; display: grid; gap: 8px; box-sizing: border-box; width: min(340px, calc(100% - 16px)); padding: 10px 12px;
+  border: 1px solid var(--line-strong); border-radius: 12px; background: var(--dialog-surface); cursor: default;
+}
+.osm-map-consent p { margin: 0; color: var(--ink); font-size: 13px; line-height: 1.4; }
+.osm-map-offline, .osm-map-attribution { position: absolute; bottom: 4px; padding: 2px 6px; border-radius: 6px; font-size: 13px; line-height: 1.4; }
+.osm-map-offline { left: 6px; background: var(--dialog-surface); color: var(--muted); }
+html[data-theme] .osm-map-attribution { right: 4px; background: rgba(255, 255, 255, .88); color: #17263a; text-decoration: underline; }
+html[data-theme] .osm-map-disable { justify-self: start; min-height: 44px; border: 0; background: transparent; color: var(--muted); text-decoration: underline; }
+
+@media (prefers-reduced-motion: reduce) { .osm-map-marker svg { transition: none; } }
