@@ -1,6 +1,8 @@
 import type { Collection, CollectionUnit, Entry, EntryFilter, EntryPage, User, FieldKind, Language, ProfileInput, SharedObjectGrant, SavedView, EntryReminder, AnalysisInput, AnalysisResult, EntryLink, EntryRelation, StockPosition, StockMovement, StockMovementInput, StockPreview, ForecastInput, ForecastResult, CollectionRole, AuditLog, ClassificationCode, GeoPage, WorkflowDefinition, SensitivityLevel } from "./brainy";
 
-export type WorkflowNotification = { id: string; collectionId: string; entryId: string; kind: string; actorUserId: string; createdAt: string; readAt?: string | null };
+export type FormulaStaticType = { type: "NUMBER" | "TEXT" | "DATE" | "DATETIME" | "BOOLEAN"; unit?: string | null; dimension?: string | null; unitOpen: boolean };
+export type FormulaPreview = { entryId: string; entryLabel?: string | null; value?: string | null; unit?: string | null; dimension?: string | null; missing?: string | null };
+export type WorkflowNotification ={ id: string; collectionId: string; entryId: string; kind: string; actorUserId: string; createdAt: string; readAt?: string | null };
 
 export type BackgroundJob = { id: string; collectionId: string; requestKey: string; kind: string; state: string; total: number; processed: number; createdCount: number; skippedCount: number; errorCount: number; logs: { row: number; message: string }[]; result?: string | null; failure?: string | null; createdAt: string; updatedAt: string };
 const backgroundJobFields = "id collectionId requestKey kind state total processed createdCount skippedCount errorCount logs { row message } failure createdAt updatedAt";
@@ -235,6 +237,12 @@ export const api = {
   },
   async saveFormula(collectionId: string, input: { name: string; formatId: string; expression: string; expectedVersion?: number }, formulaId?: string): Promise<Collection> {
     return (await request<{ saveCollectionFormula: Collection }>(`mutation($collectionId:String!,$input:FormulaInput!,$formulaId:String) { saveCollectionFormula(collectionId:$collectionId,input:$input,formulaId:$formulaId) { ${collectionFields} } }`, { collectionId, input, formulaId })).saveCollectionFormula;
+  },
+  async inferFormula(collectionId: string, formatId: string, expression: string): Promise<FormulaStaticType> {
+    return (await request<{ inferCollectionFormula: FormulaStaticType }>(`query($collectionId:String!,$formatId:String!,$expression:String!) { inferCollectionFormula(collectionId:$collectionId,formatId:$formatId,expression:$expression) { type unit dimension unitOpen } }`, { collectionId, formatId, expression })).inferCollectionFormula;
+  },
+  async previewFormula(collectionId: string, formatId: string, expression: string): Promise<FormulaPreview | null> {
+    return (await request<{ previewCollectionFormula: FormulaPreview | null }>(`query($collectionId:String!,$formatId:String!,$expression:String!) { previewCollectionFormula(collectionId:$collectionId,formatId:$formatId,expression:$expression) { entryId entryLabel value unit dimension missing } }`, { collectionId, formatId, expression })).previewCollectionFormula;
   },
   async deleteFormula(collectionId: string, formulaId: string): Promise<Collection> {
     return (await request<{ deleteCollectionFormula: Collection }>(`mutation($collectionId:String!,$formulaId:String!) { deleteCollectionFormula(collectionId:$collectionId,formulaId:$formulaId) { ${collectionFields} } }`, { collectionId, formulaId })).deleteCollectionFormula;

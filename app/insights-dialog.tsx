@@ -2,9 +2,9 @@
 
 import { useMemo, useRef, useState } from "react";
 import { api } from "../lib/api";
-import { buildFormulaExpression, readFormulaDraft } from "../lib/formula-editor";
-import type { AnalysisInput, AnalysisOperationId, AnalysisResult, Collection, EntryFilter, ForecastResult, Formula, Language } from "../lib/brainy";
+import type { AnalysisInput, AnalysisOperationId, AnalysisResult, Collection, EntryFilter, ForecastResult, Language } from "../lib/brainy";
 import { AnalysisResultChart } from "./analysis-result-chart";
+import { FormulaEditorPanel } from "./formula-editor-panel";
 import { AccessibleListbox } from "./components/ui/AccessibleListbox";
 
 type Props = {
@@ -48,19 +48,6 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
     ...formulas.map((formula) => ({ id: `formula:${formula.id}`, label: `${formula.name} (=)` })),
   ], [formulas, numericFields]);
 
-  const [formulaId, setFormulaId] = useState<string | undefined>();
-  const [formulaVersion, setFormulaVersion] = useState<number | undefined>();
-  const [formulaName, setFormulaName] = useState("");
-  const [formulaKind, setFormulaKind] = useState<"arithmetic" | "dateDifference">("arithmetic");
-  const [left, setLeft] = useState(sources[0]?.id ?? "");
-  const [operator, setOperator] = useState("MULTIPLY");
-  const [right, setRight] = useState(sources[1]?.id ?? "");
-  const [constant, setConstant] = useState("2");
-  const [fromDateField, setFromDateField] = useState(dateFields[0]?.id ?? "");
-  const [toDateField, setToDateField] = useState(dateFields[1]?.id ?? dateFields[0]?.id ?? "");
-  const [dateUnit, setDateUnit] = useState("d");
-  const [roundDigits, setRoundDigits] = useState("");
-  const [roundMode, setRoundMode] = useState("HALF_UP");
 
   const [measure, setMeasure] = useState(sources[0]?.id ?? "");
   const [operation, setOperation] = useState<AnalysisOperationId>("SUM");
@@ -115,44 +102,6 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
     date: quickChartFormat.fields.find((field) => field.kind === "DATE" || field.kind === "DATETIME"),
     group: quickChartFormat.fields.find((field) => field.kind === "SELECT" || field.kind === "TEXT" || field.kind === "OBJECT_REF"),
   } : null;
-
-  function editFormula(formula: Formula) {
-    const draft = readFormulaDraft(formula.expression);
-    if (!draft) return;
-    setFormulaId(formula.id);
-    setFormulaVersion(formula.version);
-    setFormulaName(formula.name);
-    setFormulaKind(draft.kind);
-    setRoundDigits(draft.roundDigits);
-    setRoundMode(draft.roundMode);
-    if (draft.kind === "dateDifference") {
-      setFromDateField(draft.fromFieldId);
-      setToDateField(draft.toFieldId);
-      setDateUnit(draft.unit);
-    } else {
-      setOperator(draft.operator);
-      setLeft(draft.left);
-      setRight(draft.right);
-      setConstant(draft.constant);
-    }
-  }
-
-  async function saveFormula() {
-    if (!format) return;
-    setBusy(true); setError("");
-    try {
-      const expression = buildFormulaExpression(formulaKind === "dateDifference"
-        ? { kind: "dateDifference", fromFieldId: fromDateField, toFieldId: toDateField, unit: dateUnit, roundDigits, roundMode }
-        : { kind: "arithmetic", operator, left: left || sources[0]?.id || "", right, constant, roundDigits, roundMode });
-      const updated = await api.saveFormula(collection.id, { name: formulaName, formatId: format.id, expression: JSON.stringify(expression), expectedVersion: formulaVersion }, formulaId);
-      onCollectionChanged(updated);
-      setFormulaId(undefined); setFormulaVersion(undefined); setFormulaName("");
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : String(cause));
-    } finally {
-      setBusy(false);
-    }
-  }
 
   function analysisInput(extra: Partial<AnalysisInput> = {}): AnalysisInput {
     const activeMeasure = measure || sources[0]?.id || "";
@@ -324,32 +273,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
 
       <details className="insights-section insights-formulas">
         <summary>{fr ? "Formules enregistrées" : "Saved formulas"}</summary>
-        <div className="insights-fields">
-          <label>{fr ? "Nom" : "Name"}<input value={formulaName} onChange={(event) => setFormulaName(event.target.value)} /></label>
-          <label>{fr ? "Type" : "Type"}
-            <select value={formulaKind} onChange={(event) => setFormulaKind(event.target.value as "arithmetic" | "dateDifference")}>
-              <option value="arithmetic">{fr ? "Arithmétique" : "Arithmetic"}</option>
-              <option value="dateDifference">{fr ? "Écart entre dates" : "Date difference"}</option>
-            </select>
-          </label>
-          {formulaKind === "arithmetic" ? <>
-            <label>{fr ? "Valeur 1" : "Value 1"}<select value={left} onChange={(event) => setLeft(event.target.value)}>{sources.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
-            <label>{fr ? "Opération" : "Operation"}<select value={operator} onChange={(event) => setOperator(event.target.value)}><option value="MULTIPLY">×</option><option value="ADD">+</option><option value="SUBTRACT">−</option><option value="DIVIDE">÷</option></select></label>
-            <label>{fr ? "Valeur 2" : "Value 2"}<select value={right} onChange={(event) => setRight(event.target.value)}><option value="">{fr ? "Nombre fixe" : "Fixed number"}</option>{sources.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
-            {!right && <label>{fr ? "Nombre fixe" : "Fixed number"}<input value={constant} onChange={(event) => setConstant(event.target.value)} /></label>}
-          </> : <>
-            <label>{fr ? "Début" : "Start"}<select value={fromDateField} onChange={(event) => setFromDateField(event.target.value)}>{dateFields.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-            <label>{fr ? "Fin" : "End"}<select value={toDateField} onChange={(event) => setToDateField(event.target.value)}>{dateFields.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-            <label>{fr ? "Unité" : "Unit"}<select value={dateUnit} onChange={(event) => setDateUnit(event.target.value)}><option value="d">{fr ? "Jours" : "Days"}</option><option value="h">{fr ? "Heures" : "Hours"}</option></select></label>
-          </>}
-          <label>{fr ? "Décimales" : "Decimals"}<select value={roundDigits} onChange={(event) => setRoundDigits(event.target.value)}><option value="">{fr ? "Aucun arrondi" : "No rounding"}</option>{[0, 1, 2, 3, 4, 5, 6].map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
-          {roundDigits !== "" && <label>{fr ? "Règle" : "Rule"}<select value={roundMode} onChange={(event) => setRoundMode(event.target.value)}><option value="HALF_UP">{fr ? "Moitié vers le haut" : "Half up"}</option><option value="HALF_EVEN">{fr ? "Moitié vers le pair" : "Half even"}</option></select></label>}
-        </div>
-        {!formulaName.trim() && <p className="action-help">{fr ? "Nommez la formule pour continuer." : "Name the formula to continue."}</p>}
-        <button type="button" disabled={busy || !formulaName.trim()} onClick={saveFormula}>{formulaId ? (fr ? "Mettre à jour" : "Update") : (fr ? "Enregistrer la formule" : "Save formula")}</button>
-        <ul>
-          {formulas.map((formula) => <li key={formula.id}><span>{formula.name}</span>{readFormulaDraft(formula.expression) ? <button type="button" onClick={() => editFormula(formula)}>{fr ? "Modifier" : "Edit"}</button> : <em className="formula-advanced-badge">{fr ? "Formule avancée (lecture seule)" : "Advanced formula (read-only)"}</em>}<button type="button" onClick={async () => onCollectionChanged(await api.deleteFormula(collection.id, formula.id))}>{fr ? "Supprimer" : "Delete"}</button></li>)}
-        </ul>
+        {format && <FormulaEditorPanel key={format.id} collection={collection} format={format} language={language} onCollectionChanged={onCollectionChanged} />}
       </details>
 
       <section className="insights-section">
