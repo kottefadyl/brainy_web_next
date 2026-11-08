@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { api } from "../lib/api";
+import { buildFormulaExpression, readFormulaDraft } from "../lib/formula-editor";
 import type { AnalysisInput, AnalysisOperationId, AnalysisResult, Collection, EntryFilter, ForecastResult, Formula, Language } from "../lib/brainy";
 import { AnalysisResultChart } from "./analysis-result-chart";
 import { AccessibleListbox } from "./components/ui/AccessibleListbox";
@@ -33,16 +34,6 @@ const OPERATIONS: { id: AnalysisOperationId; fr: string; en: string }[] = [
   { id: "SUCCESSIVE_VARIATION", fr: "Variation successive (%)", en: "Successive variation (%)" },
   { id: "LINEAR_TREND", fr: "Tendance linéaire", en: "Linear trend" },
 ];
-
-/** The visual editor only understands these two shapes; opening anything else would crash it. */
-function isVisuallyEditable(expression: string): boolean {
-  try {
-    const parsed = JSON.parse(expression);
-    return parsed?.kind === "dateDifference" || (parsed?.kind === "arithmetic" && !!parsed.left && !!parsed.right);
-  } catch {
-    return false;
-  }
-}
 
 export default function InsightsDialog({ collection, language, onClose, onCollectionChanged, onOpenEntry }: Props) {
   const fr = language === "fr";
@@ -126,22 +117,23 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
   } : null;
 
   function editFormula(formula: Formula) {
-    const parsed = JSON.parse(formula.expression);
+    const draft = readFormulaDraft(formula.expression);
+    if (!draft) return;
     setFormulaId(formula.id);
     setFormulaVersion(formula.version);
     setFormulaName(formula.name);
-    setFormulaKind(parsed.kind === "dateDifference" ? "dateDifference" : "arithmetic");
-    setRoundDigits(parsed.round?.digits === undefined ? "" : String(parsed.round.digits));
-    setRoundMode(parsed.round?.mode ?? "HALF_UP");
-    if (parsed.kind === "dateDifference") {
-      setFromDateField(parsed.fromFieldId);
-      setToDateField(parsed.toFieldId);
-      setDateUnit(parsed.unit ?? "d");
+    setFormulaKind(draft.kind);
+    setRoundDigits(draft.roundDigits);
+    setRoundMode(draft.roundMode);
+    if (draft.kind === "dateDifference") {
+      setFromDateField(draft.fromFieldId);
+      setToDateField(draft.toFieldId);
+      setDateUnit(draft.unit);
     } else {
-      setOperator(parsed.operator);
-      setLeft(parsed.left.type === "formula" ? `formula:${parsed.left.formulaId}` : parsed.left.fieldId);
-      setRight(parsed.right.type === "constant" ? "" : parsed.right.type === "formula" ? `formula:${parsed.right.formulaId}` : parsed.right.fieldId);
-      setConstant(parsed.right.type === "constant" ? parsed.right.value : "2");
+      setOperator(draft.operator);
+      setLeft(draft.left);
+      setRight(draft.right);
+      setConstant(draft.constant);
     }
   }
 
@@ -149,11 +141,9 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
     if (!format) return;
     setBusy(true); setError("");
     try {
-      const operand = (value: string) => value.startsWith("formula:") ? { type: "formula", formulaId: value.slice(8) } : { type: "field", fieldId: value };
-      const expression: Record<string, unknown> = formulaKind === "dateDifference"
-        ? { kind: "dateDifference", fromFieldId: fromDateField, toFieldId: toDateField, unit: dateUnit }
-        : { kind: "arithmetic", operator, left: operand(left || sources[0]?.id || ""), right: right ? operand(right) : { type: "constant", value: constant.replace(",", ".") } };
-      if (roundDigits !== "") expression.round = { digits: Number(roundDigits), mode: roundMode };
+      const expression = buildFormulaExpression(formulaKind === "dateDifference"
+        ? { kind: "dateDifference", fromFieldId: fromDateField, toFieldId: toDateField, unit: dateUnit, roundDigits, roundMode }
+        : { kind: "arithmetic", operator, left: left || sources[0]?.id || "", right, constant, roundDigits, roundMode });
       const updated = await api.saveFormula(collection.id, { name: formulaName, formatId: format.id, expression: JSON.stringify(expression), expectedVersion: formulaVersion }, formulaId);
       onCollectionChanged(updated);
       setFormulaId(undefined); setFormulaVersion(undefined); setFormulaName("");
@@ -358,7 +348,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
         {!formulaName.trim() && <p className="action-help">{fr ? "Nommez la formule pour continuer." : "Name the formula to continue."}</p>}
         <button type="button" disabled={busy || !formulaName.trim()} onClick={saveFormula}>{formulaId ? (fr ? "Mettre à jour" : "Update") : (fr ? "Enregistrer la formule" : "Save formula")}</button>
         <ul>
-          {formulas.map((formula) => <li key={formula.id}><span>{formula.name}</span>{isVisuallyEditable(formula.expression) ? <button type="button" onClick={() => editFormula(formula)}>{fr ? "Modifier" : "Edit"}</button> : <em className="formula-advanced-badge">{fr ? "Formule avancée (lecture seule)" : "Advanced formula (read-only)"}</em>}<button type="button" onClick={async () => onCollectionChanged(await api.deleteFormula(collection.id, formula.id))}>{fr ? "Supprimer" : "Delete"}</button></li>)}
+          {formulas.map((formula) => <li key={formula.id}><span>{formula.name}</span>{readFormulaDraft(formula.expression) ? <button type="button" onClick={() => editFormula(formula)}>{fr ? "Modifier" : "Edit"}</button> : <em className="formula-advanced-badge">{fr ? "Formule avancée (lecture seule)" : "Advanced formula (read-only)"}</em>}<button type="button" onClick={async () => onCollectionChanged(await api.deleteFormula(collection.id, formula.id))}>{fr ? "Supprimer" : "Delete"}</button></li>)}
         </ul>
       </details>
 
