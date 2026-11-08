@@ -107,7 +107,7 @@ try {
           const lum=a=>a.map(x=>{x/=255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4}).reduce((n,x,i)=>n+x*[.2126,.7152,.0722][i],0);
           const ratio=(a,b)=>{a=lum(px(a));b=lum(px(b));return (Math.max(a,b)+.05)/(Math.min(a,b)+.05)};
           const min=a=>a.length?+Math.min(...a).toFixed(2):null;
-          const cards=all('.format-card'),icons=all('.collection-hub-icon'), chart=document.querySelector('.analysis-line-chart svg');
+          const cards=all('.format-card'),icons=all('.collection-hub-icon'), chart=document.querySelector('.analysis-chart-plot');
           return {
             overflow:document.documentElement.scrollWidth>innerWidth+1,
             clipped:all('.workspace,.format-card,.analysis-line-chart').some(e=>e.scrollWidth>e.clientWidth+2),

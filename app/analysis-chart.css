@@ -1,0 +1,57 @@
+/* Interactive analysis chart (analysis-result-chart.tsx). */
+html[data-theme] .analysis-line-chart { --series-main: var(--chart-1); --series-comparison: var(--chart-2); position: relative; }
+html[data-theme="dark"] .analysis-line-chart { --series-main: #4F8BE6; --series-comparison: #2BA98A; }
+
+.analysis-chart-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; min-width: 0; }
+html[data-theme] .analysis-chart-legend { flex: 1 1 180px; flex-wrap: wrap; min-width: 0; }
+.analysis-chart-tools { display: flex; align-items: center; gap: 6px; flex: none; margin-inline-start: auto; }
+.analysis-view-switch { display: flex; padding: 2px; border: 1px solid var(--line); border-radius: 10px; }
+
+html[data-theme] .analysis-view-switch button,
+html[data-theme] .analysis-line-chart .format-menu-trigger {
+  display: grid; place-items: center; width: 44px; height: 40px; min-height: 40px; margin: 0; padding: 0; border: 0; border-radius: 8px;
+  background: transparent; color: var(--muted); box-shadow: none; transition: background .12s, color .12s;
+}
+html[data-theme] .analysis-view-switch button:hover,
+html[data-theme] .analysis-line-chart .format-menu-trigger:hover { background: var(--hover); color: var(--ink); }
+html[data-theme] .analysis-view-switch button[aria-pressed="true"] { background: var(--blue-soft); color: var(--blue); }
+
+html[data-theme] .analysis-legend-item {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin: 0; padding: 0 8px; border: 0; border-radius: 8px;
+  background: transparent; color: var(--ink); font-size: 13px; text-align: start; box-shadow: none;
+}
+html[data-theme] .analysis-legend-item:hover { background: var(--hover); }
+html[data-theme] .analysis-legend-item[data-muted="true"] { color: var(--muted); text-decoration: line-through; }
+html[data-theme] .analysis-chart-key { flex: none; width: 22px; height: 0; border-radius: 0; background: none; border-top: 2px solid var(--series-main); }
+html[data-theme] .analysis-chart-key[data-series="comparison"] { border-top: 2px dashed var(--series-comparison); }
+
+.analysis-chart-target { cursor: crosshair; outline-offset: -3px; }
+html[data-theme] .analysis-line-chart .analysis-chart-target:focus-visible { outline: 2px solid var(--focus) !important; outline-offset: -3px !important; }
+.analysis-chart-band { fill: var(--hover); }
+.analysis-chart-note { margin: 0; color: var(--muted); font-size: 13px; }
+
+.analysis-tooltip {
+  position: absolute; top: 0; left: 0; z-index: 3; display: grid; gap: 2px; box-sizing: border-box; width: max-content; max-width: min(250px, 100%);
+  padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--dialog-surface); color: var(--ink);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .18); font-size: 13px; line-height: 1.35; pointer-events: none; overflow-wrap: anywhere;
+  opacity: 0; visibility: hidden; transition: opacity .1s, transform .1s ease-out;
+}
+.analysis-tooltip[data-open="true"] { opacity: 1; visibility: visible; }
+.analysis-tooltip strong { font-size: 15px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.analysis-tooltip-label, .analysis-tooltip-meta { color: var(--muted); }
+.analysis-tooltip-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; }
+.analysis-tooltip-meta em { padding: 1px 6px; border-radius: 6px; background: var(--hover); color: var(--ink); font-style: normal; font-weight: 600; white-space: nowrap; }
+.analysis-tooltip-meta em[data-trend="up"] { background: var(--success-soft); color: var(--success); }
+.analysis-tooltip-meta em[data-trend="down"] { background: var(--danger-soft); color: var(--danger); }
+.analysis-tooltip-comparison { display: block; margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--line); color: var(--muted); }
+.analysis-tooltip-comparison .analysis-chart-key { display: inline-block; margin-inline-end: 6px; vertical-align: middle; }
+.analysis-tooltip-comparison b { color: var(--ink); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .analysis-tooltip { transition: none; }
+  html[data-theme] .analysis-view-switch button { transition: none; }
+}
+
+/* Older rules size every svg of a chart: the toolbar icons keep their own size. */
+html[data-theme] .insights-chart.analysis-line-chart svg:not(.analysis-chart-plot) { display: block; width: 18px; height: 18px; }
+html[data-theme] .analysis-chart-legend { row-gap: 0; }

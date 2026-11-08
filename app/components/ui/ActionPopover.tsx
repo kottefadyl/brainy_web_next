@@ -6,7 +6,7 @@ import { MoreHorizontal } from "lucide-react";
 type Action = { label: string; icon: ReactNode; onSelect: () => void };
 
 /** Native top-layer popover: cards and scroll containers cannot clip actions. */
-export function ActionPopover({ label, actions }: { label: string; actions: Action[] }) {
+export function ActionPopover({ label, actions, triggerIcon }: { label: string; actions: Action[]; triggerIcon?: ReactNode }) {
   const id = useId();
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
@@ -32,7 +32,7 @@ export function ActionPopover({ label, actions }: { label: string; actions: Acti
   }, []);
   const close = () => { panel.current?.hidePopover(); trigger.current?.focus(); };
   return <div className="format-card-more">
-    <button ref={trigger} type="button" className="format-menu-trigger" popoverTarget={id} aria-label={label} title={label}><MoreHorizontal size={20} aria-hidden="true" /></button>
+    <button ref={trigger} type="button" className="format-menu-trigger" popoverTarget={id} aria-label={label} title={label}>{triggerIcon ?? <MoreHorizontal size={20} aria-hidden="true" />}</button>
     <div ref={panel} id={id} popover="auto" className="format-card-menu" aria-label={label}
       onToggle={(event) => { if (event.newState === "open") { position(); panel.current?.querySelector("button")?.focus({ preventScroll: true }); } }}
       onKeyDown={(event) => {

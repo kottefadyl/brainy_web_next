@@ -49,6 +49,11 @@ export default function PhaseTwoBPreview() {
   const drawerTrigger = useRef<HTMLButtonElement>(null);
   const [value, setValue] = useState("");
   const [tab, setTab] = useState<CollectionTab>("entries");
+  const months = Array.from({ length: 12 }, (_, i) => `2026-${String(i + 1).padStart(2, "0")}`);
+  const chartRow = (group: string, value: number, count: number) => ({ group, label: group, value: String(value), count, sources: [], sourcesHasMore: false });
+  const compareRows = months.map((month, i) => chartRow(month, [12450, 13800, 11200, 15600, 0, 9000, 14200, 16100, 15000, 17300, 12000, 18250][i], 42 + i));
+  const previousRows = months.map((month, i) => chartRow(month.replace("2026", "2025"), [9000, 12000, 10500, 11800, 12600, 9400, 13100, 12000, 13900, 14500, 11000, 15000][i], 30 + i));
+  const denseRows = Array.from({ length: 500 }, (_, i) => chartRow(new Date(Date.UTC(2025, 0, 1 + i)).toISOString().slice(0, 10), i === 250 ? 900 : 100 + Math.round(40 * Math.sin(i / 9)), 1));
   const rows = (view === "one" ? [{ group: "a", label: "Novembre", value: "305", count: 4 }] : [
     { group: "a", label: "Lundi", value: "120", count: 3 },
     { group: "b", label: "Mardi", value: "180", count: 5 },
@@ -60,7 +65,7 @@ export default function PhaseTwoBPreview() {
       onSelect={setSelected} onTemplate={noop} onManual={noop} onTransfer={noop} onTools={() => setTools(true)} onEditProfile={noop} onSignOut={noop} />
     <main className="workspace"><header className="topbar"><span>Brainy</span><LanguagePicker language={language} onChange={setLanguage} /></header><div className="workspace-body">{section !== "collection" ? <button type="button" id="preview-back" className="analysis-back" onClick={() => setSection("collection")}>Back</button> : <>
       <div className="preview-controls">
-        {["formats", "entries", "empty", "tools", "one", "many"].map((item) => <button key={item} type="button" onClick={() => setView(item)}>{item}</button>)}
+        {["formats", "entries", "empty", "tools", "one", "many", "compare", "dense"].map((item) => <button key={item} type="button" onClick={() => setView(item)}>{item}</button>)}
         <button type="button" onClick={() => { const next = theme === "light" ? "dark" : "light"; setTheme(next); document.documentElement.dataset.theme = next; }}>Theme</button>
         <button type="button" onClick={() => setLanguage(language === "fr" ? "en" : "fr")}>Language</button>
         <button type="button" onClick={() => setModal(true)}>Modal</button>
@@ -75,6 +80,8 @@ export default function PhaseTwoBPreview() {
       {view === "entries" && <div className="entry-grid saved-view-list">{entries.map((entry) => <EntryCard key={entry.id} entry={entry} collection={collection} language={language} onDetails={noop} onEdit={noop} onDelete={noop} onCopy={noop} />)}</div>}
       {view === "empty" && <EntriesEmptyState language={language} filtered={false} onClear={noop} onWrite={noop} />}
       {view === "tools" && <CollectionToolsHub collection={collection} user={{ id: "u", name: "Test", email: "test@example.com", interests: [], hobbies: [], profileCompleted: true }} language={language} defaultOpen={returnTool !== null} onOpenSection={(next) => { setLastAction(`section:${next}`); rememberTool(next); setSection(next); }} onOpenDialog={(kind) => setLastAction(`dialog:${kind}`)} />}
+      {view === "compare" && <div className="analysis-page"><AnalysisResultChart rows={compareRows} comparisonRows={previousRows} unit="EUR" language={language} title="Sum" /></div>}
+      {view === "dense" && <div className="analysis-page"><AnalysisResultChart rows={denseRows} unit="g" language={language} title="Dense" /></div>}
       {(view === "one" || view === "many") && <div className="analysis-page"><AnalysisResultChart rows={rows} unit="g" language={language} /></div>}
       <AccessibleListbox label={language === "fr" ? "Format de données" : "Data format"} value={value} options={[{ id: "", label: language === "fr" ? "Tous les formats de données" : "All data formats" }, ...formats.map((item) => ({ id: item.id, label: item.name, swatch: item.color }))]} onChange={setValue} />
     </>}</div></main>

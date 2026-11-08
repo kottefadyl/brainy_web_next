@@ -250,7 +250,6 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
 
   const rows = useMemo(() => result?.rows ?? [], [result]);
   const values = useMemo(() => rows.map((row) => Number(row.value) || 0), [rows]);
-  const max = Math.max(1, ...values.map((value) => Math.abs(value)));
   const nonnegative = values.every((value) => value >= 0);
   const total = values.reduce((sum, value) => sum + (value > 0 ? value : 0), 0);
   const canLine = nonnegative && (groupBy === "DAY" || groupBy === "MONTH" || ["CUMULATIVE", "MOVING_AVERAGE", "LINEAR_TREND"].includes(operation));
@@ -394,12 +393,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
             ...(nonnegative && total > 0 ? [{ id: "PIE", label: fr ? "Répartition" : "Shares" }] : []),
           ]} onChange={(value) => setChart(value as typeof chart)} />
           {rows.length === 1 && <AnalysisResultChart rows={rows} unit={result.unit} language={language} />}
-          {rows.length > 1 && effectiveChart === "BAR" && (
-            <div className="insights-chart" role="img" aria-label={fr ? "Graphique en barres" : "Bar chart"}>
-              {rows.map((row) => <div key={row.group} className="insights-bar"><span>{row.label}</span><div><i style={{ width: `${Math.abs(Number(row.value) || 0) / max * 100}%` }} /></div><strong>{row.value} {result.unit ?? ""}</strong></div>)}
-            </div>
-          )}
-          {rows.length > 1 && effectiveChart === "LINE" && <AnalysisResultChart rows={rows} unit={result.unit} language={language} />}
+          {rows.length > 1 && (effectiveChart === "BAR" || effectiveChart === "LINE") && <AnalysisResultChart rows={rows} comparisonRows={result.comparisonRows} unit={result.unit} language={language} title={OPERATIONS.find((item) => item.id === result.operation)?.[fr ? "fr" : "en"] ?? result.operation} view={effectiveChart} views={[...(canLine ? ["LINE" as const] : []), ...(nonnegative ? ["BAR" as const] : [])]} onViewChange={setChart} />}
           {rows.length > 1 && effectiveChart === "PIE" && (
             <div className="insights-chart insights-pie-layout" role="img" aria-label={fr ? "Graphique de répartition" : "Share chart"}>
               <div className="insights-pie" style={{ background: `conic-gradient(${rows.map((row, idx) => { const colors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)", "var(--chart-6)", "var(--chart-7)", "var(--chart-8)"]; const start = rows.slice(0, idx).reduce((sum, item) => sum + Math.max(0, Number(item.value) || 0), 0) / total * 360; const end = start + Math.max(0, Number(row.value) || 0) / total * 360; return `${colors[idx % colors.length]} ${start}deg ${end}deg`; }).join(", ")})` }} />
