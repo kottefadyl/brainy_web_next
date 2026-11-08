@@ -36,7 +36,7 @@ export const contributionApi = {
   async eraseByReceipt(receipt: string) { return (await request<{ eraseContributionByReceipt: boolean }>("mutation($receipt:String!){eraseContributionByReceipt(receipt:$receipt)}", { receipt })).eraseContributionByReceipt; },
 };
 
-async function request<T>(query: string, variables: Record<string, unknown> = {}, backup = false): Promise<T> {
+export async function request<T>(query: string, variables: Record<string, unknown> = {}, backup = false): Promise<T> {
   let response: Response;
   try {
     response = await fetch(backup ? "/api/graphql?backup=1" : "/api/graphql", {

@@ -6,6 +6,7 @@ import {
   Boxes,
   ChartNoAxesCombined,
   ChevronDown,
+  DatabaseZap,
   BookLock,
   Box,
   GitBranch,
@@ -37,6 +38,7 @@ export default function CollectionToolsHub({
       | "map"
       | "workflow"
       | "contributions"
+      | "dataSources"
       | "ledger"
       | "sensitivity"
   ) => void;
@@ -44,8 +46,9 @@ export default function CollectionToolsHub({
 }) {
   const [open, setOpen] = useState(false);
   const isOwner = collection.ownerId === user.id;
+  const canSend = isOwner || collection.members?.some((member) => member.userId === user.id && member.role !== "READER");
   const fr = language === "fr";
-  const count = isOwner ? 10 : 9;
+  const count = (isOwner ? 10 : 9) + (canSend ? 1 : 0);
 
   return (
     <section
@@ -214,6 +217,27 @@ export default function CollectionToolsHub({
                 <ArrowRight className="collection-hub-arrow" size={17} />
               </button>
 
+              {canSend && (
+                <button
+                  type="button"
+                  className="collection-hub-card"
+                  onClick={() => onOpenSection("dataSources")}
+                >
+                  <span className="collection-hub-icon">
+                    <DatabaseZap size={21} />
+                  </span>
+                  <span className="collection-hub-copy">
+                    <strong>{fr ? "Sources de données" : "Data sources"}</strong>
+                    <small>
+                      {fr
+                        ? "Fichiers et systèmes externes, rejets expliqués"
+                        : "Files and external systems, explained rejections"}
+                    </small>
+                  </span>
+                  <ArrowRight className="collection-hub-arrow" size={17} />
+                </button>
+              )}
+
               {isOwner && (
                 <button
                   type="button"
@@ -275,3 +299,4 @@ export default function CollectionToolsHub({
     </section>
   );
 }
+

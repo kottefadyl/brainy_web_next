@@ -14,6 +14,7 @@ import ClassificationPanel from "./classification-panel";
 import GeoMapView from "./geo-map-view";
 import WorkflowPanel from "./workflow-panel";
 import ContributionPanel from "./contribution-panel";
+import DataSourcesPanel from "./data-sources-panel";
 import LedgerPanel from "./ledger-panel";
 import SensitivityPanel from "./sensitivity-panel";
 import CollectionToolsHub from "./collection-tools-hub";
@@ -952,7 +953,7 @@ export default function BrainyApp() {
   const [user, setUser] = useState<User | null>(null);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"collection" | "insights" | "stock" | "classifications" | "map" | "workflow" | "contributions" | "ledger" | "sensitivity">("collection");
+  const [activeSection, setActiveSection] = useState<"collection" | "insights" | "stock" | "classifications" | "map" | "workflow" | "contributions" | "dataSources" | "ledger" | "sensitivity">("collection");
   const [entries, setEntries] = useState<Entry[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [pageAfter, setPageAfter] = useState<string | null>(null);
@@ -1167,6 +1168,7 @@ export default function BrainyApp() {
           </section>}
           {selected && activeSection === "stock" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{language === "fr" ? "Collection" : "Collection"}</button><StockPanel key={selected.id} collection={selected} language={language} userId={user.id} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} /></section>}
           {selected && activeSection === "workflow" && <WorkflowPanel key={selected.id} collection={selected} user={user} language={language} onClose={() => setActiveSection("collection")} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} onEntriesChanged={() => { void refresh(); }} />}
+          {selected && activeSection === "dataSources" && <DataSourcesPanel key={selected.id} collection={selected} user={user} language={language} onClose={() => setActiveSection("collection")} onEntriesChanged={() => { void refresh(); }} />}
           {selected && activeSection === "contributions" && <ContributionPanel key={selected.id} collection={selected} language={language} onClose={() => setActiveSection("collection")} onEntriesChanged={() => { void refresh(); }} />}
           {selected && activeSection === "ledger" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{t(language, "collection")}</button><LedgerPanel key={selected.id} collection={selected} language={language} userId={user.id} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} onEntriesChanged={() => { void refresh(); }} /></section>}
           {selected && activeSection === "sensitivity" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{t(language, "collection")}</button><SensitivityPanel key={selected.id} collection={selected} language={language} userId={user.id} onChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} /></section>}

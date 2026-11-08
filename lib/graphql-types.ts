@@ -244,7 +244,7 @@ export type CollectionField = {
   name: Scalars['String']['output'];
   options?: Maybe<Array<Scalars['String']['output']>>;
   referenceMode?: Maybe<Scalars['String']['output']>;
-  sensitivity: SensitivityLevel;
+  sensitivity?: Maybe<SensitivityLevel>;
   sourceFieldId?: Maybe<Scalars['String']['output']>;
   targetObjectFormatId?: Maybe<Scalars['String']['output']>;
   unit?: Maybe<Scalars['String']['output']>;
@@ -274,7 +274,7 @@ export type CollectionFormat = {
   linkedSource?: Maybe<LinkedFormatSource>;
   name: Scalars['String']['output'];
   objectModel: Scalars['Boolean']['output'];
-  sensitivity: SensitivityLevel;
+  sensitivity?: Maybe<SensitivityLevel>;
   version?: Maybe<Scalars['Float']['output']>;
   workflow?: Maybe<WorkflowDefinition>;
 };
@@ -419,6 +419,184 @@ export type CreatedContributionLink = {
   token: Scalars['String']['output'];
 };
 
+export type DataSource = {
+  __typename?: 'DataSource';
+  collectionId: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  decimalSeparator: Scalars['String']['output'];
+  delimiter: Scalars['String']['output'];
+  formatId: Scalars['String']['output'];
+  formatVersion: Scalars['Int']['output'];
+  id: Scalars['ID']['output'];
+  keyCreatedAt?: Maybe<Scalars['DateTime']['output']>;
+  keyHint?: Maybe<Scalars['String']['output']>;
+  mappings: Array<DataSourceMapping>;
+  name: Scalars['String']['output'];
+  observedAtColumn?: Maybe<Scalars['String']['output']>;
+  qualityColumn?: Maybe<Scalars['String']['output']>;
+  recordIdColumn: Scalars['String']['output'];
+  statusColumn?: Maybe<Scalars['String']['output']>;
+  updatePolicy: Scalars['String']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+};
+
+export type DataSourceInput = {
+  decimalSeparator?: Scalars['String']['input'];
+  delimiter?: Scalars['String']['input'];
+  formatId: Scalars['String']['input'];
+  mappings: Array<DataSourceMappingInput>;
+  name: Scalars['String']['input'];
+  observedAtColumn?: InputMaybe<Scalars['String']['input']>;
+  qualityColumn?: InputMaybe<Scalars['String']['input']>;
+  recordIdColumn: Scalars['String']['input'];
+  statusColumn?: InputMaybe<Scalars['String']['input']>;
+  updatePolicy?: Scalars['String']['input'];
+};
+
+export type DataSourceKey = {
+  __typename?: 'DataSourceKey';
+  key: Scalars['String']['output'];
+  source: DataSource;
+};
+
+export type DataSourceMapping = {
+  __typename?: 'DataSourceMapping';
+  column: Scalars['String']['output'];
+  fieldId: Scalars['String']['output'];
+  unitColumn?: Maybe<Scalars['String']['output']>;
+};
+
+export type DataSourceMappingInput = {
+  column: Scalars['String']['input'];
+  fieldId: Scalars['String']['input'];
+  unitColumn?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type DataSourceRejection = {
+  __typename?: 'DataSourceRejection';
+  cells: Array<Scalars['String']['output']>;
+  code: Scalars['String']['output'];
+  message: Scalars['String']['output'];
+  recordId?: Maybe<Scalars['String']['output']>;
+  row: Scalars['Int']['output'];
+};
+
+export type DataSourceRun = {
+  __typename?: 'DataSourceRun';
+  actorId?: Maybe<Scalars['String']['output']>;
+  collectionId: Scalars['String']['output'];
+  contentType: Scalars['String']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  createdCount: Scalars['Int']['output'];
+  deliveryId: Scalars['String']['output'];
+  durationMs: Scalars['Int']['output'];
+  failure?: Maybe<Scalars['String']['output']>;
+  finishedAt?: Maybe<Scalars['DateTime']['output']>;
+  id: Scalars['ID']['output'];
+  ignoredColumns: Array<Scalars['String']['output']>;
+  maxLagSeconds?: Maybe<Scalars['Int']['output']>;
+  olderCount: Scalars['Int']['output'];
+  origin: Scalars['String']['output'];
+  processed: Scalars['Int']['output'];
+  receivedAt: Scalars['DateTime']['output'];
+  rejectedCount: Scalars['Int']['output'];
+  rejections: Array<DataSourceRejection>;
+  retryOf?: Maybe<Scalars['String']['output']>;
+  rowsPerSecond?: Maybe<Scalars['Float']['output']>;
+  sourceId: Scalars['String']['output'];
+  startedAt?: Maybe<Scalars['DateTime']['output']>;
+  state: Scalars['String']['output'];
+  total: Scalars['Int']['output'];
+  unchangedCount: Scalars['Int']['output'];
+  updatedAt: Scalars['DateTime']['output'];
+  updatedCount: Scalars['Int']['output'];
+};
+
+export type DomainPackageExport = {
+  __typename?: 'DomainPackageExport';
+  dataFormats: Scalars['Float']['output'];
+  fileName: Scalars['String']['output'];
+  packageJson: Scalars['String']['output'];
+  warnings: Array<Scalars['String']['output']>;
+};
+
+export type DomainPackageExportInput = {
+  author: Scalars['String']['input'];
+  description?: InputMaybe<Scalars['String']['input']>;
+  license: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  notice?: InputMaybe<Scalars['String']['input']>;
+  packageId: Scalars['String']['input'];
+  version: Scalars['String']['input'];
+};
+
+export type DomainPackageInstall = {
+  __typename?: 'DomainPackageInstall';
+  author: Scalars['String']['output'];
+  collectionId: Scalars['String']['output'];
+  dataFormatCount: Scalars['Float']['output'];
+  detachedAt?: Maybe<Scalars['DateTime']['output']>;
+  id: Scalars['ID']['output'];
+  installedAt: Scalars['DateTime']['output'];
+  keyFingerprint?: Maybe<Scalars['String']['output']>;
+  license: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  packageId: Scalars['String']['output'];
+  publishedAt: Scalars['String']['output'];
+  signatureStatus: Scalars['String']['output'];
+  updatedFrom?: Maybe<Scalars['String']['output']>;
+  version: Scalars['String']['output'];
+};
+
+export type DomainPackageInstallResult = {
+  __typename?: 'DomainPackageInstallResult';
+  addedDataFormats: Scalars['Float']['output'];
+  addedFields: Scalars['Float']['output'];
+  collectionId: Scalars['String']['output'];
+  exampleObjects: Scalars['Float']['output'];
+  installId: Scalars['String']['output'];
+  mode: Scalars['String']['output'];
+  version: Scalars['String']['output'];
+};
+
+export type DomainPackagePreview = {
+  __typename?: 'DomainPackagePreview';
+  addedFields: Array<Scalars['String']['output']>;
+  adjustments: Array<Scalars['String']['output']>;
+  allowed: Scalars['Boolean']['output'];
+  author: Scalars['String']['output'];
+  codeLists: Array<Scalars['String']['output']>;
+  conflicts: Array<Scalars['String']['output']>;
+  dataFormats: Array<Scalars['String']['output']>;
+  dependencies: Array<Scalars['String']['output']>;
+  description: Scalars['String']['output'];
+  exampleObjects: Scalars['Float']['output'];
+  formulas: Array<Scalars['String']['output']>;
+  homepage?: Maybe<Scalars['String']['output']>;
+  installedVersion?: Maybe<Scalars['String']['output']>;
+  keyFingerprint?: Maybe<Scalars['String']['output']>;
+  license: Scalars['String']['output'];
+  mode: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  notice: Scalars['String']['output'];
+  packageId: Scalars['String']['output'];
+  publishedAt: Scalars['String']['output'];
+  signatureStatus: Scalars['String']['output'];
+  stockRules: Array<Scalars['String']['output']>;
+  units: Array<Scalars['String']['output']>;
+  version: Scalars['String']['output'];
+  views: Array<Scalars['String']['output']>;
+};
+
+export type DomainPackageSummary = {
+  __typename?: 'DomainPackageSummary';
+  description: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  packageJson: Scalars['String']['output'];
+  version: Scalars['String']['output'];
+};
+
 export type Entry = {
   __typename?: 'Entry';
   collectionId: Scalars['String']['output'];
@@ -428,6 +606,7 @@ export type Entry = {
   copiedFromEntryId?: Maybe<Scalars['String']['output']>;
   correctionOf?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
+  dataSourceId?: Maybe<Scalars['String']['output']>;
   formatId?: Maybe<Scalars['String']['output']>;
   formatVersion?: Maybe<Scalars['Float']['output']>;
   id: Scalars['ID']['output'];
@@ -437,6 +616,9 @@ export type Entry = {
   recurrence?: Maybe<EntryRecurrence>;
   revisions: Array<EntryRevision>;
   sourceObjectId?: Maybe<Scalars['String']['output']>;
+  sourceObservedAt?: Maybe<Scalars['DateTime']['output']>;
+  sourceReceivedAt?: Maybe<Scalars['DateTime']['output']>;
+  sourceRunId?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
   values: Array<EntryValue>;
   workflow?: Maybe<EntryWorkflow>;
@@ -858,6 +1040,7 @@ export type Mutation = {
   addObjectModelFromTemplate: Collection;
   assignWorkflowEntry: Entry;
   cancelBackgroundJob: BackgroundJob;
+  cancelDataSourceRun: DataSourceRun;
   cancelEntryReminder: Scalars['Boolean']['output'];
   commitEntryStockEffect: StockMovement;
   commitStockMovement: StockMovement;
@@ -871,15 +1054,18 @@ export type Mutation = {
   createCollectionFromTemplate: Collection;
   createCollectionRelation: EntryRelation;
   createContributionLink: CreatedContributionLink;
+  createDataSource: DataSource;
   createEntry: Entry;
   createNote: Note;
   deleteCollection: Scalars['Boolean']['output'];
   deleteCollectionFormula: Collection;
   deleteCollectionView: Collection;
+  deleteDataSource: Scalars['Boolean']['output'];
   deleteEntry: Scalars['Boolean']['output'];
   deleteNote: Scalars['Boolean']['output'];
   deleteStockRule: Collection;
   detachCollectionRelations: Scalars['Boolean']['output'];
+  detachDomainPackage: Scalars['Boolean']['output'];
   detachLinkedDataFormat: Collection;
   duplicateCollectionObject: Entry;
   enableLedger: Collection;
@@ -888,6 +1074,7 @@ export type Mutation = {
   importCollectionRelations: Scalars['Boolean']['output'];
   importEntriesBatch: ImportEntriesResult;
   importGeoPoints: GeoImportResult;
+  installDomainPackage: DomainPackageInstallResult;
   linkCollectionDataFormat: TransferResult;
   linkImportedEntries: Scalars['Boolean']['output'];
   linkImportedObjects: Scalars['Boolean']['output'];
@@ -895,6 +1082,7 @@ export type Mutation = {
   loginWithGoogle: AuthPayload;
   mergeClassificationCodes: Collection;
   moveCollectionObject: TransferResult;
+  pushDataSourceDelivery: DataSourceRun;
   readWorkflowNotification: Scalars['Boolean']['output'];
   recordCollectionExchangeRate: Collection;
   recoverCollectionMove: MoveOperationStatus;
@@ -906,9 +1094,13 @@ export type Mutation = {
   renameCollection: Collection;
   restoreWorkspaceBackup: WorkspaceBackupPreview;
   resumeBackgroundJob: BackgroundJob;
+  resumeDataSourceRun: DataSourceRun;
+  retryDataSourceRejections: DataSourceRun;
   reviewContribution: ContributionSubmission;
   revokeCollectionObjectShare: Scalars['Boolean']['output'];
   revokeContributionLink: ContributionLink;
+  revokeDataSourceKey: DataSource;
+  rotateDataSourceKey: DataSourceKey;
   saveClassification: Collection;
   saveCollectionFormula: Collection;
   saveCollectionUnit: Collection;
@@ -932,9 +1124,11 @@ export type Mutation = {
   transitionWorkflowEntry: Entry;
   unregisterPushDevice: Scalars['Boolean']['output'];
   updateCollectionFormat: Collection;
+  updateDataSource: DataSource;
   updateEntry: Entry;
   updateNote?: Maybe<Note>;
   updateProfile: User;
+  uploadDataSourceDelivery: DataSourceRun;
   useCollectionObject: Entry;
 };
 
@@ -986,6 +1180,11 @@ export type MutationAssignWorkflowEntryArgs = {
 
 export type MutationCancelBackgroundJobArgs = {
   jobId: Scalars['String']['input'];
+};
+
+
+export type MutationCancelDataSourceRunArgs = {
+  runId: Scalars['String']['input'];
 };
 
 
@@ -1079,6 +1278,12 @@ export type MutationCreateContributionLinkArgs = {
 };
 
 
+export type MutationCreateDataSourceArgs = {
+  collectionId: Scalars['String']['input'];
+  input: DataSourceInput;
+};
+
+
 export type MutationCreateEntryArgs = {
   collectionId: Scalars['String']['input'];
   input: SaveEntryInput;
@@ -1107,6 +1312,11 @@ export type MutationDeleteCollectionViewArgs = {
 };
 
 
+export type MutationDeleteDataSourceArgs = {
+  sourceId: Scalars['String']['input'];
+};
+
+
 export type MutationDeleteEntryArgs = {
   id: Scalars['String']['input'];
 };
@@ -1127,6 +1337,11 @@ export type MutationDetachCollectionRelationsArgs = {
   collectionId: Scalars['String']['input'];
   entryId: Scalars['String']['input'];
   replacementId?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationDetachDomainPackageArgs = {
+  installId: Scalars['String']['input'];
 };
 
 
@@ -1180,6 +1395,14 @@ export type MutationImportGeoPointsArgs = {
 };
 
 
+export type MutationInstallDomainPackageArgs = {
+  collectionId?: InputMaybe<Scalars['String']['input']>;
+  collectionName?: InputMaybe<Scalars['String']['input']>;
+  language?: InputMaybe<Scalars['String']['input']>;
+  packageJson: Scalars['String']['input'];
+};
+
+
 export type MutationLinkCollectionDataFormatArgs = {
   formatId: Scalars['String']['input'];
   targetCollectionId: Scalars['String']['input'];
@@ -1222,6 +1445,14 @@ export type MutationMergeClassificationCodesArgs = {
 export type MutationMoveCollectionObjectArgs = {
   objectId: Scalars['String']['input'];
   targetCollectionId: Scalars['String']['input'];
+};
+
+
+export type MutationPushDataSourceDeliveryArgs = {
+  content: Scalars['String']['input'];
+  contentType: Scalars['String']['input'];
+  deliveryId: Scalars['String']['input'];
+  key: Scalars['String']['input'];
 };
 
 
@@ -1292,6 +1523,16 @@ export type MutationResumeBackgroundJobArgs = {
 };
 
 
+export type MutationResumeDataSourceRunArgs = {
+  runId: Scalars['String']['input'];
+};
+
+
+export type MutationRetryDataSourceRejectionsArgs = {
+  runId: Scalars['String']['input'];
+};
+
+
 export type MutationReviewContributionArgs = {
   action: Scalars['String']['input'];
   duplicateOf?: InputMaybe<Scalars['String']['input']>;
@@ -1307,6 +1548,16 @@ export type MutationRevokeCollectionObjectShareArgs = {
 
 export type MutationRevokeContributionLinkArgs = {
   id: Scalars['String']['input'];
+};
+
+
+export type MutationRevokeDataSourceKeyArgs = {
+  sourceId: Scalars['String']['input'];
+};
+
+
+export type MutationRotateDataSourceKeyArgs = {
+  sourceId: Scalars['String']['input'];
 };
 
 
@@ -1475,6 +1726,12 @@ export type MutationUpdateCollectionFormatArgs = {
 };
 
 
+export type MutationUpdateDataSourceArgs = {
+  input: DataSourceInput;
+  sourceId: Scalars['String']['input'];
+};
+
+
 export type MutationUpdateEntryArgs = {
   id: Scalars['String']['input'];
   input: SaveEntryInput;
@@ -1489,6 +1746,14 @@ export type MutationUpdateNoteArgs = {
 
 export type MutationUpdateProfileArgs = {
   input: ProfileInput;
+};
+
+
+export type MutationUploadDataSourceDeliveryArgs = {
+  content: Scalars['String']['input'];
+  contentType: Scalars['String']['input'];
+  deliveryId: Scalars['String']['input'];
+  sourceId: Scalars['String']['input'];
 };
 
 
@@ -1610,9 +1875,16 @@ export type Query = {
   contributionLinks: Array<ContributionLink>;
   contributionSubmissions: Array<ContributionSubmission>;
   dataFormatCopyPreview: TransferPreview;
+  dataSourceRejectionsCsv: Scalars['String']['output'];
+  dataSourceRun: DataSourceRun;
+  dataSourceRuns: Array<DataSourceRun>;
+  dataSources: Array<DataSource>;
+  domainPackageInstalls: Array<DomainPackageInstall>;
+  domainPackagePilots: Array<DomainPackageSummary>;
   entryAttachment: EntryAttachment;
   entryObjectReferences: Array<ResolvedObjectReference>;
   entryReminders: Array<EntryReminder>;
+  exportDomainPackage: DomainPackageExport;
   exportGeoPoints: Scalars['String']['output'];
   forecastCollection: ForecastResult;
   health: Scalars['String']['output'];
@@ -1627,6 +1899,7 @@ export type Query = {
   objectMovePreview: TransferPreview;
   objectVariableProperty: ResolvedObjectVariable;
   previewClassificationCsv: ClassificationCsvPreview;
+  previewDomainPackage: DomainPackagePreview;
   previewEntryStockEffect: StockPreview;
   previewGeoImport: GeoImportResult;
   previewStockMovement: StockPreview;
@@ -1856,6 +2129,36 @@ export type QueryDataFormatCopyPreviewArgs = {
 };
 
 
+export type QueryDataSourceRejectionsCsvArgs = {
+  runId: Scalars['String']['input'];
+};
+
+
+export type QueryDataSourceRunArgs = {
+  runId: Scalars['String']['input'];
+};
+
+
+export type QueryDataSourceRunsArgs = {
+  sourceId: Scalars['String']['input'];
+};
+
+
+export type QueryDataSourcesArgs = {
+  collectionId: Scalars['String']['input'];
+};
+
+
+export type QueryDomainPackageInstallsArgs = {
+  collectionId: Scalars['String']['input'];
+};
+
+
+export type QueryDomainPackagePilotsArgs = {
+  language?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type QueryEntryAttachmentArgs = {
   entryId: Scalars['String']['input'];
   fieldId: Scalars['String']['input'];
@@ -1869,6 +2172,13 @@ export type QueryEntryObjectReferencesArgs = {
 
 export type QueryEntryRemindersArgs = {
   entryId: Scalars['String']['input'];
+};
+
+
+export type QueryExportDomainPackageArgs = {
+  collectionId: Scalars['String']['input'];
+  input: DomainPackageExportInput;
+  language?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1938,6 +2248,13 @@ export type QueryObjectVariablePropertyArgs = {
 
 export type QueryPreviewClassificationCsvArgs = {
   csv: Scalars['String']['input'];
+};
+
+
+export type QueryPreviewDomainPackageArgs = {
+  collectionId?: InputMaybe<Scalars['String']['input']>;
+  language?: InputMaybe<Scalars['String']['input']>;
+  packageJson: Scalars['String']['input'];
 };
 
 
