@@ -51,7 +51,7 @@ export type Entry = {
   correctionOf?: string | null;
   ledgerHash?: string | null;
   ledgerSequence?: number | null;
-  values: { fieldId: string; value: string; unitSnapshot?: UnitSnapshot | null; objectIds?: string[] | null; objectSnapshots?: { objectId: string; capturedAt: string; properties: { fieldId: string; name: string; kind: FieldKind; value: string; unitSnapshot?: UnitSnapshot | null }[] }[] | null; measureValue?: { status?: string; uncertainty?: string; uncertaintyType?: string; quality?: string; instrument?: string; observedAt?: string; recordedAt?: string; revisedAt?: string; revisionNote?: string } | null }[];
+  values: { fieldId: string; value: string; attachmentSize?: number | null; attachmentMimeType?: string | null; largeFileId?: string | null; largeFileSha256?: string | null; unitSnapshot?: UnitSnapshot | null; objectIds?: string[] | null; objectSnapshots?: { objectId: string; capturedAt: string; properties: { fieldId: string; name: string; kind: FieldKind; value: string; unitSnapshot?: UnitSnapshot | null }[] }[] | null; measureValue?: { status?: string; uncertainty?: string; uncertaintyType?: string; quality?: string; instrument?: string; observedAt?: string; recordedAt?: string; revisedAt?: string; revisionNote?: string } | null }[];
   createdAt: string;
   updatedAt: string;
   sourceObjectId?: string | null;

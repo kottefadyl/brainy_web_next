@@ -1,7 +1,7 @@
 import { api } from "./api";
 import { effectiveFieldSensitivity, formatFieldValue, type Collection, type Entry, type FieldKind, type Language, type UnitSnapshot } from "./brainy";
 
-export type TransferValue = { fieldId: string; value: string; unitSnapshot?: UnitSnapshot | null; attachmentBase64?: string; attachmentMimeType?: string };
+export type TransferValue = { fieldId: string; value: string; unitSnapshot?: UnitSnapshot | null; attachmentBase64?: string; attachmentMimeType?: string | null; largeFileId?: string | null };
 export type TransferEntry = { id: string; formatId: string; sourceObjectId?: string | null; createdAt: string; updatedAt: string; values: TransferValue[]; workflowHistory?: NonNullable<Entry["workflow"]>["history"] };
 export type TransferBundle = {
   brainyExportVersion: 1;
@@ -33,7 +33,10 @@ export async function exportCollection(collection: Collection, includeSensitive 
       for (const value of entry.values) {
         if (!allowed.has(value.fieldId)) continue;
         const field = format.fields.find((item) => item.id === value.fieldId);
-        if (field?.kind === "ATTACHMENT") {
+        if (field?.kind === "ATTACHMENT" && value.largeFileId) {
+          // T44: a large file travels by reference (same account only); its content stays in storage.
+          values.push({ fieldId: value.fieldId, value: value.value, largeFileId: value.largeFileId });
+        } else if (field?.kind === "ATTACHMENT") {
           const attachment = await api.entryAttachment(entry.id, field.id);
           values.push({ ...value, attachmentBase64: attachment.base64, attachmentMimeType: attachment.mimeType });
         } else values.push(includeSensitive ? value : { ...value, objectSnapshots: [] });

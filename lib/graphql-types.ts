@@ -776,6 +776,8 @@ export type EntryValue = {
   dateValue?: Maybe<Scalars['String']['output']>;
   durationSeconds?: Maybe<Scalars['Float']['output']>;
   fieldId: Scalars['String']['output'];
+  largeFileId?: Maybe<Scalars['String']['output']>;
+  largeFileSha256?: Maybe<Scalars['String']['output']>;
   measureValue?: Maybe<EntryMeasureValue>;
   numberValue?: Maybe<Scalars['String']['output']>;
   objectIds?: Maybe<Array<Scalars['String']['output']>>;
@@ -789,6 +791,7 @@ export type EntryValueInput = {
   attachmentBase64?: InputMaybe<Scalars['String']['input']>;
   attachmentMimeType?: InputMaybe<Scalars['String']['input']>;
   fieldId: Scalars['String']['input'];
+  largeFileId?: InputMaybe<Scalars['String']['input']>;
   measureValue?: InputMaybe<EntryMeasureValueInput>;
   unitSnapshot?: InputMaybe<UnitSnapshotInput>;
   value: Scalars['String']['input'];
@@ -987,6 +990,36 @@ export type InitialCodeListInput = {
   name: Scalars['String']['input'];
 };
 
+export type LargeFileLink = {
+  __typename?: 'LargeFileLink';
+  expiresAt: Scalars['DateTime']['output'];
+  fileName: Scalars['String']['output'];
+  sha256?: Maybe<Scalars['String']['output']>;
+  size: Scalars['Float']['output'];
+  url: Scalars['String']['output'];
+};
+
+export type LargeFileStatus = {
+  __typename?: 'LargeFileStatus';
+  checkedAt?: Maybe<Scalars['DateTime']['output']>;
+  fileName: Scalars['String']['output'];
+  largeFileId: Scalars['String']['output'];
+  size: Scalars['Float']['output'];
+  state: Scalars['String']['output'];
+};
+
+export type LargeFileUpload = {
+  __typename?: 'LargeFileUpload';
+  chunkSize: Scalars['Int']['output'];
+  fileName: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  partCount: Scalars['Int']['output'];
+  receivedParts: Array<Scalars['Int']['output']>;
+  sha256?: Maybe<Scalars['String']['output']>;
+  size: Scalars['Float']['output'];
+  state: Scalars['String']['output'];
+};
+
 export type LedgerIntegrity = {
   __typename?: 'LedgerIntegrity';
   checked: Scalars['Float']['output'];
@@ -1033,6 +1066,7 @@ export type MoveOperationStatus = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  abortLargeFileUpload: Scalars['Boolean']['output'];
   acceptLinkedDataFormatVersion: Collection;
   addCollectionFormat: Collection;
   addCollectionMember: Collection;
@@ -1042,8 +1076,10 @@ export type Mutation = {
   cancelBackgroundJob: BackgroundJob;
   cancelDataSourceRun: DataSourceRun;
   cancelEntryReminder: Scalars['Boolean']['output'];
+  checkLargeFiles: Array<LargeFileStatus>;
   commitEntryStockEffect: StockMovement;
   commitStockMovement: StockMovement;
+  completeLargeFileUpload: LargeFileUpload;
   copyClassification: Collection;
   copyCollectionDataFormat: TransferResult;
   copyCollectionObject: TransferResult;
@@ -1120,6 +1156,7 @@ export type Mutation = {
   setStockNegativePolicy: Collection;
   shareCollectionObject: SharedObjectGrant;
   startBackgroundJob: BackgroundJob;
+  startLargeFileUpload: LargeFileUpload;
   submitContribution: ContributionReceipt;
   transitionWorkflowEntry: Entry;
   unregisterPushDevice: Scalars['Boolean']['output'];
@@ -1129,7 +1166,14 @@ export type Mutation = {
   updateNote?: Maybe<Note>;
   updateProfile: User;
   uploadDataSourceDelivery: DataSourceRun;
+  uploadLargeFilePart: LargeFileUpload;
   useCollectionObject: Entry;
+  verifyLargeFile: LargeFileStatus;
+};
+
+
+export type MutationAbortLargeFileUploadArgs = {
+  uploadId: Scalars['String']['input'];
 };
 
 
@@ -1193,6 +1237,11 @@ export type MutationCancelEntryReminderArgs = {
 };
 
 
+export type MutationCheckLargeFilesArgs = {
+  collectionId: Scalars['String']['input'];
+};
+
+
 export type MutationCommitEntryStockEffectArgs = {
   collectionId: Scalars['String']['input'];
   entryId: Scalars['String']['input'];
@@ -1204,6 +1253,12 @@ export type MutationCommitEntryStockEffectArgs = {
 export type MutationCommitStockMovementArgs = {
   collectionId: Scalars['String']['input'];
   input: StockMovementInput;
+};
+
+
+export type MutationCompleteLargeFileUploadArgs = {
+  sha256: Scalars['String']['input'];
+  uploadId: Scalars['String']['input'];
 };
 
 
@@ -1701,6 +1756,12 @@ export type MutationStartBackgroundJobArgs = {
 };
 
 
+export type MutationStartLargeFileUploadArgs = {
+  collectionId: Scalars['String']['input'];
+  input: StartLargeFileUploadInput;
+};
+
+
 export type MutationSubmitContributionArgs = {
   input: SubmitContributionInput;
   token: Scalars['String']['input'];
@@ -1757,10 +1818,24 @@ export type MutationUploadDataSourceDeliveryArgs = {
 };
 
 
+export type MutationUploadLargeFilePartArgs = {
+  base64: Scalars['String']['input'];
+  partNumber: Scalars['Int']['input'];
+  sha256: Scalars['String']['input'];
+  uploadId: Scalars['String']['input'];
+};
+
+
 export type MutationUseCollectionObjectArgs = {
   objectId: Scalars['String']['input'];
   targetFieldId: Scalars['String']['input'];
   targetFormatId: Scalars['String']['input'];
+};
+
+
+export type MutationVerifyLargeFileArgs = {
+  entryId: Scalars['String']['input'];
+  fieldId: Scalars['String']['input'];
 };
 
 export type Note = {
@@ -1888,6 +1963,8 @@ export type Query = {
   exportGeoPoints: Scalars['String']['output'];
   forecastCollection: ForecastResult;
   health: Scalars['String']['output'];
+  largeFileDownloadLink: LargeFileLink;
+  largeFileUpload: LargeFileUpload;
   ledgerBalance: Scalars['String']['output'];
   ledgerProof: Scalars['String']['output'];
   linkedDataFormatUpdatePreview: LinkedFormatUpdatePreview;
@@ -2197,6 +2274,17 @@ export type QueryForecastCollectionArgs = {
 };
 
 
+export type QueryLargeFileDownloadLinkArgs = {
+  entryId: Scalars['String']['input'];
+  fieldId: Scalars['String']['input'];
+};
+
+
+export type QueryLargeFileUploadArgs = {
+  uploadId: Scalars['String']['input'];
+};
+
+
 export type QueryLedgerBalanceArgs = {
   collectionId: Scalars['String']['input'];
   fieldId: Scalars['String']['input'];
@@ -2473,6 +2561,12 @@ export type StartBackgroundJobInput = {
   kind: Scalars['String']['input'];
   payload: Scalars['String']['input'];
   requestKey: Scalars['String']['input'];
+};
+
+export type StartLargeFileUploadInput = {
+  fileName: Scalars['String']['input'];
+  mimeType: Scalars['String']['input'];
+  size: Scalars['Float']['input'];
 };
 
 export type StarterTemplate = {

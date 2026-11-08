@@ -1,0 +1,10 @@
+/* T44 — large attachment upload states. Tokens only; light and dark come from the theme. */
+.large-file-help{display:block;font-weight:400;color:var(--muted);font-size:13px;margin-top:4px}
+.large-file-progress{display:grid;gap:4px;margin-top:6px}
+.large-file-progress [role=progressbar]{height:6px;border-radius:999px;background:var(--border);overflow:hidden}
+.large-file-progress [role=progressbar] span{display:block;height:100%;background:var(--primary);transition:width 200ms ease-out}
+.large-file-progress small{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.large-file-failure{margin:4px 0 0;color:var(--warning);font-size:14px}
+.large-file-status{margin:4px 0 0;font-size:14px;color:var(--ink)}
+.large-file-badge{font-style:normal;font-size:12px;font-weight:600;margin-left:8px;padding:1px 8px;border-radius:999px;border:1px solid var(--border);color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.large-file-progress [role=progressbar] span{transition:none}}
