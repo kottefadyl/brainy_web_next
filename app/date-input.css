@@ -58,3 +58,6 @@ html[data-theme] .brainy-calendar button[data-selected="true"]:focus-visible { o
   html[data-theme] .brainy-calendar:popover-open { animation: none; }
   html[data-theme] .brainy-date .brainy-date-trigger { transition: none; }
 }
+
+/* Must outrank the global !important input padding of phase-two.css. */
+html[data-theme] .brainy-date .brainy-date-control input[type="text"]:not([hidden]) { padding-right: 48px !important; }

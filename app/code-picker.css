@@ -1,0 +1,43 @@
+/* Tree and search for code lists (code-picker.tsx). */
+.code-picker { display: block; width: 100%; min-width: 0; }
+html[data-theme] .code-picker-trigger {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; margin: 0; padding: 6px 10px 6px 12px;
+  border: 1px solid var(--control-border); border-radius: 10px; background: var(--surface); color: var(--ink); font-size: 14px; font-weight: 450; text-align: start; box-shadow: none;
+}
+html[data-theme] .code-picker-trigger:hover:not(:disabled) { border-color: var(--ink); background: var(--surface); transform: none; }
+.code-picker-value { display: grid; gap: 1px; min-width: 0; overflow-wrap: anywhere; line-height: 1.3; }
+.code-picker-value small { color: var(--muted); font-size: 13px; }
+.code-picker-value span[data-placeholder="true"] { color: var(--muted); }
+.code-picker-value code, .code-browser-code { color: var(--muted); font-family: inherit; font-size: 13px; font-variant-numeric: tabular-nums; }
+.code-picker-value em, .code-browser-label em { color: var(--muted); font-style: normal; }
+
+html[data-theme] .code-picker-panel[popover] {
+  position: fixed; inset: auto; margin: 0; box-sizing: border-box; width: min(440px, calc(100vw - 16px)); padding: 8px;
+  border: 1px solid var(--line-strong); border-radius: 14px; background: var(--dialog-surface); color: var(--ink); box-shadow: 0 16px 40px rgba(0, 0, 0, .22); font-size: 14px; font-weight: 400;
+}
+html[data-theme] .code-picker-panel:popover-open { display: block; animation: brainy-calendar-in .16s ease-out; }
+html[data-theme] .code-picker-panel:focus { outline: none; }
+
+.code-browser { display: grid; gap: 6px; min-width: 0; }
+.code-browser-search { position: relative; display: block; color: var(--muted); }
+.code-browser-search svg { position: absolute; top: 14px; left: 12px; }
+html[data-theme] .code-browser-search input { width: 100%; min-height: 44px; margin: 0; font-weight: 400; }
+/* Must outrank the global !important input padding of design-system.css. */
+html[data-theme] .code-browser .code-browser-search input[type="search"]:not([hidden]) { padding-left: 38px !important; }
+.code-browser-list { max-height: min(46vh, 340px); overflow-y: auto; overscroll-behavior: contain; }
+.code-browser-row { display: flex; align-items: center; gap: 6px; min-height: 44px; padding-inline-end: 8px; border-radius: 8px; cursor: pointer; }
+.code-browser-row[data-active="true"] { background: var(--hover); }
+.code-browser-row[data-selected="true"] { box-shadow: inset 3px 0 0 var(--blue); }
+.code-browser-row[data-enabled="false"] { cursor: default; }
+.code-browser-row[data-enabled="false"] .code-browser-label { color: var(--muted); }
+.code-browser-toggle-slot { flex: none; width: 32px; }
+html[data-theme] .code-browser-toggle { display: grid; place-items: center; width: 32px; height: 40px; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--muted); box-shadow: none; }
+html[data-theme] .code-browser-toggle:hover { background: var(--line); color: var(--ink); }
+.code-browser-text { display: grid; flex: 1; min-width: 0; padding-block: 4px; line-height: 1.3; overflow-wrap: anywhere; }
+.code-browser-path { color: var(--muted); font-size: 13px; }
+.code-browser-code { flex: none; max-width: 40%; overflow-wrap: anywhere; text-align: end; }
+.code-browser-empty, .code-browser-note { margin: 0; padding: 8px; color: var(--muted); font-size: 13px; }
+html[data-theme] .code-browser-clear { justify-self: start; min-height: 44px; margin: 0; padding: 0 8px; border: 0; background: transparent; color: var(--muted); text-decoration: underline; box-shadow: none; }
+
+.classification-panel .code-browser { padding-top: 8px; }
+@media (prefers-reduced-motion: reduce) { html[data-theme] .code-picker-panel:popover-open { animation: none; } }

@@ -14,6 +14,7 @@ import { AccessibleListbox } from "../../../app/components/ui/AccessibleListbox"
 import { AnalysisResultChart } from "../../../app/analysis-result-chart";
 import Modal from "../../../app/components/ui/Modal";
 import OsmMap from "../../../app/osm-map";
+import { CodeFieldPicker } from "../../../app/code-field-picker";
 import { useToolSectionFocus } from "../../../app/components/shell/use-tool-section-focus";
 import WorkspaceToolsDialog from "../../../app/workspace-tools-dialog";
 import { LocalizedDateInput, LocalizedDateTimeInput, LocalizedTimeInput } from "../../../app/components/ui/LocalizedDateInput";
@@ -30,6 +31,14 @@ const entries: Entry[] = Array.from({ length: 24 }, (_, i) => ({
   id: `e${i}`, formatId: formats[i % 3].id, createdAt: "2026-11-01T10:00:00Z", updatedAt: "2026-11-01T10:00:00Z",
   values: [{ fieldId: `title${i % 3}`, value: `Entrée numéro ${i + 1}` }, { fieldId: `text${i % 3}`, value: "Une description complète et lisible dans le détail de cette entrée." }],
 }));
+const sampleCode = (code: string, labelFr: string, labelEn: string, parentCode?: string, active = true) => ({ code, labelFr, labelEn, parentCode, active });
+const sampleCodes = [
+  sampleCode("G", "Commerce", "Trade"), sampleCode("47", "Vente de détail", "Retail", "G"), sampleCode("47.1", "Magasins non spécialisés", "Non-specialised stores", "47"),
+  sampleCode("47.11", "À prédominance alimentaire", "Mostly food", "47.1"), sampleCode("47.11B", "Commerce d'alimentation générale", "General food stores", "47.11"),
+  sampleCode("47.2", "Épicerie fine", "Delicatessen", "47"), sampleCode("OLD", "Ancien code alimentation", "Former food code", "47", false),
+  sampleCode("A", "Agriculture", "Farming"), sampleCode("01", "Alimentation animale", "Food for animals", "A"),
+  sampleCode("H", "Longue branche", "Long branch"), ...Array.from({ length: 60 }, (_, index) => sampleCode(`H${index}`, `Élément ${index}`, `Item ${index}`, "H")),
+];
 const noop = () => {};
 export default function PhaseTwoBPreview() {
   const [view, setView] = useState("formats");
@@ -40,6 +49,8 @@ export default function PhaseTwoBPreview() {
   const [modal, setModal] = useState(false);
   const [drawer, setDrawer] = useState(false);
   const [tools, setTools] = useState(false);
+  const [codesOpen, setCodesOpen] = useState(false);
+  const [codeValue, setCodeValue] = useState("");
   const [section, setSection] = useState("collection");
   const { returnTool, rememberTool } = useToolSectionFocus(section);
   const [dates, setDates] = useState(false);
@@ -71,6 +82,7 @@ export default function PhaseTwoBPreview() {
         <button type="button" onClick={() => setLanguage(language === "fr" ? "en" : "fr")}>Language</button>
         <button type="button" onClick={() => setModal(true)}>Modal</button>
         <button type="button" id="preview-dates" onClick={() => setDates(true)}>Dates</button>
+        <button type="button" id="preview-codes" onClick={() => setCodesOpen(true)}>Codes</button>
         <button type="button" id="preview-tools" onClick={() => setTools(true)}>Tools</button>
         <button type="button" ref={drawerTrigger} onClick={() => setDrawer(true)}>Collections</button>
       </div>
@@ -88,6 +100,7 @@ export default function PhaseTwoBPreview() {
       <AccessibleListbox label={language === "fr" ? "Format de données" : "Data format"} value={value} options={[{ id: "", label: language === "fr" ? "Tous les formats de données" : "All data formats" }, ...formats.map((item) => ({ id: item.id, label: item.name, swatch: item.color }))]} onChange={setValue} />
     </>}</div></main>
     {modal && <Modal title="Détail de l’entrée" closeLabel="Fermer" onClose={() => setModal(false)}><p>Contenu de démonstration</p><AccessibleListbox label="Format de données" value={value} options={formats.map((item) => ({ id: item.id, label: item.name, swatch: item.color }))} onChange={setValue} /></Modal>}
+    {codesOpen && <Modal title="Codes" closeLabel="Fermer" onClose={() => setCodesOpen(false)}><label className="input-label">{language === "fr" ? "Activité" : "Activity"}<CodeFieldPicker codes={sampleCodes} language={language} value={codeValue} onChange={setCodeValue} /></label><output data-code-value={codeValue} /></Modal>}
     {tools && <WorkspaceToolsDialog collections={[collection]} language={language} onClose={() => setTools(false)} onRestored={noop} />}
     {dates && <Modal title="Dates" closeLabel="Fermer" onClose={() => setDates(false)}><form className="form-stack" onSubmit={(event) => { event.preventDefault(); setLastAction("submitted"); }}>
       <label className="input-label">{language === "fr" ? "Date simple" : "Plain date"}<LocalizedDateInput language={language} value={date} onChange={setDate} /></label>

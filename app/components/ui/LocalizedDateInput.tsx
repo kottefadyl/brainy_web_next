@@ -45,13 +45,20 @@ function useTypedValue({ value, onChange, parse, format, check }: {
 }
 
 /** A control nested in a <label> would otherwise add its own name to the field's. */
-function useLabelText(input: RefObject<HTMLInputElement | null>, explicit?: string) {
+export function useLabelText(input: RefObject<HTMLElement | null>, explicit?: string, value?: string) {
   useLayoutEffect(() => {
     const element = input.current;
     const label = element?.closest("label");
     if (!element || !label || explicit) return;
-    const name = Array.from(label.childNodes).filter((node) => !node.contains(element)).map((node) => node.textContent).join(" ").trim();
-    if (name) element.setAttribute("aria-label", name);
+    const texts: string[] = [];
+    const collect = (node: Node) => {
+      if (node.contains(element)) { if (node !== element) node.childNodes.forEach(collect); return; }
+      if (node.nodeType === Node.TEXT_NODE) { if (node.textContent?.trim()) texts.push(node.textContent.trim()); }
+      else node.childNodes.forEach(collect);
+    };
+    collect(label);
+    const name = texts.join(" ");
+    if (name) element.setAttribute("aria-label", value ? `${name}: ${value}` : name);
   });
 }
 

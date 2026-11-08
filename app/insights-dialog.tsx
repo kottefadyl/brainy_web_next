@@ -5,6 +5,7 @@ import { useMemo, useRef, useState } from "react";
 import { api } from "../lib/api";
 import type { AnalysisInput, AnalysisOperationId, AnalysisResult, Collection, EntryFilter, ForecastResult, Language } from "../lib/brainy";
 import { AnalysisResultChart } from "./analysis-result-chart";
+import { EXACT_CODE_DEPTH, maxCodeLevels } from "../lib/code-tree";
 import { FormulaEditorPanel } from "./formula-editor-panel";
 import { AccessibleListbox } from "./components/ui/AccessibleListbox";
 
@@ -61,7 +62,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
   const [groupBy, setGroupBy] = useState<AnalysisInput["groupBy"]>("NONE");
   const [dateFieldId, setDateFieldId] = useState(dateFields[0]?.id ?? "");
   const [groupFieldId, setGroupFieldId] = useState("");
-  const [groupDepth, setGroupDepth] = useState(2);
+  const [groupDepth, setGroupDepth] = useState(EXACT_CODE_DEPTH);
   const zoneFormats = collection.formats.filter((candidate) => candidate.fields.some((field) => field.kind === "ZONE"));
   const [zoneFormatId, setZoneFormatId] = useState(zoneFormats[0]?.id ?? "");
   const [zoneFieldId, setZoneFieldId] = useState("");
@@ -258,6 +259,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
   const nonnegative = values.every((value) => value >= 0);
   const total = values.reduce((sum, value) => sum + (value > 0 ? value : 0), 0);
   const canLine = nonnegative && (groupBy === "DAY" || groupBy === "MONTH" || ["CUMULATIVE", "MOVING_AVERAGE", "LINEAR_TREND"].includes(operation));
+  const groupCodes = collection.codeLists?.find((list) => list.id === format?.fields.find((field) => field.id === (groupFieldId || groupFields[0]?.id))?.codeListId)?.codes ?? [];
   const effectiveChart = (chart === "PIE" && (!nonnegative || total <= 0)) || (chart === "LINE" && !canLine) || (chart === "BAR" && !nonnegative) ? "TABLE" : chart;
 
   return (
@@ -295,7 +297,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
           {dateFields.length > 0 && <label>{fr ? "Champ date" : "Date field"}<select value={dateFieldId} onChange={(event) => setDateFieldId(event.target.value)}>{dateFields.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
           {(groupBy === "CATEGORY" || groupBy === "OBJECT" || groupBy === "ZONE") && <label>{groupBy === "ZONE" ? fr ? "Champ position" : "Position field" : fr ? "Champ groupe" : "Group field"}<select value={groupFieldId} onChange={(event) => setGroupFieldId(event.target.value)}>{groupFields.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
           {groupBy === "ZONE" && <><label>{fr ? "Format de données des zones" : "Zone data format"}<select value={zoneFormatId} onChange={(event) => { setZoneFormatId(event.target.value); setZoneFieldId(""); }}>{zoneFormats.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>{fr ? "Champ zone" : "Zone field"}<select value={zoneFieldId} onChange={(event) => setZoneFieldId(event.target.value)}>{zoneFields.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></>}
-          {groupBy === "CATEGORY" && format?.fields.some((field) => field.id === (groupFieldId || groupFields[0]?.id) && field.kind === "CODE") && <label>{fr ? "Niveau de regroupement" : "Grouping level"}<select value={groupDepth} onChange={(event) => setGroupDepth(Number(event.target.value))}><option value={0}>{fr ? "Racine" : "Root"}</option><option value={1}>{fr ? "Intermédiaire" : "Middle"}</option><option value={2}>{fr ? "Code précis" : "Exact code"}</option></select></label>}
+          {groupBy === "CATEGORY" && format?.fields.some((field) => field.id === (groupFieldId || groupFields[0]?.id) && field.kind === "CODE") && <label>{fr ? "Niveau de regroupement" : "Grouping level"}<select value={groupDepth} onChange={(event) => setGroupDepth(Number(event.target.value))}>{Array.from({ length: Math.max(0, maxCodeLevels(groupCodes) - 1) }, (_, level) => <option key={level} value={level}>{level === 0 ? (fr ? "Racine" : "Root") : fr ? `Niveau ${level + 1}` : `Level ${level + 1}`}</option>)}<option value={EXACT_CODE_DEPTH}>{fr ? "Code précis" : "Exact code"}</option></select></label>}
           {operation === "CROSSTAB" && <>
             <label>{fr ? "Second axe (colonnes)" : "Secondary group (columns)"}
               <select value={secondaryGroupBy} onChange={(event) => setSecondaryGroupBy(event.target.value as NonNullable<AnalysisInput["secondaryGroupBy"]>)}>

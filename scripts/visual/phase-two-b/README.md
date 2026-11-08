@@ -23,4 +23,6 @@ Run `node scripts/visual/phase-two-b/chart.mjs` after step 4 for 12 combinations
 
 Run `node scripts/visual/phase-two-b/osm-map.mjs` after step 4 for 12 combinations of width, theme and language on the map. Tile requests are intercepted, so nothing reaches OpenStreetMap; the bench proves none is made before consent, then drives dragging, wheel and button zoom, fit, marker popups, keyboard paths and the offline background. Add `--logic` to check only the Web Mercator arithmetic, without a browser.
 
+Run `node scripts/visual/phase-two-b/code-picker.mjs` after step 4 for 12 combinations of width, theme and language on the hierarchical code picker: keyboard tree navigation to five levels, accent-free search, breadcrumbs on homonyms, selection, clearing and Escape inside a dialog. Add `--logic` to check only the tree and search rules.
+
 The generated route is excluded from Git. Screenshots, metrics and browser profiles are excluded from Git, lint and TypeScript. Cleanup also retires the generated `.next/dev/types` cache, which otherwise keeps a validator importing the removed fixture route. No new dependencies are required. Do not run the development server concurrently with the final build.
