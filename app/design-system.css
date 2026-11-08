@@ -224,7 +224,7 @@ html[data-theme] :is(input:not([type="checkbox"]):not([type="radio"]):not([type=
   transition: border-color .14s var(--ease), box-shadow .14s var(--ease);
 }
 html[data-theme] :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea):hover:not(:disabled):not(:focus) { border-color: var(--c-ink); }
-html[data-theme] :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea):focus-visible {
+html[data-theme] :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea):focus-visible:not(:is(.sidebar-search, .mobile-drawer-search) input) {
   border-color: var(--c-focus); outline: 2px solid var(--c-focus) !important; outline-offset: 1px !important;
   box-shadow: 0 0 0 5px color-mix(in srgb, var(--c-focus) 16%, transparent) !important;
 }
@@ -269,7 +269,7 @@ html[data-theme] .app-shell .sidebar-top::after { width: 28px; height: 3px; back
 html[data-theme] .app-shell .sidebar-heading { color: var(--c-muted); letter-spacing: .08em; font-size: 12px; font-weight: 700; }
 html[data-theme] .app-shell .sidebar-total { background: var(--c-soft); color: var(--c-muted); border-radius: 999px; }
 html[data-theme] .app-shell .sidebar-search { background: var(--navigation-field); border-color: var(--c-line-strong); color: var(--c-ink); border-radius: 10px; }
-html[data-theme] .app-shell .sidebar-search:focus-within { border-color: var(--c-focus); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-focus) 14%, transparent); }
+html[data-theme] .app-shell .sidebar-search:focus-within { border-color: var(--c-focus); box-shadow: none; }
 html[data-theme] .app-shell .sidebar .nav-item,
 html[data-theme] .mobile-drawer-panel .mobile-menu-list button {
   border-radius: 10px; color: var(--c-ink); font-weight: 500;
