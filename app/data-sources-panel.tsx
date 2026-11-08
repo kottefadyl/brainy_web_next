@@ -9,6 +9,7 @@ import DataSourceForm from "./data-source-form";
 import DataSourceRuns from "./data-source-runs";
 import type { Collection, Language, User } from "../lib/brainy";
 import { formatDisplayName } from "../lib/brainy";
+import { formatColorStyle } from "../lib/format-colors";
 import { dataSourceApi, dataSourceError, deliveryIdFor, type DataSource, type DataSourceInput } from "../lib/data-sources";
 import "./data-sources.css";
 
@@ -91,7 +92,7 @@ export default function DataSourcesPanel({ collection, user, language, onClose, 
             <div>
               <h2>{source.name}</h2>
               <p className="data-source-muted">
-                {format && <span className="data-source-format"><span className="data-source-swatch" style={{ background: format.color }} aria-hidden="true" />{formatDisplayName(format, language)}</span>}
+                {format && <span className="data-source-format"><span className="data-source-swatch" style={formatColorStyle(format.color)} aria-hidden="true" />{formatDisplayName(format, language)}</span>}
                 {" · "}{tr(language, `${source.mappings.length} columns`, `${source.mappings.length} colonnes`)}{" · "}{tr(language, `ID column “${source.recordIdColumn}”`, `identifiant « ${source.recordIdColumn} »`)}
               </p>
               <p className="data-source-muted">{source.keyHint ? tr(language, `Sending key active (…${source.keyHint})`, `Clé d’envoi active (…${source.keyHint})`) : tr(language, "No sending key", "Aucune clé d’envoi")}</p>

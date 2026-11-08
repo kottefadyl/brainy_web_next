@@ -80,7 +80,7 @@ export default function DataSourceRuns({ sourceId, language, refreshKey, onEntri
         </dl>
         <p className="data-source-muted">
           {run.rowsPerSecond ? `${number.format(run.rowsPerSecond)} ${tr(language, "rows/s", "lignes/s")}` : ""}
-          {run.durationMs ? ` · ${number.format(Math.round(run.durationMs / 100) / 10)} s` : ""}
+          {run.durationMs ? ` · ${run.durationMs < 1000 ? `${number.format(run.durationMs)} ms` : `${number.format(Math.round(run.durationMs / 100) / 10)} s`}` : ""}
           {run.maxLagSeconds ? ` · ${tr(language, "longest delay between fact and reception", "écart maximal entre fait et réception")} ${lagText(run.maxLagSeconds, language)}` : ""}
         </p>
         {run.ignoredColumns.length > 0 && <p className="data-source-muted">{tr(language, "Columns not read:", "Colonnes non lues :")} {run.ignoredColumns.join(", ")}</p>}
