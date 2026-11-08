@@ -1,0 +1,60 @@
+/* Localized date, time and calendar controls (see components/ui/LocalizedDateInput). */
+.brainy-date { display: grid; gap: 6px; width: 100%; min-width: 0; }
+.brainy-date-control { position: relative; display: block; min-width: 0; }
+.brainy-datetime { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; width: 100%; min-width: 0; }
+.brainy-datetime > .brainy-date { flex: 1 1 165px; width: auto; }
+.brainy-datetime > .brainy-time { flex: 1 1 104px; }
+
+html[data-theme] .brainy-date input { width: 100%; min-width: 0; min-height: 44px; font-weight: 450; font-variant-numeric: tabular-nums; }
+html[data-theme] .brainy-date-control input { padding-inline-end: 48px; }
+
+html[data-theme] .brainy-date .brainy-date-trigger {
+  position: absolute; inset-block: 0; inset-inline-end: 0; display: grid; place-items: center;
+  width: 44px; min-width: 0; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 10px;
+  background: transparent; color: var(--muted); box-shadow: none; transition: background .12s, color .12s;
+}
+html[data-theme] .brainy-date .brainy-date-trigger:hover:not(:disabled) { background: var(--hover); color: var(--ink); transform: none; }
+html[data-theme] .brainy-date .brainy-date-trigger:focus-visible { outline-offset: -2px !important; }
+.brainy-date-error { color: var(--danger); font-size: max(13px, .8125rem); font-weight: 500; line-height: 1.4; overflow-wrap: anywhere; }
+html[data-theme] .brainy-date input[aria-invalid="true"] { border-color: var(--danger); }
+
+html[data-theme] .brainy-calendar[popover] {
+  position: fixed; inset: auto; margin: 0; box-sizing: border-box;
+  width: min(328px, calc(100vw - 16px)); max-height: calc(100dvh - 16px); overflow: auto; padding: 6px;
+  border: 1px solid var(--line-strong); border-radius: 14px; background: var(--dialog-surface); color: var(--ink);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .22); font-size: 14px; font-weight: 400; text-align: center;
+}
+html[data-theme] .brainy-calendar:popover-open { display: grid; gap: 4px; animation: brainy-calendar-in .16s ease-out; }
+@keyframes brainy-calendar-in { from { opacity: 0; transform: translateY(4px); } }
+html[data-theme] .brainy-calendar:focus { outline: none; }
+
+.brainy-calendar-head { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+.brainy-calendar-head > span { display: flex; flex: none; }
+.brainy-calendar-head strong { flex: 1; min-width: 0; font-size: 14px; font-weight: 650; }
+.brainy-calendar-grid { display: grid; gap: 2px; }
+.brainy-calendar-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.brainy-calendar-row > [role="gridcell"] { display: block; min-width: 0; }
+.brainy-calendar-weekday { padding: 6px 0; color: var(--muted); font-size: 13px; font-weight: 600; text-transform: capitalize; }
+.brainy-calendar-foot { display: flex; justify-content: center; }
+
+html[data-theme] .brainy-calendar button {
+  position: relative; display: grid; place-items: center; min-width: 0; min-height: 44px; margin: 0; padding: 0; border: 0; border-radius: 10px;
+  background: transparent; color: var(--ink); box-shadow: none; font: inherit; line-height: 1;
+}
+html[data-theme] .brainy-calendar-head button { width: 34px; color: var(--muted); }
+html[data-theme] .brainy-calendar [role="gridcell"] button { width: 100%; font-variant-numeric: tabular-nums; }
+html[data-theme] .brainy-calendar-foot button { padding: 0 14px; color: var(--blue); font-weight: 650; }
+html[data-theme] .brainy-calendar button:hover:not(:disabled) { background: var(--hover); transform: none; }
+html[data-theme] .brainy-calendar button:focus-visible { outline-offset: -2px !important; }
+html[data-theme] .brainy-calendar button:disabled { opacity: .45; }
+html[data-theme] .brainy-calendar button[data-outside="true"] { color: var(--muted); }
+html[data-theme] .brainy-calendar button[data-today="true"] { font-weight: 700; }
+html[data-theme] .brainy-calendar button[data-today="true"]::after { content: ""; position: absolute; bottom: 7px; left: 50%; width: 14px; height: 2px; margin-left: -7px; border-radius: 1px; background: currentColor; }
+html[data-theme] .brainy-calendar button[data-selected="true"],
+html[data-theme] .brainy-calendar button[data-selected="true"]:hover:not(:disabled) { background: var(--primary); color: var(--on-primary); font-weight: 650; }
+html[data-theme] .brainy-calendar button[data-selected="true"]:focus-visible { outline-offset: 1px !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .brainy-calendar:popover-open { animation: none; }
+  html[data-theme] .brainy-date .brainy-date-trigger { transition: none; }
+}

@@ -1,5 +1,6 @@
 "use client";
 
+import { focusableWithin } from "../ui/use-dialog-focus";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { LogOut, Pencil, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import { t, type Collection, type Language } from "../../../lib/brainy";
@@ -41,7 +42,7 @@ export function MobileCollectionDrawer({ open, collections, selectedId, language
     return () => desktop.removeEventListener("change", closeOnDesktop);
   }, [open, onClose]);
 
-  const focusable = () => Array.from(panelRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), summary, [tabindex]:not([tabindex="-1"])') ?? []);
+  const focusable = () => focusableWithin(panelRef.current);
   const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "Escape") { event.preventDefault(); onClose(); return; }
     if (event.key !== "Tab") return;

@@ -1,5 +1,7 @@
 "use client";
 
+import { TemporalFieldInput } from "./components/ui/LocalizedDateInput";
+import { useDialogFocus } from "./components/ui/use-dialog-focus";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../lib/api";
 import type { Collection, Entry, Field, Language } from "../lib/brainy";
@@ -22,14 +24,8 @@ export default function QuickEntryDialog({ collection, userId, language, onClose
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const closeRef = useRef(onClose);
-  useEffect(() => { closeRef.current = onClose; }, [onClose]);
-  useEffect(() => {
-    const previous = document.activeElement as HTMLElement | null;
-    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") closeRef.current(); };
-    document.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("keydown", onKey); previous?.focus(); };
-  }, []);
+  const dialogRef = useRef<HTMLElement>(null);
+  useDialogFocus(dialogRef, onClose);
   useEffect(() => {
     let active = true;
     api.entriesPage(collection.id, { formatId }).then((page) => { if (active) setRecent(page.entries); }).catch(() => {});
@@ -56,10 +52,11 @@ export default function QuickEntryDialog({ collection, userId, language, onClose
     if (field.kind === "LONG_TEXT") return <textarea {...common} rows={3} />;
     if (field.kind === "SELECT") return <select {...common}><option value="">—</option>{field.options?.map((option) => <option key={option} value={option}>{option}</option>)}</select>;
     if (field.kind === "BOOLEAN") return <select {...common}><option value="">—</option><option value="true">{fr ? "Oui" : "Yes"}</option><option value="false">{fr ? "Non" : "No"}</option></select>;
-    return <><input {...common} disabled={template.today.includes(field.id)} type={field.kind === "DATE" ? "date" : field.kind === "DATETIME" ? "datetime-local" : "text"} inputMode={field.kind === "NUMBER" ? "decimal" : undefined} list={`quick-${field.id}`} /><datalist id={`quick-${field.id}`}>{suggestions.map((item) => <option key={item} value={item} />)}</datalist></>;
+    if (field.kind === "DATE" || field.kind === "DATETIME") return <TemporalFieldInput kind={field.kind} language={language} value={common.value} disabled={template.today.includes(field.id)} onChange={(next) => setField(field.id, next)} />;
+    return <><input {...common} disabled={template.today.includes(field.id)} type="text" inputMode={field.kind === "NUMBER" ? "decimal" : undefined} list={`quick-${field.id}`} /><datalist id={`quick-${field.id}`}>{suggestions.map((item) => <option key={item} value={item} />)}</datalist></>;
   };
   const renderField = (field: Field) => <div key={field.id} className="quick-entry-field"><label><span>{field.name}{field.unit ? ` · ${field.unit}` : ""}</span>{control(field)}</label>{["DATE", "DATETIME"].includes(field.kind) && <label className="quick-today-option"><input type="checkbox" checked={template.today.includes(field.id)} onChange={(event) => setTemplate((current) => ({ ...current, today: event.target.checked ? [...current.today, field.id] : current.today.filter((id) => id !== field.id) }))} />{fr ? "Date du jour" : "Today"}</label>}</div>;
-  return <div className="quick-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section className="quick-dialog" role="dialog" aria-modal="true" aria-labelledby="quick-entry-title">
+  return <div className="quick-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section ref={dialogRef} className="quick-dialog" role="dialog" aria-modal="true" aria-labelledby="quick-entry-title">
     <header><div><h2 id="quick-entry-title">{fr ? "Saisie rapide" : "Quick entry"}</h2><p>{fr ? "Ajoutez une entrée en remplissant au moins un champ." : "Add an entry by filling in at least one field."}</p></div><button type="button" onClick={onClose} aria-label={fr ? "Fermer" : "Close"}>×</button></header>
     <label>{fr ? "Format de données" : "Data format"}<select value={formatId} onChange={(event) => changeFormat(event.target.value)}>{collection.formats.filter((item) => !item.objectModel).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
     {recent.length > 0 && <button type="button" className="quick-subtle" onClick={duplicateLast}>{fr ? "Reprendre la dernière entrée" : "Use last entry"}</button>}

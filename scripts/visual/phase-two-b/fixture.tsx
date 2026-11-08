@@ -13,6 +13,9 @@ import { EntriesEmptyState } from "../../../app/entries-list-states";
 import { AccessibleListbox } from "../../../app/components/ui/AccessibleListbox";
 import { AnalysisResultChart } from "../../../app/analysis-result-chart";
 import Modal from "../../../app/components/ui/Modal";
+import { useToolSectionFocus } from "../../../app/components/shell/use-tool-section-focus";
+import WorkspaceToolsDialog from "../../../app/workspace-tools-dialog";
+import { LocalizedDateInput, LocalizedDateTimeInput, LocalizedTimeInput } from "../../../app/components/ui/LocalizedDateInput";
 import { CollectionTabs, type CollectionTab } from "../../../app/components/shell/CollectionTabs";
 import { formatColors, type Collection, type Entry, type Language } from "../../../lib/brainy";
 
@@ -35,6 +38,14 @@ export default function PhaseTwoBPreview() {
   const [selected, setSelected] = useState("");
   const [modal, setModal] = useState(false);
   const [drawer, setDrawer] = useState(false);
+  const [tools, setTools] = useState(false);
+  const [section, setSection] = useState("collection");
+  const { returnTool, rememberTool } = useToolSectionFocus(section);
+  const [dates, setDates] = useState(false);
+  const [date, setDate] = useState("");
+  const [limited, setLimited] = useState("2026-11-20");
+  const [dateTime, setDateTime] = useState("");
+  const [time, setTime] = useState("");
   const drawerTrigger = useRef<HTMLButtonElement>(null);
   const [value, setValue] = useState("");
   const [tab, setTab] = useState<CollectionTab>("entries");
@@ -46,13 +57,15 @@ export default function PhaseTwoBPreview() {
   return <AppShell>
     <Sidebar brand={<strong>Brainy</strong>} collections={Array.from({ length: 45 }, (_, i) => ({ ...collection, id: String(i), name: `Collection très longue ${i + 1}` }))}
       selectedId={selected || "0"} loading={false} language={language} userName="Compte de test" userEmail="test@example.com"
-      onSelect={setSelected} onTemplate={noop} onManual={noop} onTransfer={noop} onTools={noop} onEditProfile={noop} onSignOut={noop} />
-    <main className="workspace"><header className="topbar"><span>Brainy</span><LanguagePicker language={language} onChange={setLanguage} /></header><div className="workspace-body">
+      onSelect={setSelected} onTemplate={noop} onManual={noop} onTransfer={noop} onTools={() => setTools(true)} onEditProfile={noop} onSignOut={noop} />
+    <main className="workspace"><header className="topbar"><span>Brainy</span><LanguagePicker language={language} onChange={setLanguage} /></header><div className="workspace-body">{section !== "collection" ? <button type="button" id="preview-back" className="analysis-back" onClick={() => setSection("collection")}>Back</button> : <>
       <div className="preview-controls">
         {["formats", "entries", "empty", "tools", "one", "many"].map((item) => <button key={item} type="button" onClick={() => setView(item)}>{item}</button>)}
         <button type="button" onClick={() => { const next = theme === "light" ? "dark" : "light"; setTheme(next); document.documentElement.dataset.theme = next; }}>Theme</button>
         <button type="button" onClick={() => setLanguage(language === "fr" ? "en" : "fr")}>Language</button>
         <button type="button" onClick={() => setModal(true)}>Modal</button>
+        <button type="button" id="preview-dates" onClick={() => setDates(true)}>Dates</button>
+        <button type="button" id="preview-tools" onClick={() => setTools(true)}>Tools</button>
         <button type="button" ref={drawerTrigger} onClick={() => setDrawer(true)}>Collections</button>
       </div>
       <output className="sr-only" data-last-action={lastAction}>{lastAction}</output>
@@ -61,11 +74,20 @@ export default function PhaseTwoBPreview() {
       {view === "formats" && <CollectionFormatsSection collection={collection} language={language} entryCounts={{ f0: 8, f1: 8, f2: 8 }} onAdd={noop} onAddEntry={noop} onEdit={(id) => setLastAction(`edit:${id}`)} onColor={(id) => setLastAction(`color:${id}`)} onCopy={(id) => setLastAction(`copy:${id}`)} onLink={(id) => setLastAction(`link:${id}`)} onReviewUpdate={noop} />}
       {view === "entries" && <div className="entry-grid saved-view-list">{entries.map((entry) => <EntryCard key={entry.id} entry={entry} collection={collection} language={language} onDetails={noop} onEdit={noop} onDelete={noop} onCopy={noop} />)}</div>}
       {view === "empty" && <EntriesEmptyState language={language} filtered={false} onClear={noop} onWrite={noop} />}
-      {view === "tools" && <CollectionToolsHub collection={collection} user={{ id: "u", name: "Test", email: "test@example.com", interests: [], hobbies: [], profileCompleted: true }} language={language} onOpenSection={noop} onOpenDialog={noop} />}
+      {view === "tools" && <CollectionToolsHub collection={collection} user={{ id: "u", name: "Test", email: "test@example.com", interests: [], hobbies: [], profileCompleted: true }} language={language} defaultOpen={returnTool !== null} onOpenSection={(next) => { setLastAction(`section:${next}`); rememberTool(next); setSection(next); }} onOpenDialog={(kind) => setLastAction(`dialog:${kind}`)} />}
       {(view === "one" || view === "many") && <div className="analysis-page"><AnalysisResultChart rows={rows} unit="g" language={language} /></div>}
       <AccessibleListbox label={language === "fr" ? "Format de données" : "Data format"} value={value} options={[{ id: "", label: language === "fr" ? "Tous les formats de données" : "All data formats" }, ...formats.map((item) => ({ id: item.id, label: item.name, swatch: item.color }))]} onChange={setValue} />
-    </div></main>
+    </>}</div></main>
     {modal && <Modal title="Détail de l’entrée" closeLabel="Fermer" onClose={() => setModal(false)}><p>Contenu de démonstration</p><AccessibleListbox label="Format de données" value={value} options={formats.map((item) => ({ id: item.id, label: item.name, swatch: item.color }))} onChange={setValue} /></Modal>}
-    {drawer && <MobileCollectionDrawer open={drawer} collections={[collection]} selectedId={collection.id} language={language} triggerRef={drawerTrigger} onClose={() => setDrawer(false)} onSelect={noop} onTemplate={noop} onManual={noop} onTools={noop} onEditProfile={noop} onSignOut={noop} />}
+    {tools && <WorkspaceToolsDialog collections={[collection]} language={language} onClose={() => setTools(false)} onRestored={noop} />}
+    {dates && <Modal title="Dates" closeLabel="Fermer" onClose={() => setDates(false)}><form className="form-stack" onSubmit={(event) => { event.preventDefault(); setLastAction("submitted"); }}>
+      <label className="input-label">{language === "fr" ? "Date simple" : "Plain date"}<LocalizedDateInput language={language} value={date} onChange={setDate} /></label>
+      <label className="input-label">{language === "fr" ? "Date limitée" : "Limited date"}<LocalizedDateInput language={language} value={limited} min="2026-11-10" max="2026-11-30" onChange={setLimited} /></label>
+      <label className="input-label">{language === "fr" ? "Date et heure" : "Date and time"}<LocalizedDateTimeInput language={language} value={dateTime} onChange={setDateTime} /></label>
+      <label className="input-label">{language === "fr" ? "Heure" : "Time"}<LocalizedTimeInput language={language} value={time} onChange={setTime} /></label>
+      <output data-values={JSON.stringify({ date, limited, dateTime, time })} />
+      <button type="submit" id="preview-submit" className="button button-primary">OK</button>
+    </form></Modal>}
+    {drawer && <MobileCollectionDrawer open={drawer} collections={[collection]} selectedId={collection.id} language={language} triggerRef={drawerTrigger} onClose={() => setDrawer(false)} onSelect={noop} onTemplate={noop} onManual={noop} onTools={() => setTools(true)} onEditProfile={noop} onSignOut={noop} />}
   </AppShell>;
 }

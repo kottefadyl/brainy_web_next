@@ -1,5 +1,7 @@
 ﻿"use client";
 
+import { LocalizedDateInput } from "./components/ui/LocalizedDateInput";
+import { addDays, todayLocalIso } from "../lib/date-input";
 import { useEffect, useState, type FormEvent } from "react";
 import { contributionApi, type ContributionLink, type ContributionSubmission } from "../lib/api";
 import { translateError, type Collection, type Language } from "../lib/brainy";
@@ -19,7 +21,7 @@ export default function ContributionPanel({ collection, language, onClose, onEnt
   const [titleEn, setTitleEn] = useState(""); const [titleFr, setTitleFr] = useState("");
   const [consentEn, setConsentEn] = useState(""); const [consentFr, setConsentFr] = useState("");
   const [anonymous, setAnonymous] = useState(true);
-  const [expiry, setExpiry] = useState(() => new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10));
+  const [expiry, setExpiry] = useState(() => addDays(todayLocalIso(), 7));
   const [createdUrl, setCreatedUrl] = useState("");
   const [error, setError] = useState(""); const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export default function ContributionPanel({ collection, language, onClose, onEnt
       <div className="contribution-grid"><label>{tr(language, "Information (English)", "Information (anglais)")}<input required maxLength={2000} value={titleEn} onChange={(event) => setTitleEn(event.target.value)} /></label><label>{tr(language, "Information (French)", "Information (français)")}<input required maxLength={2000} value={titleFr} onChange={(event) => setTitleFr(event.target.value)} /></label></div>
       <div className="contribution-grid"><label>{tr(language, "Consent text (English)", "Consentement (anglais)")}<textarea required maxLength={2000} value={consentEn} onChange={(event) => setConsentEn(event.target.value)} /></label><label>{tr(language, "Consent text (French)", "Consentement (français)")}<textarea required maxLength={2000} value={consentFr} onChange={(event) => setConsentFr(event.target.value)} /></label></div>
       <label className="contribution-check"><input type="checkbox" checked={anonymous} onChange={(event) => setAnonymous(event.target.checked)} />{tr(language, "Allow anonymous replies", "Autoriser les réponses anonymes")}</label>
-      <label>{tr(language, "Expires on", "Expire le")}<input type="date" required value={expiry} min={new Date().toISOString().slice(0, 10)} onChange={(event) => setExpiry(event.target.value)} /></label>
+      <label>{tr(language, "Expires on", "Expire le")}<LocalizedDateInput language={language} required value={expiry} min={todayLocalIso()} onChange={setExpiry} /></label>
       {(!formatId || !fieldIds.length) && <p className="action-help">{tr(language, "Choose a data format and at least one field to continue.", "Choisissez un format de données et au moins un champ pour continuer.")}</p>}
       <button type="submit" disabled={busy || !formatId || !fieldIds.length}>{tr(language, "Create link", "Créer le lien")}</button>
       {createdUrl && <div role="status"><p>{tr(language, "Copy this link now. It is shown only once.", "Copiez ce lien maintenant. Il n’est affiché qu’une fois.")}</p><input readOnly value={createdUrl} aria-label={tr(language, "Contribution link", "Lien de contribution")} onFocus={(event) => event.target.select()} /><button type="button" onClick={() => void navigator.clipboard.writeText(createdUrl)}>{tr(language, "Copy", "Copier")}</button></div>}

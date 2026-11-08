@@ -1,5 +1,6 @@
 "use client";
 
+import { LocalizedDateTimeInput } from "./components/ui/LocalizedDateInput";
 import { useState } from "react";
 import type { Language } from "../lib/brainy";
 
@@ -164,11 +165,11 @@ export default function MeasurementInput({
 
           <label style={{ display: "grid", gap: "4px", fontSize: "0.8rem" }}>
             <span>{fr ? "Date d'observation" : "Observed at"}</span>
-            <input
-              type="datetime-local"
-              value={observedAt ? observedAt.slice(0, 16) : ""}
-              onChange={(e) => {
-                const iso = e.target.value ? new Date(e.target.value).toISOString() : "";
+            <LocalizedDateTimeInput
+              language={language}
+              value={observedAt}
+              onChange={(local) => {
+                const iso = local ? new Date(local).toISOString() : "";
                 setObservedAt(iso);
                 update(value, status, uncertainty, uncertaintyType, quality, instrument, iso);
               }}

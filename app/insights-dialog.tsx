@@ -1,5 +1,6 @@
 "use client";
 
+import { LocalizedDateInput } from "./components/ui/LocalizedDateInput";
 import { useMemo, useRef, useState } from "react";
 import { api } from "../lib/api";
 import type { AnalysisInput, AnalysisOperationId, AnalysisResult, Collection, EntryFilter, ForecastResult, Language } from "../lib/brainy";
@@ -336,10 +337,10 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
               </select>
             </label>
           )}
-          <label>{fr ? "Du" : "From"}<input type="date" value={from} onChange={(event) => setFrom(event.target.value)} /></label>
-          <label>{fr ? "Au" : "To"}<input type="date" value={to} onChange={(event) => setTo(event.target.value)} /></label>
-          <label>{fr ? "Comparer du" : "Compare from"}<input type="date" value={comparisonFrom} onChange={(event) => setComparisonFrom(event.target.value)} /></label>
-          <label>{fr ? "Comparer au" : "Compare to"}<input type="date" value={comparisonTo} onChange={(event) => setComparisonTo(event.target.value)} /></label>
+          <label>{fr ? "Du" : "From"}<LocalizedDateInput language={language} value={from} onChange={setFrom} /></label>
+          <label>{fr ? "Au" : "To"}<LocalizedDateInput language={language} value={to} onChange={setTo} /></label>
+          <label>{fr ? "Comparer du" : "Compare from"}<LocalizedDateInput language={language} value={comparisonFrom} onChange={setComparisonFrom} /></label>
+          <label>{fr ? "Comparer au" : "Compare to"}<LocalizedDateInput language={language} value={comparisonTo} onChange={setComparisonTo} /></label>
           <label>{fr ? "Filtrer un champ" : "Filter field"}<select value={filterFieldId} onChange={(event) => setFilterFieldId(event.target.value)}><option value="">—</option>{format?.fields.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
           {selectedFilterField && <>
             <label>{fr ? "Condition" : "Condition"}<select value={filterOperator} onChange={(event) => setFilterOperator(event.target.value as EntryFilter["operator"])}><option value="EQ">=</option><option value="CONTAINS">{fr ? "Contient" : "Contains"}</option>{selectedFilterField.kind === "NUMBER" && <><option value="GT">&gt;</option><option value="GTE">≥</option><option value="LT">&lt;</option><option value="LTE">≤</option></>}</select></label>

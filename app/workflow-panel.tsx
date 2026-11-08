@@ -1,5 +1,6 @@
 "use client";
 
+import { LocalizedDateTimeInput } from "./components/ui/LocalizedDateInput";
 import { useEffect, useState, type FormEvent } from "react";
 import { api, type WorkflowNotification } from "../lib/api";
 import { formatColors, translateError, type Collection, type CollectionFormat, type CollectionRole, type Entry, type EntryPage, type Language, type User, type WorkflowDefinition } from "../lib/brainy";
@@ -71,7 +72,7 @@ function WorkflowEntry({ entry, format, collection, user, language, onSaved }: {
       {transitions.length > 0 && <div className="workflow-actions"><strong>{copy(language, "Change state", "Changer l’état")}</strong>{transitions.map((item) => <button key={item.to} type="button" disabled={busy} onClick={() => action(() => api.transitionWorkflowEntry(entry.id, item.to, entry.updatedAt))}>{item.to}</button>)}</div>}
       {role !== "READER" && <div className="workflow-assignment"><strong>{copy(language, "Assignment and due date", "Assignation et échéance")}</strong>
         <label>{copy(language, "Account", "Compte")}<select value={assignee} onChange={(event) => setAssignee(event.target.value)}><option value="">{copy(language, "Unassigned", "Non assigné")}</option>{people.map((person) => <option key={person.userId} value={person.userId}>{person.name}</option>)}</select></label>
-        <label>{copy(language, "Due date (optional)", "Échéance (facultative)")}<input type="datetime-local" value={due} onChange={(event) => setDue(event.target.value)} /></label>
+        <label>{copy(language, "Due date (optional)", "Échéance (facultative)")}<LocalizedDateTimeInput language={language} value={due} onChange={setDue} /></label>
         <label>{copy(language, "Remind minutes before", "Rappeler combien de minutes avant")}<input type="number" min={0} max={43200} value={minutes} onChange={(event) => setMinutes(Number(event.target.value))} /></label>
         <button type="button" disabled={busy} onClick={() => action(() => api.assignWorkflowEntry(entry.id, { assigneeUserId: assignee, dueAt: due ? new Date(due).toISOString() : undefined, reminderMinutesBefore: minutes, expectedUpdatedAt: entry.updatedAt }))}>{copy(language, "Save assignment", "Enregistrer l’assignation")}</button>
       </div>}

@@ -1,6 +1,8 @@
 "use client";
 
+import { useRef } from "react";
 import { X, SlidersHorizontal } from "lucide-react";
+import { useDialogFocus } from "./components/ui/use-dialog-focus";
 import WorkspaceBackupPanel from "./workspace-backup-panel";
 import BackgroundJobsPanel from "./background-jobs-panel";
 import type { Collection, Language } from "../lib/brainy";
@@ -18,20 +20,22 @@ export default function WorkspaceToolsDialog({
   onRestored: () => void;
 }) {
   const fr = language === "fr";
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogFocus(dialogRef, onClose);
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <div
+        ref={dialogRef}
         className="modal modal-wide workspace-tools-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="workspace-tools-title"
-        onClick={(event) => event.stopPropagation()}
       >
         <div className="modal-head">
           <div className="workspace-tools-head">
             <span className="workspace-tools-icon">
-              <SlidersHorizontal size={20} />
+              <SlidersHorizontal size={20} aria-hidden="true" />
             </span>
             <div>
               <h2 id="workspace-tools-title">

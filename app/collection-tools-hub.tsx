@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   ArrowRight,
   Boxes,
@@ -24,12 +24,14 @@ export default function CollectionToolsHub({
   collection,
   user,
   language,
+  defaultOpen = false,
   onOpenSection,
   onOpenDialog,
 }: {
   collection: Collection;
   user: User;
   language: Language;
+  defaultOpen?: boolean;
   onOpenSection: (
     section:
       | "insights"
@@ -44,7 +46,8 @@ export default function CollectionToolsHub({
   ) => void;
   onOpenDialog: (kind: "units" | "objects") => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
+  const drawerId = useId();
   const isOwner = collection.ownerId === user.id;
   const canSend = isOwner || collection.members?.some((member) => member.userId === user.id && member.role !== "READER");
   const fr = language === "fr";
@@ -60,28 +63,29 @@ export default function CollectionToolsHub({
         className={`collection-tools-toggle ${open ? "open" : ""}`}
         onClick={() => setOpen(!open)}
         aria-expanded={open}
+        aria-controls={open ? drawerId : undefined}
       >
-        <div className="tools-toggle-left">
+        <span className="tools-toggle-left">
           <span className="tools-toggle-icon">
             <SlidersHorizontal size={17} />
           </span>
-          <div className="tools-toggle-text">
+          <span className="tools-toggle-text">
             <strong>{fr ? "Outils & options avancées" : "Advanced collection tools"}</strong>
             <small>
               {fr
                 ? "Statistiques, stocks, cartes, nomenclatures, flux et registre"
                 : "Analytics, stocks, maps, code lists, workflows, and ledger"}
             </small>
-          </div>
-        </div>
-        <div className="tools-toggle-right">
+          </span>
+        </span>
+        <span className="tools-toggle-right">
           <span className="tools-badge">{count}</span>
           <ChevronDown className={`tools-chevron ${open ? "open" : ""}`} size={18} />
-        </div>
+        </span>
       </button>
 
       {open && (
-        <div className="collection-tools-drawer">
+        <div id={drawerId} className="collection-tools-drawer">
           {/* Groupe 1 : Analyse & Métier */}
           <div className="collection-tools-group">
             <h4 className="collection-tools-group-heading">
@@ -91,6 +95,7 @@ export default function CollectionToolsHub({
               <button
                 type="button"
                 className="collection-hub-card collection-hub-featured"
+                data-tool="insights"
                 onClick={() => onOpenSection("insights")}
               >
                 <span className="collection-hub-icon">
@@ -108,6 +113,7 @@ export default function CollectionToolsHub({
               <button
                 type="button"
                 className="collection-hub-card"
+                data-tool="stock"
                 onClick={() => onOpenSection("stock")}
               >
                 <span className="collection-hub-icon">
@@ -125,6 +131,7 @@ export default function CollectionToolsHub({
               <button
                 type="button"
                 className="collection-hub-card"
+                data-tool="map"
                 onClick={() => onOpenSection("map")}
               >
                 <span className="collection-hub-icon">
@@ -178,6 +185,7 @@ export default function CollectionToolsHub({
               <button
                 type="button"
                 className="collection-hub-card"
+                data-tool="classifications"
                 onClick={() => onOpenSection("classifications")}
               >
                 <span className="collection-hub-icon">
@@ -201,6 +209,7 @@ export default function CollectionToolsHub({
               <button
                 type="button"
                 className="collection-hub-card"
+                data-tool="workflow"
                 onClick={() => onOpenSection("workflow")}
               >
                 <span className="collection-hub-icon">
@@ -221,6 +230,7 @@ export default function CollectionToolsHub({
                 <button
                   type="button"
                   className="collection-hub-card"
+                  data-tool="dataSources"
                   onClick={() => onOpenSection("dataSources")}
                 >
                   <span className="collection-hub-icon">
@@ -242,6 +252,7 @@ export default function CollectionToolsHub({
                 <button
                   type="button"
                   className="collection-hub-card"
+                  data-tool="contributions"
                   onClick={() => onOpenSection("contributions")}
                 >
                   <span className="collection-hub-icon">
@@ -262,6 +273,7 @@ export default function CollectionToolsHub({
               <button
                 type="button"
                 className="collection-hub-card"
+                data-tool="ledger"
                 onClick={() => onOpenSection("ledger")}
               >
                 <span className="collection-hub-icon">
@@ -281,6 +293,7 @@ export default function CollectionToolsHub({
               <button
                 type="button"
                 className="collection-hub-card"
+                data-tool="sensitivity"
                 onClick={() => onOpenSection("sensitivity")}
               >
                 <span className="collection-hub-icon">

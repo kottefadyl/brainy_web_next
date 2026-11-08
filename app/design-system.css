@@ -456,6 +456,19 @@ html[data-theme] .collection-hub-card {
   transition: transform .16s var(--ease), box-shadow .16s var(--ease), border-color .16s;
 }
 html[data-theme] .collection-hub-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); border-color: var(--c-line-strong); }
+html[data-theme] .workspace-backup-panel button {
+  border: 1px solid var(--control-border); border-radius: 10px; padding: 0 16px;
+  background: var(--surface); color: var(--ink); font-weight: 600; transition: background .12s var(--ease);
+}
+html[data-theme] .workspace-backup-panel button:hover:not(:disabled) { background: var(--hover); }
+html[data-theme] .workspace-backup-panel label:has(> input[type="checkbox"]) { display: flex; align-items: flex-start; gap: 10px; }
+html[data-theme] .workspace-backup-panel label > input[type="checkbox"] { flex: none; margin: 2px 0 0; }
+html[data-theme] input[type="file"] { max-width: 100%; color: var(--ink); }
+html[data-theme] input[type="file"]::file-selector-button {
+  margin-inline-end: 10px; min-height: 44px; padding: 0 14px; border: 1px solid var(--control-border); border-radius: 10px;
+  background: var(--surface); color: var(--ink); font: inherit; font-weight: 600; cursor: pointer;
+}
+html[data-theme] input[type="file"]:hover::file-selector-button { background: var(--hover); }
 html[data-theme] .collection-hub-arrow { color: var(--c-muted); transition: transform .16s var(--ease), color .16s; }
 html[data-theme] .collection-hub-card:hover .collection-hub-arrow { transform: translateX(3px); color: var(--c-accent); }
 
@@ -599,3 +612,6 @@ html[data-theme] :is(.danger, .is-danger, .entry-delete, .collection-hero-menu-d
   html[data-theme] :is(.format-card, .entry-card.entry-row, .collection-hub-card, .button, .starter-grid button):hover { transform: none !important; }
   html[data-theme] .auth-visual .story-preview { animation: none !important; }
 }
+
+/* The add-entry outline sits on 24 pastel backgrounds and must stay at 3:1. */
+html[data-theme="light"] .app-shell .format-card .format-add-entry { border-color: color-mix(in srgb, var(--c-ink) 58%, transparent); }

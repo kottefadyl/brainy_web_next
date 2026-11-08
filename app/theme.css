@@ -130,7 +130,9 @@ body {
   line-height: 1.5;
 }
 
+a:focus-visible,
 button:focus-visible,
+[tabindex]:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
