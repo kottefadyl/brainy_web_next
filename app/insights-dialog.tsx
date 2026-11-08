@@ -34,6 +34,16 @@ const OPERATIONS: { id: AnalysisOperationId; fr: string; en: string }[] = [
   { id: "LINEAR_TREND", fr: "Tendance linéaire", en: "Linear trend" },
 ];
 
+/** The visual editor only understands these two shapes; opening anything else would crash it. */
+function isVisuallyEditable(expression: string): boolean {
+  try {
+    const parsed = JSON.parse(expression);
+    return parsed?.kind === "dateDifference" || (parsed?.kind === "arithmetic" && !!parsed.left && !!parsed.right);
+  } catch {
+    return false;
+  }
+}
+
 export default function InsightsDialog({ collection, language, onClose, onCollectionChanged, onOpenEntry }: Props) {
   const fr = language === "fr";
   const resultsRef = useRef<HTMLDivElement | null>(null);
@@ -348,7 +358,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
         {!formulaName.trim() && <p className="action-help">{fr ? "Nommez la formule pour continuer." : "Name the formula to continue."}</p>}
         <button type="button" disabled={busy || !formulaName.trim()} onClick={saveFormula}>{formulaId ? (fr ? "Mettre à jour" : "Update") : (fr ? "Enregistrer la formule" : "Save formula")}</button>
         <ul>
-          {formulas.map((formula) => <li key={formula.id}><span>{formula.name}</span><button type="button" onClick={() => editFormula(formula)}>{fr ? "Modifier" : "Edit"}</button><button type="button" onClick={async () => onCollectionChanged(await api.deleteFormula(collection.id, formula.id))}>{fr ? "Supprimer" : "Delete"}</button></li>)}
+          {formulas.map((formula) => <li key={formula.id}><span>{formula.name}</span>{isVisuallyEditable(formula.expression) ? <button type="button" onClick={() => editFormula(formula)}>{fr ? "Modifier" : "Edit"}</button> : <em className="formula-advanced-badge">{fr ? "Formule avancée (lecture seule)" : "Advanced formula (read-only)"}</em>}<button type="button" onClick={async () => onCollectionChanged(await api.deleteFormula(collection.id, formula.id))}>{fr ? "Supprimer" : "Delete"}</button></li>)}
         </ul>
       </details>
 

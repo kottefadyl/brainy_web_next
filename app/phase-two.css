@@ -35,6 +35,7 @@ html[data-theme] .stock-panel .stock-empty-history { margin: 0; color: var(--mut
 html[data-theme] .stock-panel .stock-negative-switch { display: flex; align-items: center; gap: 12px; min-height: 44px; cursor: pointer; }
 html[data-theme] .stock-panel .stock-negative-switch:has(input:disabled) { cursor: wait; }
 html[data-theme] .stock-panel .stock-integrity-actions + [role="status"] { margin-top: 12px; }
+html[data-theme] .formula-advanced-badge { display: inline-flex; align-items: center; padding: 2px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-soft); color: var(--muted); font-size: 13px; font-style: normal; font-weight: 600; }
 html[data-theme] .stock-panel > details.stock-rule-editor { border: 1px solid var(--line); border-radius: 18px; background: var(--surface); }
 html[data-theme] .stock-panel > details.stock-rule-editor > summary { display: flex; align-items: center; min-height: 52px; padding: 12px 40px 12px 20px; border-radius: 17px; font-weight: 600; }
 html[data-theme] .stock-panel > details.stock-rule-editor > summary::after { right: 20px; }
