@@ -21,12 +21,15 @@ function findSessionToken(value: unknown): string | null {
   return null;
 }
 
+/** Hides the session token only: other tokens, such as a contribution link's, are meant for the page. */
 function withoutTokens(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(withoutTokens);
   if (!value || typeof value !== "object") return value;
+  const record = value as Record<string, unknown>;
+  const isSession = typeof record.token === "string" && !!record.user && typeof record.user === "object";
   return Object.fromEntries(
-    Object.entries(value as Record<string, unknown>)
-      .filter(([key]) => key !== "token")
+    Object.entries(record)
+      .filter(([key]) => !(isSession && key === "token"))
       .map(([key, item]) => [key, withoutTokens(item)]),
   );
 }
