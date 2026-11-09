@@ -564,6 +564,7 @@ export const numberUnits: NumberUnit[] = [
   { code: "USD", en: "US dollar", fr: "Dollar américain", symbol: "$", category: "money" },
   { code: "GBP", en: "British pound", fr: "Livre sterling", symbol: "£", category: "money" },
   { code: "NGN", en: "Nigerian naira", fr: "Naira nigérian", symbol: "₦", category: "money" },
+  { code: "FCFA", en: "CFA franc", fr: "Franc CFA", symbol: "FCFA", category: "money" },
   { code: "%", en: "Percent", fr: "Pourcentage", symbol: "%", category: "other" },
   { code: "h", en: "Hours", fr: "Heures", symbol: "h", category: "other" },
   { code: "min", en: "Minutes", fr: "Minutes", symbol: "min", category: "other" },

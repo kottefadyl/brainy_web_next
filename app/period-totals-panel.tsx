@@ -41,7 +41,8 @@ export default function PeriodTotalsPanel({ collection, entries, language, onSav
 
   if (!format || !dateField || !amountField) return null;
 
-  const shown = (value?: string) => value === undefined ? "…" : formatAmount(value, language);
+  const unit = amountField.unit ? ` ${amountField.unit}` : "";
+  const shown = (value?: string) => value === undefined ? "…" : formatAmount(value, language) + unit;
   const monthName = new Intl.DateTimeFormat(fr ? "fr-FR" : "en-US", { month: "long", year: "numeric" }).format(new Date());
 
   const save = async (event: FormEvent) => {
@@ -53,7 +54,7 @@ export default function PeriodTotalsPanel({ collection, entries, language, onSav
     setBusy(true);
     try {
       onSaved(await api.saveEntry(collectionId, [{ fieldId: dateField.id, value: date }, { fieldId: amountField.id, value: stored }], undefined, format.id));
-      setNotice(fr ? `Enregistré : ${formatAmount(stored, language)}` : `Saved: ${formatAmount(stored, language)}`);
+      setNotice(`${fr ? "Enregistré :" : "Saved:"} ${formatAmount(stored, language)}${unit}`);
       setAmount(""); setDate(isoDay());
     } catch (cause) {
       setError(fr ? `Enregistrement impossible : ${cause instanceof Error ? cause.message : cause}` : `Could not save: ${cause instanceof Error ? cause.message : cause}`);
@@ -64,7 +65,7 @@ export default function PeriodTotalsPanel({ collection, entries, language, onSav
     <div className="period-totals-figures">
       <div className="period-totals-month">
         <span>{fr ? "Ce mois-ci" : "This month"}</span>
-        <strong>{shown(totals?.month)}{amountField.unit ? ` ${amountField.unit}` : ""}</strong>
+        <strong>{shown(totals?.month)}</strong>
         <small>{monthName}</small>
       </div>
       <dl>
