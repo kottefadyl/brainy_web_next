@@ -396,7 +396,7 @@ const messages = {
     continueToWorkspace: "Continuer vers l’espace",
     noCollections: "Faites place à votre première idée",
     noCollectionsDetail: "Créez une collection et choisissez les champs à conserver.",
-    noEntries: "Aucune note pour le moment",
+    noEntries: "Aucune entrée pour le moment",
     noEntriesDetail: "Ajoutez une entrée avec les champs de cette collection.",
     writeEntry: "Écrire une entrée",
     newEntry: "Nouvelle entrée",

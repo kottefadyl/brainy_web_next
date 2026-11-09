@@ -1,0 +1,163 @@
+/* Light theme only: blue navigation (sidebar and mobile drawer) and collection header.
+   Every selector starts with html[data-theme="light"], so the dark theme is never affected.
+   Load this file after design-accents.css: it relies on source order at equal specificity. */
+
+/* ---------- Sidebar and drawer: tokens ---------- */
+html[data-theme="light"] .app-shell .sidebar,
+html[data-theme="light"] .mobile-drawer-panel {
+  --c-ink: #FFFFFF;
+  --c-muted: #DCE6FF;
+  --c-line: rgba(255, 255, 255, .18);
+  --c-line-strong: rgba(255, 255, 255, .42);
+  --c-accent: #FFFFFF;
+  --c-focus: #FFFFFF;
+  --ink: #FFFFFF;
+  --muted: #DCE6FF;
+  --line: rgba(255, 255, 255, .18);
+  --blue: #FFFFFF;
+  --blue-dark: #FFFFFF;
+  --focus: #FFFFFF;
+  --hover: rgba(255, 255, 255, .14);
+  --surface: rgba(255, 255, 255, .12);
+  --accent-soft: rgba(255, 255, 255, .14);
+  --control-border: rgba(255, 255, 255, .42);
+  --navigation-field: rgba(255, 255, 255, .12);
+  --navigation-hover: rgba(255, 255, 255, .14);
+  --nav-active: #FFFFFF;
+  --on-nav-active: #084BC4;
+  --primary: #FFFFFF;
+  --primary-hover: #E6EDFF;
+  --on-primary: #084BC4;
+  --tint-blue: rgba(255, 255, 255, .16);
+  --tint-green: rgba(255, 255, 255, .16);
+  --tint-red: rgba(255, 255, 255, .16);
+  --tint-ink: rgba(255, 255, 255, .16);
+  --ink-blue: #FFFFFF;
+  --ink-green: #FFFFFF;
+  --ink-red: #FFFFFF;
+  --ink-black: #FFFFFF;
+  --brand-ink: #FFFFFF;
+  --brand-blue: #A9C2FF;
+  --brand-chip-line: #084BC4;
+  --logo-red: #FF9AA0;
+  background: linear-gradient(180deg, #0B55DA 0%, #084BC4 52%, #063A9B 100%);
+  color: #FFFFFF;
+}
+html[data-theme="light"] .app-shell .sidebar { border-right-color: #063A9B; }
+
+/* ---------- Sidebar: brand and list ---------- */
+html[data-theme="light"] .app-shell .sidebar .brand-dot { color: #FF9AA0; }
+html[data-theme="light"] .app-shell .sidebar-top::after {
+  background: linear-gradient(90deg, #7CF0B4, #FFD166, #FF9AA0, #7CF0B4);
+  background-size: 200% 100%;
+}
+html[data-theme="light"] .app-shell .sidebar-total { background: #FFECBF; color: #7A4700; }
+html[data-theme="light"] .app-shell .collection-nav { scrollbar-color: rgba(255, 255, 255, .38) transparent; }
+html[data-theme="light"] .app-shell .collection-nav::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .38); }
+html[data-theme="light"] .app-shell .collection-nav[data-active-visible="true"]::before { background: #084BC4; }
+html[data-theme="light"] .app-shell .sidebar .nav-item.active { box-shadow: 0 4px 12px -4px rgba(10, 25, 90, .5); }
+html[data-theme="light"] .app-shell .sidebar .nav-item.active .nav-count { background: #084BC4; color: #FFFFFF; }
+html[data-theme="light"] .app-shell .sidebar .profile-avatar,
+html[data-theme="light"] .mobile-drawer-panel .profile-avatar { background: linear-gradient(135deg, #FFD166, #FF9AA0); color: #0A2A6B; }
+
+/* Collection icons: solid pastel tiles, because translucent hues turn muddy on the blue. */
+html[data-theme="light"] .app-shell .sidebar .collection-nav .nav-item:nth-child(6n+1) > svg:first-child { color: #0B55DA; background: #D9E8FF; }
+html[data-theme="light"] .app-shell .sidebar .collection-nav .nav-item:nth-child(6n+2) > svg:first-child { color: #0B7A45; background: #C9F5DC; }
+html[data-theme="light"] .app-shell .sidebar .collection-nav .nav-item:nth-child(6n+3) > svg:first-child { color: #C2255C; background: #FFDCE3; }
+html[data-theme="light"] .app-shell .sidebar .collection-nav .nav-item:nth-child(6n+4) > svg:first-child { color: #9A5B00; background: #FFECBF; }
+html[data-theme="light"] .app-shell .sidebar .collection-nav .nav-item:nth-child(6n+5) > svg:first-child { color: #6D3FD1; background: #E6DEFF; }
+html[data-theme="light"] .app-shell .sidebar .collection-nav .nav-item:nth-child(6n+6) > svg:first-child { color: #0B7285; background: #C8F3F3; }
+
+/* The menu opens on its own light surface, so it gets the regular light tokens back. */
+html[data-theme="light"] .app-shell .sidebar-more-options {
+  --ink: #0E1116;
+  --muted: #586070;
+  --hover: #EEF0F4;
+  --focus: #084BC4;
+  --c-ink: #0E1116;
+  --c-muted: #586070;
+  --c-focus: #084BC4;
+  border: 1px solid #E4E7EC;
+  border-radius: 12px;
+  background: #FFFFFF;
+  color: #0E1116;
+  box-shadow: 0 12px 28px -8px rgba(10, 25, 90, .4);
+}
+
+/* ---------- Mobile drawer ---------- */
+html[data-theme="light"] .mobile-drawer-panel .mobile-drawer-list button[aria-current="page"] {
+  border-left-color: #084BC4;
+  background: #FFFFFF;
+  color: #084BC4;
+}
+html[data-theme="light"] .mobile-drawer-panel .mobile-drawer-count {
+  min-width: 24px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-weight: 700;
+  text-align: center;
+}
+html[data-theme="light"] .mobile-drawer-panel .mobile-drawer-list button:nth-child(6n+1) .mobile-drawer-count { color: #084BC4; background: #D9E8FF; }
+html[data-theme="light"] .mobile-drawer-panel .mobile-drawer-list button:nth-child(6n+2) .mobile-drawer-count { color: #0B6B3D; background: #C9F5DC; }
+html[data-theme="light"] .mobile-drawer-panel .mobile-drawer-list button:nth-child(6n+3) .mobile-drawer-count { color: #B01E50; background: #FFDCE3; }
+html[data-theme="light"] .mobile-drawer-panel .mobile-drawer-list button:nth-child(6n+4) .mobile-drawer-count { color: #7A4700; background: #FFECBF; }
+html[data-theme="light"] .mobile-drawer-panel .mobile-drawer-list button:nth-child(6n+5) .mobile-drawer-count { color: #5B32B8; background: #E6DEFF; }
+html[data-theme="light"] .mobile-drawer-panel .mobile-drawer-list button:nth-child(6n+6) .mobile-drawer-count { color: #0A6474; background: #C8F3F3; }
+html[data-theme="light"] .mobile-drawer-head strong::after { background: #FFFFFF; }
+
+/* ---------- Collection header ---------- */
+html[data-theme="light"] .app-shell .collection-hero {
+  border-color: #084BC4;
+  background:
+    radial-gradient(55% 120% at 100% 0%, rgba(167, 139, 250, .28), transparent 65%),
+    radial-gradient(50% 120% at 100% 100%, rgba(52, 211, 153, .16), transparent 62%),
+    radial-gradient(70% 140% at 0% 100%, rgba(4, 30, 100, .34), transparent 62%),
+    linear-gradient(118deg, #0B55DA 0%, #084BC4 52%, #063A9B 100%);
+  background-size: 140% 140%, 140% 140%, 140% 140%, 100% 100%;
+  box-shadow: 0 14px 30px -16px rgba(8, 75, 196, .65), 0 1px 2px rgba(16, 24, 40, .08);
+}
+html[data-theme="light"] .app-shell .collection-hero::before {
+  background: linear-gradient(90deg, #7CF0B4, #FFD166, #FF9AA0, #7CF0B4);
+  background-size: 200% 100%;
+}
+html[data-theme="light"] .app-shell .collection-hero::after { filter: brightness(0) invert(1); opacity: .12; }
+html[data-theme="light"] .app-shell .collection-hero .eyebrow { color: #DCE6FF; }
+html[data-theme="light"] .app-shell .collection-hero h1 { color: #FFFFFF; }
+html[data-theme="light"] .app-shell .collection-hero .collection-icon {
+  background: linear-gradient(140deg, #FFF3D1, #FFD98A);
+  color: #8A4B00;
+  box-shadow: 0 8px 18px -8px rgba(10, 25, 90, .6);
+}
+html[data-theme="light"] .app-shell .collection-meta > span:first-child { background: #D9E8FF; color: #084BC4; }
+html[data-theme="light"] .app-shell .collection-meta > span:last-child { background: #C9F5DC; color: #0B6B3D; }
+
+/* ---------- Collection header: actions ---------- */
+html[data-theme="light"] .app-shell .collection-hero-actions > .button,
+html[data-theme="light"] .app-shell .collection-hero-more > summary {
+  --focus: #FFFFFF;
+  --c-focus: #FFFFFF;
+}
+html[data-theme="light"] .app-shell .collection-hero-actions .hero-add-entry {
+  border-color: #FFFFFF;
+  background: #FFFFFF;
+  color: #084BC4;
+  box-shadow: 0 6px 14px -6px rgba(10, 25, 90, .6);
+}
+html[data-theme="light"] .app-shell .collection-hero-actions .hero-add-entry:hover:not(:disabled) {
+  border-color: #E6EDFF;
+  background: #E6EDFF;
+  color: #084BC4;
+}
+html[data-theme="light"] .app-shell .collection-hero-actions .button:not(.hero-add-entry) {
+  border-color: rgba(255, 255, 255, .45);
+  background: rgba(255, 255, 255, .12);
+  color: #FFFFFF;
+  box-shadow: none;
+}
+html[data-theme="light"] .app-shell .collection-hero-actions .button:not(.hero-add-entry) svg { color: #8CF0B8; }
+html[data-theme="light"] .app-shell .collection-hero-actions .button:not(.hero-add-entry):hover:not(:disabled),
+html[data-theme="light"] .app-shell .collection-hero-more[open] summary {
+  border-color: rgba(255, 255, 255, .7);
+  background: rgba(255, 255, 255, .22);
+  color: #FFFFFF;
+}
