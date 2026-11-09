@@ -15,6 +15,8 @@ const frenchReasons: Record<string, string> = {
   "Return quantity exceeds the sale": "La quantité retournée dépasse la sortie",
 };
 
+export const stockNumber = (value: string, language: Language) => language === "fr" ? String(value).replace(".", ",") : String(value);
+
 export const stockKindLabel = (kind: string, language: Language) => kinds[kind]?.[language === "fr" ? 1 : 0] ?? kind;
 
 export const stockReasonLabel = (reason: string, language: Language) => language === "fr" ? frenchReasons[reason] ?? reason : reason;
