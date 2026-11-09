@@ -22,7 +22,7 @@
   html[data-theme] .app-shell .topbar :is(.theme-toggle, .language-picker summary, .refresh-button, .mobile-menu-button):hover,
   html[data-theme] .app-shell .topbar .language-picker[open] summary { background: var(--c-hover); }
   /* The code alone is enough here: the accessible name still states the language. */
-  html[data-theme] .app-shell .topbar .language-picker summary { display: flex; font-size: 13px; font-weight: 700; letter-spacing: .02em; }
+  html[data-theme] .app-shell .topbar .language-picker summary { padding-top: 2px; font-size: 13px; font-weight: 700; letter-spacing: .02em; }
   html[data-theme] .app-shell .topbar .language-picker summary > svg,
   html[data-theme] .app-shell .topbar .language-picker summary::after { display: none; }
   html[data-theme] .app-shell .topbar :is(.theme-toggle, .refresh-button) svg { width: 19px; height: 19px; }
