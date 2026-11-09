@@ -43,7 +43,7 @@ export type SharedObjectGrant = { id: string; sourceCollectionId: string; source
 export type CollectionRole = "OWNER" | "EDITOR" | "READER";
 export type CollectionMember = { userId: string; email: string; name: string; role: CollectionRole; addedAt: string; sharedFieldIds?: string[]; sensitiveFieldIds?: string[] };
 export type AuditLog = { id: string; collectionId: string; userId: string; action: string; details?: string | null; occurredAt: string };
-export type Collection = { id: string; name: string; ownerId?: string; minAggregateSize?: number; fields: Field[]; formats: CollectionFormat[]; codeLists: ClassificationList[]; units: CollectionUnit[]; exchangeRates: ExchangeRate[]; sharedObjects: SharedObjectGrant[]; savedViews: SavedView[]; formulas: Formula[]; stockRules?: StockRule[]; allowNegativeStock?: boolean; members?: CollectionMember[] };
+export type Collection = { id: string; name: string; ownerId?: string; minAggregateSize?: number; periodTotals?: { formatId: string; dateFieldId: string; amountFieldId: string } | null; fields: Field[]; formats: CollectionFormat[]; codeLists: ClassificationList[]; units: CollectionUnit[]; exchangeRates: ExchangeRate[]; sharedObjects: SharedObjectGrant[]; savedViews: SavedView[]; formulas: Formula[]; stockRules?: StockRule[]; allowNegativeStock?: boolean; members?: CollectionMember[] };
 export type Entry = {
   id: string;
   offlinePending?: boolean;

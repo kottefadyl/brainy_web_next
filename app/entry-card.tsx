@@ -15,6 +15,9 @@ export default function EntryCard({ entry, collection, language, selected, onDet
   const title = titleField ? values[titleField.id] : null;
   const preview = visible.find((field) => field.id !== titleField?.id);
   const previewValue = preview && preview.kind !== "OBJECT_REF" && preview.kind !== "ATTACHMENT" ? formatFieldValue(preview, values[preview.id], language, entry.values.find((item) => item.fieldId === preview.id)?.unitSnapshot, collection) : null;
+  // Without a title the first value heads the row, so the next readable one takes the preview place.
+  const second = title ? undefined : visible.slice(1).find((field) => field.kind !== "OBJECT_REF" && field.kind !== "ATTACHMENT");
+  const secondValue = second ? formatFieldValue(second, values[second.id], language, entry.values.find((item) => item.fieldId === second.id)?.unitSnapshot, collection) : null;
   const edited = Math.abs(new Date(entry.updatedAt).getTime() - new Date(entry.createdAt).getTime()) > 2000;
   return (
     <article className="entry-card entry-row" style={formatColorStyle(format.color)} data-selected={selected || undefined}>
@@ -29,6 +32,7 @@ export default function EntryCard({ entry, collection, language, selected, onDet
         <div className="entry-row-content">
           <h3 className="entry-title"><button type="button" onClick={onDetails} title={title ?? undefined}>{title ?? previewValue ?? formatDisplayName(format, language)}</button></h3>
           {title && previewValue && <span className="entry-preview" title={previewValue}>{previewValue}</span>}
+          {secondValue && <span className="entry-preview" title={secondValue}>{secondValue}</span>}
         </div>
         <EntryRowActions language={language} appendOnly={!!format.appendOnly} onDetails={onDetails} onCopy={onCopy} onEdit={onEdit} onDelete={onDelete} onLinks={onLinks} onReminder={onReminder} />
       </div>

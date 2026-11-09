@@ -165,6 +165,16 @@ export type ClassificationCodeInput = {
   parentCode?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type ClassificationCodePath = {
+  __typename?: 'ClassificationCodePath';
+  active: Scalars['Boolean']['output'];
+  code: Scalars['String']['output'];
+  label: Scalars['String']['output'];
+  level: Scalars['Int']['output'];
+  /** Labels of the ancestors, from the root; the code itself is not included */
+  path: Array<Scalars['String']['output']>;
+};
+
 export type ClassificationCopyPreview = {
   __typename?: 'ClassificationCopyPreview';
   allowed: Scalars['Boolean']['output'];
@@ -213,6 +223,7 @@ export type Collection = {
   minAggregateSize?: Maybe<Scalars['Float']['output']>;
   name: Scalars['String']['output'];
   ownerId: Scalars['String']['output'];
+  periodTotals?: Maybe<CollectionPeriodTotals>;
   savedViews: Array<SavedCollectionView>;
   sharedObjects: Array<SharedObjectGrant>;
   stockRules: Array<StockRule>;
@@ -312,6 +323,13 @@ export type CollectionMember = {
   sensitiveFieldIds?: Maybe<Array<Scalars['String']['output']>>;
   sharedFieldIds?: Maybe<Array<Scalars['String']['output']>>;
   userId: Scalars['String']['output'];
+};
+
+export type CollectionPeriodTotals = {
+  __typename?: 'CollectionPeriodTotals';
+  amountFieldId: Scalars['String']['output'];
+  dateFieldId: Scalars['String']['output'];
+  formatId: Scalars['String']['output'];
 };
 
 export enum CollectionRole {
@@ -873,6 +891,16 @@ export type FormulaInput = {
   name: Scalars['String']['input'];
 };
 
+export type FormulaPreview = {
+  __typename?: 'FormulaPreview';
+  dimension?: Maybe<Scalars['String']['output']>;
+  entryId: Scalars['String']['output'];
+  entryLabel?: Maybe<Scalars['String']['output']>;
+  missing?: Maybe<Scalars['String']['output']>;
+  unit?: Maybe<Scalars['String']['output']>;
+  value?: Maybe<Scalars['String']['output']>;
+};
+
 export type FormulaResult = {
   __typename?: 'FormulaResult';
   dimension?: Maybe<Scalars['String']['output']>;
@@ -880,6 +908,15 @@ export type FormulaResult = {
   missing?: Maybe<Scalars['String']['output']>;
   unit?: Maybe<Scalars['String']['output']>;
   value?: Maybe<Scalars['String']['output']>;
+};
+
+export type FormulaStaticType = {
+  __typename?: 'FormulaStaticType';
+  dimension?: Maybe<Scalars['String']['output']>;
+  type: Scalars['String']['output'];
+  unit?: Maybe<Scalars['String']['output']>;
+  /** True when the unit can only be known while calculating */
+  unitOpen: Scalars['Boolean']['output'];
 };
 
 export type GeoDistance = {
@@ -1923,6 +1960,7 @@ export type Query = {
   backgroundJob: BackgroundJob;
   backgroundJobs: Array<BackgroundJob>;
   calculateCollectionFormula: FormulaResult;
+  classificationCodePaths: Array<ClassificationCodePath>;
   classificationCopyPreview: ClassificationCopyPreview;
   classificationMergePreview: ClassificationMergePreview;
   collectionAuditLogs: Array<AuditLog>;
@@ -1963,6 +2001,7 @@ export type Query = {
   exportGeoPoints: Scalars['String']['output'];
   forecastCollection: ForecastResult;
   health: Scalars['String']['output'];
+  inferCollectionFormula: FormulaStaticType;
   largeFileDownloadLink: LargeFileLink;
   largeFileUpload: LargeFileUpload;
   ledgerBalance: Scalars['String']['output'];
@@ -1976,6 +2015,7 @@ export type Query = {
   objectMovePreview: TransferPreview;
   objectVariableProperty: ResolvedObjectVariable;
   previewClassificationCsv: ClassificationCsvPreview;
+  previewCollectionFormula?: Maybe<FormulaPreview>;
   previewDomainPackage: DomainPackagePreview;
   previewEntryStockEffect: StockPreview;
   previewGeoImport: GeoImportResult;
@@ -2015,6 +2055,13 @@ export type QueryCalculateCollectionFormulaArgs = {
   collectionId: Scalars['String']['input'];
   entryId: Scalars['String']['input'];
   formulaId: Scalars['String']['input'];
+};
+
+
+export type QueryClassificationCodePathsArgs = {
+  collectionId: Scalars['String']['input'];
+  language?: InputMaybe<Scalars['String']['input']>;
+  listId: Scalars['String']['input'];
 };
 
 
@@ -2274,6 +2321,13 @@ export type QueryForecastCollectionArgs = {
 };
 
 
+export type QueryInferCollectionFormulaArgs = {
+  collectionId: Scalars['String']['input'];
+  expression: Scalars['String']['input'];
+  formatId: Scalars['String']['input'];
+};
+
+
 export type QueryLargeFileDownloadLinkArgs = {
   entryId: Scalars['String']['input'];
   fieldId: Scalars['String']['input'];
@@ -2336,6 +2390,13 @@ export type QueryObjectVariablePropertyArgs = {
 
 export type QueryPreviewClassificationCsvArgs = {
   csv: Scalars['String']['input'];
+};
+
+
+export type QueryPreviewCollectionFormulaArgs = {
+  collectionId: Scalars['String']['input'];
+  expression: Scalars['String']['input'];
+  formatId: Scalars['String']['input'];
 };
 
 

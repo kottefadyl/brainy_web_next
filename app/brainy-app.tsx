@@ -50,6 +50,7 @@ import OfflineSyncPanel from "./offline-sync-panel";
 import { queueEntry, reviseQueuedEntry } from "../lib/offline-queue";
 import QuickCaptureDialog from "./quick-capture-dialog";
 import QuickEntryDialog from "./quick-entry-dialog";
+import PeriodTotalsPanel from "./period-totals-panel";
 import { bookText, downloadTransfer, exportCollection, importCollection, parseTransfer, transferCsv, transferMapping, type TransferBundle } from "../lib/transfer";
 import {
   effectiveFieldSensitivity, entryClipboardText, fieldKindLabel, fieldKinds, formatColors, formatDisplayName, formatFieldValue, formatForEntry, numberUnits,
@@ -1201,6 +1202,7 @@ export default function BrainyApp() {
 
 
             <CollectionHeader collection={selected} entryCount={entries.length} language={language} onNewEntry={() => setDialog({ kind: "entry" })} onInsights={() => setActiveSection("insights")} onRename={() => { setRename(selected.name); setDialogError(""); setDialog({ kind: "rename" }); }} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteCollection" }); }} onPackages={() => setDialog({ kind: "packages" })} />
+            {selected.periodTotals && <PeriodTotalsPanel key={selected.id} collection={selected} entries={entries} language={language} onSaved={(entry) => setEntries((current) => [entry, ...current])} />}
             <CollectionTabs language={language} value={collectionTab} onChange={(tab) => setTabSelection({ collectionId: selectedId, tab })} />
             <CollectionTabPanel tab="entries" active={collectionTab === "entries"}>
             <div id="collection-entries" className="entries-heading"><div><span className="section-overline">{t(language, "savedEntries")}</span><h2>{t(language, "entries")} <span>{entries.length} {language === "fr" ? entries.length === 1 ? "entrée" : "entrées" : entries.length === 1 ? "entry" : "entries"}</span></h2></div><Button variant="secondary" onClick={() => setQuickEntry(true)}>{language === "fr" ? "Saisie rapide" : "Quick entry"}</Button></div>
