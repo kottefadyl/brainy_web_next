@@ -1,0 +1,33 @@
+/* Workspace top bar on the narrowest phones (320 px class). Loaded last: it ties on specificity with design-system.css. */
+@media (max-width: 340px) {
+  html[data-theme] .app-shell .topbar {
+    min-height: 56px;
+    padding: 6px 12px;
+    gap: 4px;
+  }
+  html[data-theme] .app-shell .topbar-right { gap: 2px; }
+  html[data-theme] .app-shell .topbar :is(.theme-toggle, .language-picker summary, .refresh-button, .mobile-menu-button) {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--c-ink);
+    box-shadow: none;
+    transition: background-color 120ms ease-out;
+  }
+  html[data-theme] .app-shell .topbar :is(.theme-toggle, .language-picker summary, .refresh-button, .mobile-menu-button):hover,
+  html[data-theme] .app-shell .topbar .language-picker[open] summary { background: var(--c-hover); }
+  /* The code alone is enough here: the accessible name still states the language. */
+  html[data-theme] .app-shell .topbar .language-picker summary { display: flex; font-size: 13px; font-weight: 700; letter-spacing: .02em; }
+  html[data-theme] .app-shell .topbar .language-picker summary > svg,
+  html[data-theme] .app-shell .topbar .language-picker summary::after { display: none; }
+  html[data-theme] .app-shell .topbar :is(.theme-toggle, .refresh-button) svg { width: 19px; height: 19px; }
+  /* The only way to the collections on a phone, so the one control that keeps a fill. */
+  html[data-theme] .app-shell .topbar .topbar-right .mobile-menu-button { margin-left: 2px; background: var(--c-accent-soft); color: var(--c-accent); }
+  html[data-theme] .app-shell .topbar .topbar-right .mobile-menu-button:hover { background: color-mix(in srgb, var(--primary) 16%, transparent); }
+  html[data-theme] .app-shell .topbar .mobile-menu-button svg { width: 20px; height: 20px; }
+}
