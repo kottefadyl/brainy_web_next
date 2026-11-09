@@ -469,7 +469,7 @@ export const api = {
   async useObject(objectId: string, targetFormatId: string, targetFieldId: string): Promise<Entry> {
     return (await request<{ useCollectionObject: Entry }>(`mutation Use($objectId: String!, $targetFormatId: String!, $targetFieldId: String!) { useCollectionObject(objectId: $objectId, targetFormatId: $targetFormatId, targetFieldId: $targetFieldId) { ${entryFields} } }`, { objectId, targetFormatId, targetFieldId })).useCollectionObject;
   },
-  async saveEntry(collectionId: string, values: { fieldId: string; value: string; attachmentBase64?: string; attachmentMimeType?: string; largeFileId?: string }[], entryId?: string, formatId?: string, sync?: { clientMutationId?: string; expectedUpdatedAt?: string }): Promise<Entry> {
+  async saveEntry(collectionId: string, values: { fieldId: string; value: string; attachmentBase64?: string; attachmentMimeType?: string; largeFileId?: string; measureValue?: Entry["values"][number]["measureValue"] }[], entryId?: string, formatId?: string, sync?: { clientMutationId?: string; expectedUpdatedAt?: string }): Promise<Entry> {
     const key = entryId ? "updateEntry" : "createEntry";
     const query = entryId
       ? `mutation UpdateEntry($id: String!, $input: SaveEntryInput!) { updateEntry(id: $id, input: $input) { ${entryFields} } }`

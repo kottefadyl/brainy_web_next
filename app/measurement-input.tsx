@@ -26,6 +26,7 @@ type Props = {
   } | null;
   unit?: string | null;
   language: Language;
+  label: string;
   onChange: (value: string, measureValue: MeasureValueState) => void;
 };
 
@@ -34,6 +35,7 @@ export default function MeasurementInput({
   measureValue,
   unit,
   language,
+  label,
   onChange,
 }: Props) {
   const fr = language === "fr";
@@ -77,6 +79,7 @@ export default function MeasurementInput({
         <input
           type="text"
           inputMode="decimal"
+          aria-label={label}
           disabled={status === "ABSENT"}
           placeholder={status === "ABSENT" ? (fr ? "Valeur absente" : "Absent value") : "0.0"}
           value={status === "ABSENT" ? "" : value}
@@ -89,6 +92,7 @@ export default function MeasurementInput({
           </span>
         )}
         <select
+          aria-label={fr ? `Statut de ${label}` : `${label} status`}
           value={status}
           onChange={(e) => {
             const nextStatus = e.target.value as MeasureValueState["status"];

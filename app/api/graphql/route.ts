@@ -64,7 +64,8 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({ query: body.query, variables: body.variables ?? {} }),
       cache: "no-store",
-      signal: AbortSignal.timeout(backupRequest ? 120000 : 12000),
+      // A large analysis takes up to about 33 s on one million entries (T22).
+      signal: AbortSignal.timeout(backupRequest ? 120000 : /\banalyseCollection\b/.test(body.query) ? 60000 : 12000),
     });
     const payload = await upstream.json() as Record<string, unknown>;
     const token = findSessionToken(payload.data);
