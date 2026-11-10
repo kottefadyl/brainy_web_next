@@ -184,6 +184,56 @@ export function entryCount(count: number, language: Language): string {
   return `${number} ${count === 1 ? "entry" : "entries"}`;
 }
 
+export const MAX_SERIES = 4;
+const PERIOD_GROUPS = new Set(["DAY", "MONTH"]);
+const SERIES_GROUPS = new Set(["CATEGORY", "OBJECT"]);
+export type MultiSeries = {
+  periods: string[];
+  series: { key: string; label: string; total: number; points: (SeriesPoint | undefined)[] }[];
+  hiddenSeries: number;
+  skippedRows: number;
+};
+
+/**
+ * Turns a cross-tabulation of periods × categories into one series per
+ * category, all in the same unit. The categories with the largest totals are
+ * drawn; the table keeps every cell. Null when the result has no period axis.
+ */
+export function splitCrossTab(rows: Row[], groupBy: string | undefined, secondaryGroupBy: string | undefined): MultiSeries | null {
+  const periodFirst = PERIOD_GROUPS.has(groupBy ?? "") && SERIES_GROUPS.has(secondaryGroupBy ?? "");
+  const periodSecond = SERIES_GROUPS.has(groupBy ?? "") && PERIOD_GROUPS.has(secondaryGroupBy ?? "");
+  if (!periodFirst && !periodSecond) return null;
+  const cells: { period: string; key: string; label: string; row: Row }[] = [];
+  let skippedRows = 0;
+  for (const row of rows) {
+    if (!row.rowKey || !row.columnKey) return null;
+    const period = periodFirst ? row.rowKey : row.columnKey;
+    const key = periodFirst ? row.columnKey : row.rowKey;
+    if (!periodDate(period)) { skippedRows += 1; continue; }
+    // The API writes "<row label> × <column label>"; a period is written as its own key.
+    const label = periodFirst
+      ? (row.label.startsWith(`${period} × `) ? row.label.slice(period.length + 3) : key)
+      : (row.label.endsWith(` × ${period}`) ? row.label.slice(0, -(period.length + 3)) : key);
+    cells.push({ period, key, label, row });
+  }
+  const periods = [...new Set(cells.map((cell) => cell.period))].sort();
+  if (periods.length < 2) return null;
+  const totals = new Map<string, { label: string; total: number }>();
+  for (const cell of cells) {
+    const current = totals.get(cell.key) ?? { label: cell.label, total: 0 };
+    current.total += Math.abs(toValue(cell.row));
+    totals.set(cell.key, current);
+  }
+  const chosen = [...totals.entries()].sort((a, b) => b[1].total - a[1].total || a[1].label.localeCompare(b[1].label)).slice(0, MAX_SERIES);
+  const index = new Map(periods.map((period, position) => [period, position]));
+  const series = chosen.map(([key, { label, total }]) => {
+    const points: (SeriesPoint | undefined)[] = periods.map(() => undefined);
+    for (const cell of cells) if (cell.key === key) points[index.get(cell.period)!] = { row: cell.row, value: toValue(cell.row) };
+    return { key, label, total, points };
+  });
+  return { periods, series, hiddenSeries: totals.size - chosen.length, skippedRows };
+}
+
 /** Quotes a cell; text that a spreadsheet would run as a formula is neutralized. */
 function csvText(value: string): string {
   const safe = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;

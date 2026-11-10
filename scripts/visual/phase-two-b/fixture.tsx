@@ -12,6 +12,8 @@ import EntryCard from "../../../app/entry-card";
 import { EntriesEmptyState } from "../../../app/entries-list-states";
 import { AccessibleListbox } from "../../../app/components/ui/AccessibleListbox";
 import { AnalysisResultChart } from "../../../app/analysis-result-chart";
+import { AnalysisMultiSeriesChart } from "../../../app/analysis-multi-series-chart";
+import { splitCrossTab } from "../../../lib/chart-math";
 import Modal from "../../../app/components/ui/Modal";
 import OsmMap from "../../../app/osm-map";
 import { CodeFieldPicker } from "../../../app/code-field-picker";
@@ -65,6 +67,10 @@ export default function PhaseTwoBPreview() {
   const chartRow = (group: string, value: number, count: number) => ({ group, label: group, value: String(value), count, sources: [], sourcesHasMore: false });
   const compareRows = months.map((month, i) => chartRow(month, [12450, 13800, 11200, 15600, 0, 9000, 14200, 16100, 15000, 17300, 12000, 18250][i], 42 + i));
   const previousRows = months.map((month, i) => chartRow(month.replace("2026", "2025"), [9000, 12000, 10500, 11800, 12600, 9400, 13100, 12000, 13900, 14500, 11000, 15000][i], 30 + i));
+  // Month × product cross-tabulation: six products, so two are left to the table; February has no tea.
+  const products = [["pain", "Pain de campagne au levain naturel", 4200], ["cafe", "Café", 3100], ["the", "Thé", 900], ["jus", "Jus d’orange", 1500], ["gateau", "Gâteaux", 700], ["soupe", "Soupe", 300]] as const;
+  const crossRows = [...months.flatMap((month, i) => products.flatMap(([key, label, base], p) => key === "the" && i === 1 ? [] : [{ group: `${month} × ${key}`, label: `${month} × ${label}`, rowKey: month, columnKey: key, value: String(Math.round(base * (1 + 0.25 * Math.sin(i / 2 + p)))), count: 10 + i + p, sources: [], sourcesHasMore: false }])),
+    { group: "Missing date × pain", label: "Missing date × Pain de campagne au levain naturel", rowKey: "Missing date", columnKey: "pain", value: "50", count: 1, sources: [], sourcesHasMore: false }];
   const denseRows = Array.from({ length: 500 }, (_, i) => chartRow(new Date(Date.UTC(2025, 0, 1 + i)).toISOString().slice(0, 10), i === 250 ? 900 : 100 + Math.round(40 * Math.sin(i / 9)), 1));
   const rows = (view === "one" ? [{ group: "a", label: "Novembre", value: "305", count: 4 }] : [
     { group: "a", label: "Lundi", value: "120", count: 3 },
@@ -77,7 +83,7 @@ export default function PhaseTwoBPreview() {
       onSelect={setSelected} onTemplate={noop} onManual={noop} onTransfer={noop} onTools={() => setTools(true)} onEditProfile={noop} onSignOut={noop} />
     <main className="workspace"><header className="topbar"><span>Brainy</span><LanguagePicker language={language} onChange={setLanguage} /></header><div className="workspace-body">{section !== "collection" ? <button type="button" id="preview-back" className="analysis-back" onClick={() => setSection("collection")}>Back</button> : <>
       <div className="preview-controls">
-        {["formats", "entries", "empty", "tools", "one", "many", "compare", "dense", "map"].map((item) => <button key={item} type="button" onClick={() => setView(item)}>{item}</button>)}
+        {["formats", "entries", "empty", "tools", "one", "many", "compare", "dense", "multi", "map"].map((item) => <button key={item} type="button" onClick={() => setView(item)}>{item}</button>)}
         <button type="button" onClick={() => { const next = theme === "light" ? "dark" : "light"; setTheme(next); document.documentElement.dataset.theme = next; }}>Theme</button>
         <button type="button" onClick={() => setLanguage(language === "fr" ? "en" : "fr")}>Language</button>
         <button type="button" onClick={() => setModal(true)}>Modal</button>
@@ -95,6 +101,7 @@ export default function PhaseTwoBPreview() {
       {view === "tools" && <CollectionToolsHub collection={collection} user={{ id: "u", name: "Test", email: "test@example.com", interests: [], hobbies: [], profileCompleted: true }} language={language} defaultOpen={returnTool !== null} onOpenSection={(next) => { setLastAction(`section:${next}`); rememberTool(next); setSection(next); }} onOpenDialog={(kind) => setLastAction(`dialog:${kind}`)} />}
       {view === "map" && <div className="geo-map-view"><OsmMap points={[{ entryId: "p0", name: "Chantier Nord", latitude: 50.63, longitude: 3.06 }, { entryId: "p1", name: "Tournée Paris", latitude: 48.8566, longitude: 2.3522, accuracy: 12 }, { entryId: "p2", name: "Enquête Lyon", latitude: 45.764, longitude: 4.8357 }, { entryId: "p3", name: "Dépôt Marseille", latitude: 43.2965, longitude: 5.3698 }]} formatColor={formats[1].color} language={language} selected={["p3"]} onOpenEntry={(id) => setLastAction(`open:${id}`)} /></div>}
       {view === "compare" && <div className="analysis-page"><AnalysisResultChart rows={compareRows} comparisonRows={previousRows} unit="EUR" language={language} title="Sum" /></div>}
+      {view === "multi" && <div className="analysis-page"><AnalysisMultiSeriesChart multi={splitCrossTab(crossRows, "MONTH", "CATEGORY")!} rows={crossRows} unit="EUR" language={language} title="Sum" /></div>}
       {view === "dense" && <div className="analysis-page"><AnalysisResultChart rows={denseRows} unit="g" language={language} title="Dense" /></div>}
       {(view === "one" || view === "many") && <div className="analysis-page"><AnalysisResultChart rows={rows} unit="g" language={language} /></div>}
       <AccessibleListbox label={language === "fr" ? "Format de données" : "Data format"} value={value} options={[{ id: "", label: language === "fr" ? "Tous les formats de données" : "All data formats" }, ...formats.map((item) => ({ id: item.id, label: item.name, swatch: item.color }))]} onChange={setValue} />

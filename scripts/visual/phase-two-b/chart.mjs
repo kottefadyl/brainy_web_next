@@ -2,7 +2,7 @@
 // dedicated Chrome from README.md. Synthetic data only.
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
-import { alignSeries, chartCsv, chooseAxisTicks, deltaPercent, lttbIndices, niceScale } from "../../../lib/chart-math.ts";
+import { alignSeries, chartCsv, chooseAxisTicks, deltaPercent, lttbIndices, niceScale, splitCrossTab } from "../../../lib/chart-math.ts";
 
 // Pure logic first: it needs neither a browser nor a server.
 assert.deepEqual(lttbIndices([1, 2, 3], 10), [0, 1, 2]);
@@ -43,6 +43,22 @@ const row = (group, value, count = 1) => ({ group, label: group, value, count, s
   const ticks = chooseAxisTicks(days, days.map((_, i) => 20 + i * 100), "en");
   assert.ok(ticks.length >= 3, "a thinned series still gets calendar ticks");
   assert.equal(new Set(ticks.map((tick) => tick.label)).size, ticks.length, "no repeated tick");
+}
+{
+  // Period × category cross-tabulations become one series per category (T23/2).
+  const cell = (period, key, label, value) => ({ group: `${period} × ${key}`, label: `${period} × ${label}`, rowKey: period, columnKey: key, value: String(value), count: 1, sources: [], sourcesHasMore: false });
+  const cells = ["2026-02", "2026-01"].flatMap((period) => [["a", "Alpha × bêta", 1], ["b", "B", 50], ["c", "C", -30], ["d", "D", 5], ["e", "E", 2]].map(([key, label, value]) => cell(period, key, label, value)));
+  const split = splitCrossTab([...cells, cell("Missing date", "a", "Alpha × bêta", 9)], "MONTH", "CATEGORY");
+  assert.deepEqual(split.periods, ["2026-01", "2026-02"], "periods in calendar order");
+  assert.deepEqual(split.series.map((series) => series.key), ["b", "c", "d", "e"], "the four largest totals, by magnitude");
+  assert.equal(split.hiddenSeries, 1);
+  assert.equal(split.skippedRows, 1, "a value without a date is counted, not drawn");
+  const swapped = splitCrossTab([cell("2026-01", "a", "Alpha × bêta", 1), cell("2026-02", "a", "Alpha × bêta", 2)].map((row) => ({ ...row, rowKey: row.columnKey, columnKey: row.rowKey, label: `Alpha × bêta × ${row.rowKey}` })), "CATEGORY", "MONTH");
+  assert.equal(swapped.series[0].label, "Alpha × bêta", "a label containing × survives when the period is the second axis");
+  assert.deepEqual(swapped.series[0].points.map((point) => point.value), [1, 2]);
+  assert.equal(splitCrossTab(cells, "CATEGORY", "OBJECT"), null, "no period axis, no series chart");
+  const gap = splitCrossTab([cell("2026-01", "a", "A", 1), cell("2026-02", "b", "B", 1)], "MONTH", "CATEGORY");
+  assert.equal(gap.series[0].points[1], undefined, "a missing cell is a gap, not a zero");
 }
 console.log("PASS: chart logic.");
 if (process.argv.includes("--logic")) process.exit(0);
@@ -242,6 +258,60 @@ async function denseScenario(tag) {
   assert.equal(drawn.pathLength, "1500", "dash is relative to the whole line");
 }
 
+async function multiScenario(language, tag) {
+  const fr = language === "fr";
+  await showView("multi");
+  await assertLayout(`${tag} multi`);
+  const drawn = await evaluate("(()=>{const c=document.querySelector('.analysis-multi-chart');return {lines:c.querySelectorAll('polyline.analysis-line-path').length,dashes:[...new Set([...c.querySelectorAll('polyline.analysis-line-path')].map(p=>p.getAttribute('stroke-dasharray')??'solid'))].length,legend:c.querySelectorAll('.analysis-legend-item').length,note:[...c.querySelectorAll('.analysis-chart-note')].map(n=>n.textContent).join(' | ')}})()");
+  assert(drawn.lines >= 4 && drawn.dashes === 4 && drawn.legend === 4, `${tag} series ${JSON.stringify(drawn)}`);
+  assert.match(drawn.note, fr ? /4 catégories sur 6/ : /4 of 6 categories/);
+  assert.match(drawn.note, fr ? /1 valeur sans date/ : /1 value without a date/);
+  const contrast = await evaluate(`(()=>{${helpers};const c=document.querySelector('.analysis-multi-chart'),b=under(c);return [...c.querySelectorAll('polyline.analysis-line-path')].map(p=>ratio(rgb(getComputedStyle(p).stroke),b))})()`);
+  assert(contrast.every((value) => value >= 3), `${tag} series contrast ${JSON.stringify(contrast)}`);
+  const legendFit = await evaluate("(()=>{const r=[...document.querySelectorAll('.analysis-multi-chart .analysis-legend-item')].map(e=>e.getBoundingClientRect());return r.every(x=>x.right<=innerWidth&&x.height>=44)})()");
+  assert(legendFit, `${tag} legend targets`);
+  // February has no tea: the tooltip says so instead of showing zero.
+  await mouseTo(".analysis-multi-chart .analysis-chart-target", 1);
+  const tip = await tipState();
+  assert(tip.open && tip.inside, `${tag} multi tooltip ${JSON.stringify(tip)}`);
+  assert.match(tip.text, fr ? /février 2026/ : /February 2026/);
+  assert.match(tip.text, fr ? /aucune donnée/ : /no data/);
+  assert.equal(await evaluate("document.querySelectorAll('.analysis-tooltip-series').length"), 4);
+  await capture(`${tag}-multi-tooltip`);
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: 1, y: 1 });
+  await pause(150);
+  // Hiding series, but never the last one.
+  for (const index of [0, 1, 2, 3]) await clickAt(".analysis-multi-chart .analysis-legend-item", index);
+  const left = await evaluate("[document.querySelectorAll('.analysis-multi-chart .analysis-legend-item[aria-pressed=true]').length,document.querySelectorAll('.analysis-multi-chart .analysis-tooltip-series').length]");
+  assert.equal(left[0], 1, `${tag} one series always stays`);
+  for (const index of [0, 1, 2]) await clickAt(".analysis-multi-chart .analysis-legend-item", index);
+  assert.equal(await evaluate("document.querySelectorAll('.analysis-multi-chart .analysis-legend-item[aria-pressed=true]').length"), 4);
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: 1, y: 1 });
+  await pause(150);
+  // Keyboard path.
+  await evaluate("document.querySelector('.analysis-multi-chart .analysis-chart-target[tabindex=\"0\"]').focus()");
+  await press("End");
+  assert.match((await tipState()).text, fr ? /décembre 2026/ : /December 2026/);
+  await press("Escape");
+  await evaluate("document.activeElement.blur()");
+  await capture(`${tag}-multi-line`);
+  // Grouped bars.
+  await evaluate("document.querySelectorAll('.analysis-multi-chart .analysis-view-switch button')[1].click()");
+  await pause(240);
+  const bars = await evaluate("document.querySelectorAll('.analysis-multi-chart .analysis-chart-rect').length");
+  assert(bars >= 47, `${tag} grouped bars ${bars}`);
+  await assertLayout(`${tag} multi bars`);
+  await capture(`${tag}-multi-bars`);
+  // Export keeps the four patterns and labels.
+  await exportAs(0);
+  const svg = await lastDownload();
+  assert.equal((svg.text.match(/stroke-dasharray/g) ?? []).length >= 3, true, "dash patterns exported");
+  assert.match(svg.text, /Café/);
+  assert(!svg.text.includes("var("), "export colours resolved");
+  await evaluate("document.querySelectorAll('.analysis-multi-chart .analysis-view-switch button')[0].click()");
+  await pause(160);
+}
+
 await send("Runtime.enable");
 await send("Page.enable");
 await send("Page.bringToFront");
@@ -261,6 +331,7 @@ for (const width of [320, 390, 1280]) for (const theme of ["light", "dark"]) for
   await pause(200);
   await compareScenario(language, theme, tag);
   await denseScenario(tag);
+  await multiScenario(language, tag);
   done += 1;
   console.log("ok", tag);
 }

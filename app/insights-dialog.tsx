@@ -5,6 +5,8 @@ import { useMemo, useRef, useState } from "react";
 import { api } from "../lib/api";
 import type { AnalysisInput, AnalysisOperationId, AnalysisResult, Collection, EntryFilter, ForecastResult, Language } from "../lib/brainy";
 import { AnalysisResultChart } from "./analysis-result-chart";
+import { AnalysisMultiSeriesChart } from "./analysis-multi-series-chart";
+import { splitCrossTab } from "../lib/chart-math";
 import { EXACT_CODE_DEPTH, maxCodeLevels } from "../lib/code-tree";
 import { FormulaEditorPanel } from "./formula-editor-panel";
 import { AccessibleListbox } from "./components/ui/AccessibleListbox";
@@ -258,9 +260,12 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
   const values = useMemo(() => rows.map((row) => Number(row.value) || 0), [rows]);
   const nonnegative = values.every((value) => value >= 0);
   const total = values.reduce((sum, value) => sum + (value > 0 ? value : 0), 0);
-  const canLine = nonnegative && (groupBy === "DAY" || groupBy === "MONTH" || ["CUMULATIVE", "MOVING_AVERAGE", "LINEAR_TREND"].includes(operation));
+  // A period × category cross-tabulation draws one series per category (T23/2).
+  const multi = useMemo(() => (result ? splitCrossTab(rows, result.groupBy, result.secondaryGroupBy) : null), [result, rows]);
+  const canLine = !!multi || (nonnegative && (groupBy === "DAY" || groupBy === "MONTH" || ["CUMULATIVE", "MOVING_AVERAGE", "LINEAR_TREND"].includes(operation)));
+  const canBar = nonnegative || !!multi;
   const groupCodes = collection.codeLists?.find((list) => list.id === format?.fields.find((field) => field.id === (groupFieldId || groupFields[0]?.id))?.codeListId)?.codes ?? [];
-  const effectiveChart = (chart === "PIE" && (!nonnegative || total <= 0)) || (chart === "LINE" && !canLine) || (chart === "BAR" && !nonnegative) ? "TABLE" : chart;
+  const effectiveChart = (chart === "PIE" && (!nonnegative || total <= 0)) || (chart === "LINE" && !canLine) || (chart === "BAR" && !canBar) ? "TABLE" : chart;
 
   return (
     <div className="insights-layout">
@@ -395,12 +400,13 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
           <details className="analysis-technical"><summary>{fr ? "Détails techniques" : "Technical details"}</summary><p>v{result.operationVersion}{result.explanation ? ` · ${result.explanation}` : ""}{result.slope ? ` · ${fr ? "Pente" : "Slope"} : ${result.slope}` : ""}</p></details>
           <AccessibleListbox label={fr ? "Affichage" : "Display"} value={effectiveChart} options={[
             { id: "TABLE", label: fr ? "Tableau" : "Table" },
-            ...(nonnegative ? [{ id: "BAR", label: fr ? "Barres" : "Bars" }] : []),
-            ...(canLine ? [{ id: "LINE", label: fr ? "Courbe" : "Line" }] : []),
+            ...(canBar ? [{ id: "BAR", label: fr ? "Barres" : "Bars" }] : []),
+            ...(canLine ? [{ id: "LINE", label: multi ? (fr ? "Courbes" : "Lines") : (fr ? "Courbe" : "Line") }] : []),
             ...(nonnegative && total > 0 ? [{ id: "PIE", label: fr ? "Répartition" : "Shares" }] : []),
           ]} onChange={(value) => setChart(value as typeof chart)} />
           {rows.length === 1 && <AnalysisResultChart rows={rows} unit={result.unit} language={language} />}
-          {rows.length > 1 && (effectiveChart === "BAR" || effectiveChart === "LINE") && <AnalysisResultChart rows={rows} comparisonRows={result.comparisonRows} unit={result.unit} language={language} title={OPERATIONS.find((item) => item.id === result.operation)?.[fr ? "fr" : "en"] ?? result.operation} view={effectiveChart} views={[...(canLine ? ["LINE" as const] : []), ...(nonnegative ? ["BAR" as const] : [])]} onViewChange={setChart} />}
+          {multi && (effectiveChart === "BAR" || effectiveChart === "LINE") && <AnalysisMultiSeriesChart multi={multi} rows={rows} unit={result.unit} language={language} title={OPERATIONS.find((item) => item.id === result.operation)?.[fr ? "fr" : "en"] ?? result.operation} view={effectiveChart} onViewChange={setChart} />}
+          {!multi && rows.length > 1 && (effectiveChart === "BAR" || effectiveChart === "LINE") && <AnalysisResultChart rows={rows} comparisonRows={result.comparisonRows} unit={result.unit} language={language} title={OPERATIONS.find((item) => item.id === result.operation)?.[fr ? "fr" : "en"] ?? result.operation} view={effectiveChart} views={[...(canLine ? ["LINE" as const] : []), ...(nonnegative ? ["BAR" as const] : [])]} onViewChange={setChart} />}
           {rows.length > 1 && effectiveChart === "PIE" && (
             <div className="insights-chart insights-pie-layout" role="img" aria-label={fr ? "Graphique de répartition" : "Share chart"}>
               <div className="insights-pie" style={{ background: `conic-gradient(${rows.map((row, idx) => { const colors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)", "var(--chart-6)", "var(--chart-7)", "var(--chart-8)"]; const start = rows.slice(0, idx).reduce((sum, item) => sum + Math.max(0, Number(item.value) || 0), 0) / total * 360; const end = start + Math.max(0, Number(row.value) || 0) / total * 360; return `${colors[idx % colors.length]} ${start}deg ${end}deg`; }).join(", ")})` }} />

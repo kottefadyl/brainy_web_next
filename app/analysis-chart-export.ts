@@ -6,11 +6,15 @@ const REPORT_COLORS: Record<string, string> = {
   "--surface": "#FFFFFF",
   "--series-main": "#2463CE",
   "--series-comparison": "#0F8F72",
+  "--chart-1": "#2463CE",
+  "--chart-2": "#0F8F72",
+  "--chart-3": "#B9730A",
+  "--chart-4": "#C2385A",
 };
 const NS = "http://www.w3.org/2000/svg";
 const HEADER = 40;
 const FOOTER = 34;
-export type ExportLegendItem = { label: string; color: string; dashed: boolean };
+export type ExportLegendItem = { label: string; color: string; dashed: boolean; dash?: string };
 
 const resolveColors = (value: string) => value.replace(/var\((--[\w-]+)\)/g, (_, name: string) => REPORT_COLORS[name] ?? "#000000");
 
@@ -45,9 +49,10 @@ export function buildChartSvg(source: SVGSVGElement, title: string, legend: Expo
   for (const item of legend) {
     const key = document.createElementNS(NS, "line");
     for (const [name, value] of Object.entries({ x1: x, x2: x + 22, y1: y - 4, y2: y - 4, stroke: resolveColors(item.color), "stroke-width": 2 })) key.setAttribute(name, String(value));
-    if (item.dashed) key.setAttribute("stroke-dasharray", "6 5");
-    root.append(key, text(item.label, x + 28, y, 13, REPORT_COLORS["--muted"]));
-    x += 28 + item.label.length * 7 + 24;
+    if (item.dash || item.dashed) key.setAttribute("stroke-dasharray", item.dash ?? "6 5");
+    const label = item.label.length > 28 ? `${item.label.slice(0, 27)}…` : item.label;
+    root.append(key, text(label, x + 28, y, 13, REPORT_COLORS["--muted"]));
+    x += 28 + label.length * 7 + 24;
   }
   return { markup: new XMLSerializer().serializeToString(root), width, height };
 }

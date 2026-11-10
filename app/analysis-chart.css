@@ -55,3 +55,10 @@ html[data-theme] .analysis-line-chart .analysis-chart-target:focus-visible { out
 /* Older rules size every svg of a chart: the toolbar icons keep their own size. */
 html[data-theme] .insights-chart.analysis-line-chart svg:not(.analysis-chart-plot) { display: block; width: 18px; height: 18px; }
 html[data-theme] .analysis-chart-legend { row-gap: 0; }
+
+/* Several series (analysis-multi-series-chart.tsx): colour, dash and marker for each. */
+html[data-theme] .insights-chart.analysis-line-chart svg.analysis-series-swatch { display: inline-block; flex: none; width: 22px; height: 10px; vertical-align: middle; }
+.analysis-legend-text { min-width: 0; overflow-wrap: anywhere; }
+.analysis-tooltip-series { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; column-gap: 8px; margin-top: 2px; }
+.analysis-tooltip-series b { font-weight: 650; font-variant-numeric: tabular-nums; text-align: end; }
+.analysis-tooltip-series small { grid-column: 2 / 4; color: var(--muted); font-size: 13px; }
