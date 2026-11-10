@@ -67,3 +67,15 @@ html .profile-form .tag-box input{flex:1 1 140px;width:auto;min-width:120px;min-
 @media(prefers-reduced-motion:reduce){.suggest-list{animation:suggest-fade .08s linear both}}
 @keyframes suggest-fade{from{opacity:0}to{opacity:1}}
 @media(max-width:490px){.profile-photo-picker{align-items:flex-start;gap:14px}.profile-photo-preview{width:64px;height:64px;font-size:25px}.profile-photo-actions{flex-direction:column}.profile-photo-actions .button{justify-content:center}}
+
+/* Top bar account button */
+.account-button{min-height:44px;max-width:220px;display:inline-flex;align-items:center;gap:9px;padding:4px 12px 4px 4px;border:1px solid var(--c-line,#e1eaf5);border-radius:999px;background:var(--c-surface,#fff);color:var(--c-ink,#1d3150);font:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background-color .12s,border-color .12s,transform .12s}
+.account-button:hover{background:var(--c-hover,#f2f6fc);border-color:var(--c-line-strong,#cdd9e7)}
+.account-button:active{transform:scale(.98)}
+.account-button:focus-visible{outline:2px solid var(--c-focus,#397dd0);outline-offset:2px}
+.account-avatar{width:34px;height:34px;flex:0 0 auto;display:grid;place-items:center;overflow:hidden;border-radius:50%;background:linear-gradient(135deg,var(--primary,#3366ee),color-mix(in srgb,var(--primary,#3366ee) 55%,var(--success-fill,#2f9e63)));color:#fff;font-size:14px;font-weight:700}
+.account-avatar.has-photo{background:var(--c-raised,#fff)}
+.account-avatar img{width:100%;height:100%;object-fit:cover}
+.account-name{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+@media(max-width:900px){.account-button{padding:4px;border-color:transparent;background:transparent}.account-name{display:none}}
+@media(prefers-reduced-motion:reduce){.account-button:active{transform:none}}

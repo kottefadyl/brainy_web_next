@@ -27,6 +27,7 @@ import { AccessibleListbox } from "./components/ui/AccessibleListbox";
 import { Sidebar } from "./components/shell/Sidebar";
 import { LanguagePicker } from "./components/shell/LanguagePicker";
 import { TopBar } from "./components/shell/TopBar";
+import { AccountButton } from "./components/shell/AccountButton";
 import { MobileCollectionDrawer } from "./components/shell/MobileCollectionDrawer";
 import { CollectionHeader } from "./components/shell/CollectionHeader";
 import { CollectionTabs, CollectionTabPanel, type CollectionTab } from "./components/shell/CollectionTabs";
@@ -1142,7 +1143,7 @@ export default function BrainyApp() {
     <AppShell>
       <Sidebar brand={<Brand />} collections={collections} selectedId={selectedId} loading={loadingCollections} language={language} userName={user.name} userEmail={user.email} userPhoto={profilePhoto} onSelect={selectCollection} onTemplate={() => setDialog({ kind: "starter" })} onManual={() => setDialog({ kind: "collection" })} onTransfer={() => setDialog({ kind: "transfer" })} onTools={() => setDialog({ kind: "workspaceTools" })} onEditProfile={() => setProfileEditing(true)} onSignOut={signOut} />
       <main className="workspace">
-        <TopBar brand={<Brand compact />} selectedName={selected?.name} language={language} themeControl={<ThemeToggle language={language} mode={colorMode} onChange={chooseColorMode} />} languageControl={<LanguagePicker language={language} onChange={setLanguage} />} refreshBusy={loadingCollections} menuOpen={menuOpen} menuButtonRef={mobileMenuButtonRef} onCapture={() => { setSharedContent(undefined); setQuickCapture(true); }} onRefresh={() => { void refresh(); }} onToggleMenu={menuOpen ? closeMenu : openMenu} />
+        <TopBar brand={<Brand compact />} selectedName={selected?.name} language={language} themeControl={<ThemeToggle language={language} mode={colorMode} onChange={chooseColorMode} />} languageControl={<LanguagePicker language={language} onChange={setLanguage} />} account={<AccountButton name={user.name} photo={profilePhoto} language={language} onClick={() => setProfileEditing(true)} />} refreshBusy={loadingCollections} menuOpen={menuOpen} menuButtonRef={mobileMenuButtonRef} onCapture={() => { setSharedContent(undefined); setQuickCapture(true); }} onRefresh={() => { void refresh(); }} onToggleMenu={menuOpen ? closeMenu : openMenu} />
         {drawerMounted && <MobileCollectionDrawer open={menuOpen} collections={collections} selectedId={selectedId} language={language} triggerRef={mobileMenuButtonRef} onClose={closeMenu} onSelect={selectCollection} onTemplate={() => setDialog({ kind: "starter" })} onManual={() => setDialog({ kind: "collection" })} onTools={() => setDialog({ kind: "workspaceTools" })} onEditProfile={() => setProfileEditing(true)} onSignOut={signOut} />}
 
         <div className="workspace-body">

@@ -31,3 +31,9 @@
   html[data-theme] .app-shell .topbar .topbar-right .mobile-menu-button:hover { background: color-mix(in srgb, var(--primary) 16%, transparent); }
   html[data-theme] .app-shell .topbar .mobile-menu-button svg { width: 20px; height: 20px; }
 }
+
+/* Phones: the logo mark alone leaves room for the account photo without pushing the collections button off screen. */
+@media (max-width: 480px) {
+  html[data-theme] .app-shell .topbar .mobile-brand .brand > span { display: none; }
+  html[data-theme] .app-shell .topbar .account-button { flex: 0 0 auto; padding: 3px; }
+}
