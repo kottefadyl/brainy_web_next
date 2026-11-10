@@ -62,8 +62,9 @@ ws.onmessage = ({ data }) => {
   if (message.method === "Fetch.requestPaused") {
     const { requestId, request } = message.params;
     tileRequests.push(request.url);
-    if (offlineTiles) void send("Fetch.failRequest", { requestId, errorReason: "InternetDisconnected" });
-    else void send("Fetch.fulfillRequest", { requestId, responseCode: 200, responseHeaders: [{ name: "Content-Type", value: "image/png" }], body: png });
+    // A tile scrolled away is aborted by the map: its request may already be gone.
+    if (offlineTiles) void send("Fetch.failRequest", { requestId, errorReason: "InternetDisconnected" }).catch(() => undefined);
+    else void send("Fetch.fulfillRequest", { requestId, responseCode: 200, responseHeaders: [{ name: "Content-Type", value: "image/png" }, { name: "Access-Control-Allow-Origin", value: "*" }, { name: "Cache-Control", value: "max-age=86400, stale-if-error=604800" }], body: png }).catch(() => undefined);
   }
   if (!item) return;
   pending.delete(message.id); clearTimeout(item.timer);
@@ -75,7 +76,10 @@ async function evaluate(expression) { const result = await send("Runtime.evaluat
 const codes = { Tab: 9, Enter: 13, Escape: 27, ArrowLeft: 37, ArrowUp: 38, ArrowRight: 39, ArrowDown: 40 };
 async function press(key) { const text = key === "Enter" ? { text: "\r" } : key === "+" ? { text: "+" } : {}; await send("Input.dispatchKeyEvent", { type: text.text ? "keyDown" : "rawKeyDown", key, code: key, windowsVirtualKeyCode: codes[key] ?? 187, ...text }); await send("Input.dispatchKeyEvent", { type: "keyUp", key, code: key, windowsVirtualKeyCode: codes[key] ?? 187 }); await pause(); }
 const capture = async (name) => { const { data } = await send("Page.captureScreenshot", { format: "png", captureBeyondViewport: false }); await writeFile(new URL(`${name}.png`, output), Buffer.from(data, "base64")); };
-const state = () => evaluate(`(()=>{const v=document.querySelector('.osm-map-viewport'),b=v.getBoundingClientRect(),m=[...v.querySelectorAll('.osm-map-marker')].map(e=>{const r=e.getBoundingClientRect();return {x:r.left+r.width/2-b.left,y:r.bottom-b.top}});return {w:b.width,h:b.height,markers:m,tiles:v.querySelectorAll('.osm-map-tile').length,popup:v.querySelector('.osm-map-popup')?.textContent??null,offline:v.querySelector('.osm-map-offline')?.textContent??null,consent:!!v.querySelector('.osm-map-consent'),attribution:v.querySelector('.osm-map-attribution')?.textContent??null,tileZ:Number(v.querySelector('.osm-map-tile:last-child')?.src.match(/org\\/(\\d+)\\//)?.[1]),zoom:(t=>t?Number(t.src.match(/org\\/(\\d+)\\//)[1])+Math.log2(t.getBoundingClientRect().width/256):null)(v.querySelector('.osm-map-tile:last-child'))}})()`);
+// Tiles load asynchronously through the tile cache: wait for the current level (2 s at most).
+const tilesSettled = () => evaluate("new Promise(r=>{const end=Date.now()+2000;const t=()=>{const m=document.querySelector('.osm-map'),c=[...document.querySelectorAll('.osm-map-tile[data-current]')];if(m?.dataset.tiles!=='on'||(c.length&&c.every(i=>i.complete))||Date.now()>end)r(true);else setTimeout(t,30)};t()})");
+const state = async () => (await tilesSettled(), stateNow());
+const stateNow = () => evaluate(`(()=>{const v=document.querySelector('.osm-map-viewport'),b=v.getBoundingClientRect(),m=[...v.querySelectorAll('.osm-map-marker')].map(e=>{const r=e.getBoundingClientRect();return {x:r.left+r.width/2-b.left,y:r.bottom-b.top}});return {w:b.width,h:b.height,markers:m,tiles:v.querySelectorAll('.osm-map-tile').length,popup:v.querySelector('.osm-map-popup')?.textContent??null,offline:v.querySelector('.osm-map-offline')?.textContent??null,consent:!!v.querySelector('.osm-map-consent'),attribution:v.querySelector('.osm-map-attribution')?.textContent??null,tileZ:Number([...v.querySelectorAll('.osm-map-tile[data-current]')].at(-1)?.dataset.url.match(/org\\/(\\d+)\\//)?.[1]),zoom:(t=>t?Number(t.dataset.url.match(/org\\/(\\d+)\\//)[1])+Math.log2(t.getBoundingClientRect().width/256):null)([...v.querySelectorAll('.osm-map-tile[data-current]')].at(-1))}})()`);
 const box = () => evaluate("(()=>{const r=document.querySelector('.osm-map-viewport').getBoundingClientRect();return {x:r.left,y:r.top,w:r.width,h:r.height}})()");
 const center = async () => { await evaluate("document.querySelector('.osm-map-viewport').scrollIntoView({block:'center'})"); await pause(180); const b = await box(); return { x: b.x + b.w / 2, y: b.y + b.h / 2, ...b }; };
 const mouse = (type, x, y, extra = {}) => send("Input.dispatchMouseEvent", { type, x, y, button: "left", ...extra });
@@ -175,11 +179,24 @@ async function scenario(language, tag) {
   const ring = await evaluate("(()=>{const e=document.querySelector('.osm-map-viewport'),s=getComputedStyle(e);return [s.outlineStyle,parseFloat(s.outlineWidth)]})()");
   assert(ring[0] !== "none" && ring[1] >= 2, "visible focus");
 
-  // Offline: tiles fail, a discreet mention appears, the points stay.
-  // With the browser cache off, the tiles of the framed view really fail again.
+  // T38/2: tiles already seen stay offline, and nothing was fetched ahead.
   await evaluate("document.querySelectorAll('.osm-map-controls button')[2].click()"); await pause(500);
+  const cached = await evaluate("caches.open('brainy-osm-tiles-v1').then(c=>c.keys()).then(k=>k.map(r=>r.url))");
+  assert(cached.length > 0, `${tag} seen tiles are cached`);
+  assert(cached.every((url) => tileRequests.includes(url)), "only tiles actually shown are cached: no prefetch");
   await send("Network.setCacheDisabled", { cacheDisabled: true });
   offlineTiles = true;
+  const beforeOffline = tileRequests.length;
+  await evaluate("window.dispatchEvent(new Event('online'))");
+  await pause(900);
+  s = await state();
+  assert.equal(s.offline, null, `${tag} seen tiles show offline`);
+  assert(s.tiles > 0, `${tag} tiles visible offline`);
+  assert.equal(tileRequests.length, beforeOffline, "fresh cached tiles need no request");
+  await capture(`${tag}-offline-cached`);
+
+  // Offline: tiles never seen fail, a discreet mention appears, the points stay.
+  await evaluate("caches.delete('brainy-osm-tiles-v1')");
   await evaluate("window.dispatchEvent(new Event('online'))");
   await pause(900);
   s = await state();
@@ -217,6 +234,7 @@ for (const width of [320, 390, 1280]) for (const theme of ["light", "dark"]) for
   await evaluate("new Promise(r=>{const t=()=>document.querySelector('.preview-controls')?r():setTimeout(t,50);t()})");
   await pause(250);
   await evaluate("localStorage.removeItem('brainy:map:osm-tiles')");
+  await evaluate("caches.delete('brainy-osm-tiles-v1')");
   await evaluate(`document.documentElement.dataset.theme=${JSON.stringify(theme)}`);
   if (language === "en") await evaluate("[...document.querySelectorAll('.preview-controls button')].find(b=>b.textContent==='Language').click()");
   await pause(200);

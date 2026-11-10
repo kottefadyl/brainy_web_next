@@ -5,6 +5,7 @@ import { Maximize, Minus, Plus, X } from "lucide-react";
 import type { GeoPoint, Language } from "../lib/brainy";
 import { formatColorStyle } from "../lib/format-colors";
 import { clampView, fitBounds, panBy, project, tileLevel, toScreen, visibleTiles, zoomAround, type MapView } from "../lib/map-math";
+import { CachedTile } from "./cached-tile";
 
 const TILES_PREFERENCE = "brainy:map:osm-tiles";
 const PIN_WIDTH = 44, PIN_HEIGHT = 44, KEY_PAN = 80;
@@ -181,9 +182,8 @@ export default function OsmMap({ points, formatColor, language, selected, onOpen
     element.style.transform = `translate(${Math.round(left)}px, ${Math.round(above >= 8 ? above : Math.min(openItem.at.top + 6, height - element.offsetHeight - 8))}px)`;
   });
 
-  // Third-party map tiles: next/image would route them through this server.
-  // eslint-disable-next-line @next/next/no-img-element
-  const renderTiles = (tiles: typeof currentTiles, interactive: boolean) => tiles.map((tile) => <img key={`${tile.key}#${retry}`} className="osm-map-tile" src={tile.url} alt="" draggable={false} decoding="async"
+  // Tiles already seen are kept for offline use (T38/2, cached-tile.tsx).
+  const renderTiles = (tiles: typeof currentTiles, interactive: boolean) => tiles.map((tile) => <CachedTile key={`${tile.key}#${retry}`} url={tile.url} current={interactive}
     style={{ left: tile.left, top: tile.top, width: tile.width, height: tile.height }} onLoad={interactive ? onTileLoad : undefined} onError={interactive ? onTileError : undefined} />);
   const title = (point: GeoPoint) => point.name || point.entryId;
 
