@@ -4,7 +4,7 @@ This Next.js app is Brainy's browser client. Flutter remains the client for mobi
 
 ## Run locally
 
-1. Start MongoDB and the API from the repository root: `docker compose up -d --build mongodb api`.
+1. Start the MongoDB service, then the API from the repository root: `node scripts/dev-local.mjs` (it also starts this web app).
 2. In this directory, run `npm ci` and then `npm run dev`.
 3. Open `http://localhost:3001`.
 
