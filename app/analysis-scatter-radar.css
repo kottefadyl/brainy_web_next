@@ -1,0 +1,45 @@
+/* Scatter plot and radar (T23/1). Theme tokens and the shared --chart-* series colours. */
+/* minmax(0, 1fr): the measured width comes from the screen, never from the drawing itself. */
+.scatter, .radar { display:grid; grid-template-columns:minmax(0, 1fr); gap:12px; min-width:0; }
+.scatter > *, .radar > * { min-width:0; }
+.scatter-controls { display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px 14px; }
+.scatter-controls label { display:grid; gap:4px; min-width:160px; font-size:.85rem; font-weight:600; color:var(--ink); }
+.scatter-controls select { min-height:44px; border:1px solid var(--line-strong); border-radius:10px; background:var(--surface); color:var(--ink); padding:0 10px; font:inherit; font-weight:500; }
+.scatter-plot, .radar-plot { position:relative; width:100%; }
+.scatter-plot { overflow:hidden; padding:3px 0; }
+/* The radar is centred; its tooltip is placed against the drawing, not the wide row. */
+.radar-canvas { position:relative; margin:0 auto; padding:3px; }
+.scatter-plot svg, .radar-plot svg { display:block; overflow:visible; }
+.scatter-plot svg:focus-visible, .radar-plot svg:focus-visible { outline:2px solid var(--focus); outline-offset:2px; border-radius:8px; }
+.scatter-grid, .radar-ring { stroke:var(--line); stroke-width:1; fill:none; }
+.scatter-axis, .radar-spoke { stroke:var(--line-strong); stroke-width:1; }
+.scatter-tick, .radar-scale { fill:var(--muted); font-size:12px; }
+.scatter-axis-name { fill:var(--ink); font-size:12.5px; font-weight:600; }
+.scatter-point { fill:var(--chart-1); fill-opacity:.72; stroke:var(--surface); stroke-width:1.2; cursor:pointer; transition:r .12s ease; }
+.scatter-point.is-active, .radar-point.is-active { fill-opacity:1; stroke:var(--ink); stroke-width:2; }
+.scatter-trend { stroke:var(--chart-2); stroke-width:2; stroke-dasharray:6 5; }
+.scatter-tooltip, .radar-tooltip { position:absolute; display:grid; gap:2px; min-width:150px; max-width:200px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--surface-elevated); color:var(--ink); box-shadow:0 6px 20px rgba(0,0,0,.16); font-size:.82rem; pointer-events:none; }
+.scatter-tooltip small { color:var(--muted); }
+.scatter-summary { display:grid; gap:4px; font-size:.9rem; color:var(--ink); }
+.scatter-summary p { margin:0; }
+.scatter-summary .btn { justify-self:start; margin-top:6px; }
+.scatter-caution, .scatter-note { color:var(--muted); font-size:.85rem; margin:0; }
+.scatter-error { color:var(--danger); margin:0; }
+.scatter-error button { margin-left:6px; min-height:36px; border:1px solid var(--line-strong); border-radius:8px; background:var(--surface); color:var(--ink); font:inherit; cursor:pointer; }
+.scatter-table table { width:100%; border-collapse:collapse; font-size:.85rem; }
+.scatter-table th, .scatter-table td { padding:6px 8px; border-bottom:1px solid var(--line); text-align:left; }
+.scatter-table td button { border:0; background:transparent; color:var(--focus); text-decoration:underline; cursor:pointer; font:inherit; min-height:32px; text-align:left; }
+.radar-legend { display:flex; flex-wrap:wrap; gap:6px 16px; font-size:.85rem; color:var(--ink); }
+.radar-key { display:inline-flex; align-items:center; gap:8px; min-height:36px; border:0; background:transparent; color:inherit; font:inherit; padding:0; }
+button.radar-key { cursor:pointer; }
+button.radar-key[aria-pressed="false"] { opacity:.5; text-decoration:line-through; }
+button.radar-key:focus-visible { outline:2px solid var(--focus); outline-offset:2px; border-radius:6px; }
+.radar-swatch { width:22px; height:0; border-top:3px solid var(--chart-1); }
+.radar-swatch.is-dashed { border-top:3px dashed var(--chart-2); }
+.radar-area { fill:var(--chart-1); fill-opacity:.18; stroke:var(--chart-1); stroke-width:2.2; stroke-linejoin:round; }
+.radar-area.is-comparison { fill:none; stroke:var(--chart-2); stroke-dasharray:6 5; }
+.radar-point { fill:var(--chart-1); stroke:var(--surface); stroke-width:1.5; }
+.radar-label { fill:var(--ink); font-size:12.5px; }
+.radar-label.is-active { font-weight:700; }
+.radar-tooltip-compared { color:var(--muted); }
+@media (prefers-reduced-motion: reduce) { .scatter-point { transition:none; } }

@@ -376,7 +376,7 @@ export const api = {
       { entryId, asOfDate },
     )).collectionEntryAsOfDate;
   },
-  async entriesPage(collectionId: string, options: { after?: string; search?: string; formatId?: string; filters?: EntryFilter[]; viewId?: string } = {}): Promise<EntryPage> {
+  async entriesPage(collectionId: string, options: { after?: string; search?: string; formatId?: string; filters?: EntryFilter[]; viewId?: string; first?: number } = {}): Promise<EntryPage> {
     return (await request<{ collectionEntriesPage: EntryPage }>(
       `query EntryPage($id: String!, $first: Int!, $after: String, $search: String, $formatId: String, $filters: [EntryFieldFilterInput!], $viewId: String) { collectionEntriesPage(collectionId: $id, first: $first, after: $after, search: $search, formatId: $formatId, filters: $filters, viewId: $viewId) { entries { ${entryFields} } nextCursor hasMore } }`,
       { id: collectionId, first: 30, ...options },

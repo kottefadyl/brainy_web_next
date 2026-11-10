@@ -36,7 +36,9 @@ export function deltaPercent(current: number, previous: number | undefined): num
  * compared month), categories by their key. A key found only in the compared
  * period keeps its own slot, so no result disappears from the chart.
  */
-export function alignSeries(rows: Row[], comparison: Row[] = []): ChartSlot[] {
+export function alignSeries(rows: Row[], compared_: Row[] | null = []): ChartSlot[] {
+  // The API sends null, not an empty list, when no period is compared.
+  const comparison = compared_ ?? [];
   const byPosition = periodKind([...rows, ...comparison].map((row) => row.label)) !== null;
   const compared = new Map(comparison.map((row, index) => [byPosition ? String(index) : row.group, row]));
   const slots: ChartSlot[] = rows.map((row, index) => {

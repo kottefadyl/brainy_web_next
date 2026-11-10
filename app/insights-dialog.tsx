@@ -6,6 +6,9 @@ import { api } from "../lib/api";
 import { OPERATIONS } from "../lib/analysis-operations";
 import type { AnalysisInput, AnalysisOperationId, AnalysisResult, Collection, EntryFilter, ForecastResult, Language } from "../lib/brainy";
 import { AnalysisResultChart } from "./analysis-result-chart";
+import AnalysisRadarChart from "./analysis-radar-chart";
+import AnalysisScatterChart from "./analysis-scatter-chart";
+import { canRadar } from "../lib/chart-scatter-radar";
 import { AnalysisMultiSeriesChart } from "./analysis-multi-series-chart";
 import { splitCrossTab } from "../lib/chart-math";
 import { EXACT_CODE_DEPTH, maxCodeLevels } from "../lib/code-tree";
@@ -65,7 +68,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
   const [filterOperator, setFilterOperator] = useState<EntryFilter["operator"]>("EQ");
   const [filterValue, setFilterValue] = useState("");
   const [filters, setFilters] = useState<EntryFilter[]>([]);
-  const [chart, setChart] = useState<"TABLE" | "BAR" | "LINE" | "STACKED" | "PIE">("BAR");
+  const [chart, setChart] = useState<"TABLE" | "BAR" | "LINE" | "STACKED" | "PIE" | "RADAR">("BAR");
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [forecastMethod, setForecastMethod] = useState<"MEAN" | "LINEAR">("MEAN");
   const [forecastFrequency, setForecastFrequency] = useState<"DAY" | "MONTH">("DAY");
@@ -248,7 +251,9 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
   // A large list sends no codes, only its number of levels (T39/3).
   const groupLevels = groupList?.external ? groupList.levels ?? 1 : maxCodeLevels(groupCodes);
   const canStack = !!multi && nonnegative;
-  const effectiveChart = (chart === "PIE" && (!nonnegative || total <= 0)) || (chart === "LINE" && !canLine) || (chart === "BAR" && !canBar) || (chart === "STACKED" && !canStack) ? "TABLE" : chart;
+  // A radar compares 3 to 12 categories or objects of one result (T23/1).
+  const radarOk = !multi && canRadar(values, result?.groupBy);
+  const effectiveChart = (chart === "PIE" && (!nonnegative || total <= 0)) || (chart === "LINE" && !canLine) || (chart === "BAR" && !canBar) || (chart === "STACKED" && !canStack) || (chart === "RADAR" && !radarOk) ? "TABLE" : chart;
 
   return (
     <div className="insights-layout">
@@ -387,10 +392,12 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
             ...(canLine ? [{ id: "LINE", label: multi ? (fr ? "Courbes" : "Lines") : (fr ? "Courbe" : "Line") }] : []),
             ...(canStack ? [{ id: "STACKED", label: fr ? "Aires empilées" : "Stacked areas" }] : []),
             ...(nonnegative && total > 0 ? [{ id: "PIE", label: fr ? "Répartition" : "Shares" }] : []),
+            ...(radarOk ? [{ id: "RADAR", label: "Radar" }] : []),
           ]} onChange={(value) => setChart(value as typeof chart)} />
           {rows.length === 1 && <AnalysisResultChart rows={rows} unit={result.unit} language={language} />}
           {multi && (effectiveChart === "BAR" || effectiveChart === "LINE" || effectiveChart === "STACKED") && <AnalysisMultiSeriesChart multi={multi} rows={rows} views={canStack ? ["LINE", "BAR", "STACKED"] : ["LINE", "BAR"]} unit={result.unit} language={language} title={OPERATIONS.find((item) => item.id === result.operation)?.[fr ? "fr" : "en"] ?? result.operation} view={effectiveChart} onViewChange={setChart} />}
           {!multi && rows.length > 1 && (effectiveChart === "BAR" || effectiveChart === "LINE") && <AnalysisResultChart rows={rows} comparisonRows={result.comparisonRows} unit={result.unit} language={language} title={OPERATIONS.find((item) => item.id === result.operation)?.[fr ? "fr" : "en"] ?? result.operation} view={effectiveChart} views={[...(canLine ? ["LINE" as const] : []), ...(nonnegative ? ["BAR" as const] : [])]} onViewChange={setChart} />}
+          {effectiveChart === "RADAR" && <AnalysisRadarChart rows={rows} comparisonRows={result.comparisonRows} unit={result.unit} language={language} title={OPERATIONS.find((item) => item.id === result.operation)?.[fr ? "fr" : "en"] ?? result.operation} />}
           {rows.length > 1 && effectiveChart === "PIE" && (
             <div className="insights-chart insights-pie-layout" role="img" aria-label={fr ? "Graphique de répartition" : "Share chart"}>
               <div className="insights-pie" style={{ background: `conic-gradient(${rows.map((row, idx) => { const colors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)", "var(--chart-6)", "var(--chart-7)", "var(--chart-8)"]; const start = rows.slice(0, idx).reduce((sum, item) => sum + Math.max(0, Number(item.value) || 0), 0) / total * 360; const end = start + Math.max(0, Number(row.value) || 0) / total * 360; return `${colors[idx % colors.length]} ${start}deg ${end}deg`; }).join(", ")})` }} />
@@ -430,6 +437,10 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
           <button type="button" className="btn secondary" onClick={() => document.getElementById("analysis-measure")?.focus()}>{fr ? "Choisir une mesure" : "Choose a measure"}</button>
         </div>
       )}
+      <details className="insights-section insights-scatter">
+        <summary>{fr ? "Relation entre deux champs (nuage de points)" : "Link between two fields (scatter plot)"}</summary>
+        {format && <AnalysisScatterChart key={format.id} collection={collection} format={format} language={language} onOpenEntry={onOpenEntry} />}
+      </details>
       <button type="button" className="insights-close" onClick={onClose}>{fr ? "Retour à la collection" : "Back to collection"}</button>
     </div>
   );
