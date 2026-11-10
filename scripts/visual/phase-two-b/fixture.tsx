@@ -14,6 +14,8 @@ import { AccessibleListbox } from "../../../app/components/ui/AccessibleListbox"
 import { AnalysisResultChart } from "../../../app/analysis-result-chart";
 import { AnalysisMultiSeriesChart } from "../../../app/analysis-multi-series-chart";
 import { GeoFieldInput } from "../../../app/geo-fields";
+import { CodePicker } from "../../../app/code-picker";
+import { ReferentialImport } from "../../../app/referential-import";
 import { splitCrossTab } from "../../../lib/chart-math";
 import Modal from "../../../app/components/ui/Modal";
 import OsmMap from "../../../app/osm-map";
@@ -64,6 +66,7 @@ export default function PhaseTwoBPreview() {
   const drawerTrigger = useRef<HTMLButtonElement>(null);
   const [value, setValue] = useState("");
   const [pickedValue, setPickedValue] = useState("");
+  const [largeCode, setLargeCode] = useState("T11");
   const [tab, setTab] = useState<CollectionTab>("entries");
   const months = Array.from({ length: 12 }, (_, i) => `2026-${String(i + 1).padStart(2, "0")}`);
   const chartRow = (group: string, value: number, count: number) => ({ group, label: group, value: String(value), count, sources: [], sourcesHasMore: false });
@@ -85,7 +88,7 @@ export default function PhaseTwoBPreview() {
       onSelect={setSelected} onTemplate={noop} onManual={noop} onTransfer={noop} onTools={() => setTools(true)} onEditProfile={noop} onSignOut={noop} />
     <main className="workspace"><header className="topbar"><span>Brainy</span><LanguagePicker language={language} onChange={setLanguage} /></header><div className="workspace-body">{section !== "collection" ? <button type="button" id="preview-back" className="analysis-back" onClick={() => setSection("collection")}>Back</button> : <>
       <div className="preview-controls">
-        {["formats", "entries", "empty", "tools", "one", "many", "compare", "dense", "multi", "map", "pick"].map((item) => <button key={item} type="button" onClick={() => setView(item)}>{item}</button>)}
+        {["formats", "entries", "empty", "tools", "one", "many", "compare", "dense", "multi", "map", "pick", "large"].map((item) => <button key={item} type="button" onClick={() => setView(item)}>{item}</button>)}
         <button type="button" onClick={() => { const next = theme === "light" ? "dark" : "light"; setTheme(next); document.documentElement.dataset.theme = next; }}>Theme</button>
         <button type="button" onClick={() => setLanguage(language === "fr" ? "en" : "fr")}>Language</button>
         <button type="button" onClick={() => setModal(true)}>Modal</button>
@@ -103,6 +106,11 @@ export default function PhaseTwoBPreview() {
       {view === "tools" && <CollectionToolsHub collection={collection} user={{ id: "u", name: "Test", email: "test@example.com", interests: [], hobbies: [], profileCompleted: true }} language={language} defaultOpen={returnTool !== null} onOpenSection={(next) => { setLastAction(`section:${next}`); rememberTool(next); setSection(next); }} onOpenDialog={(kind) => setLastAction(`dialog:${kind}`)} />}
       {view === "map" && <div className="geo-map-view"><OsmMap points={[{ entryId: "p0", name: "Chantier Nord", latitude: 50.63, longitude: 3.06 }, { entryId: "p1", name: "Tournée Paris", latitude: 48.8566, longitude: 2.3522, accuracy: 12 }, { entryId: "p2", name: "Enquête Lyon", latitude: 45.764, longitude: 4.8357 }, { entryId: "p3", name: "Dépôt Marseille", latitude: 43.2965, longitude: 5.3698 }]} formatColor={formats[1].color} language={language} selected={["p3"]} onOpenEntry={(id) => setLastAction(`open:${id}`)} /></div>}
       {view === "compare" && <div className="analysis-page"><AnalysisResultChart rows={compareRows} comparisonRows={previousRows} unit="EUR" language={language} title="Sum" /></div>}
+      {view === "large" && <div className="analysis-page geo-field-input">
+        <label>{language === "fr" ? "Commune" : "Town"}<CodePicker codes={[]} remote={{ collectionId: "c-large", listId: "communes" }} language={language} value={largeCode} onChange={setLargeCode} emptyLabel={language === "fr" ? "Aucune valeur" : "No value"} /></label>
+        <output className="large-value">{largeCode}</output>
+        <ReferentialImport collection={collection} language={language} onImported={() => setLastAction("imported")} />
+      </div>}
       {view === "pick" && <div className="analysis-page"><GeoFieldInput field={{ id: "where", name: "Lieu", kind: "POSITION" } as never} language={language} value={pickedValue} onChange={setPickedValue} /><output className="picked-value">{pickedValue}</output></div>}
       {view === "multi" && <div className="analysis-page"><AnalysisMultiSeriesChart multi={splitCrossTab(crossRows, "MONTH", "CATEGORY")!} rows={crossRows} unit="EUR" language={language} title="Sum" /></div>}
       {view === "dense" && <div className="analysis-page"><AnalysisResultChart rows={denseRows} unit="g" language={language} title="Dense" /></div>}

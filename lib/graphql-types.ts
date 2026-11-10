@@ -198,8 +198,11 @@ export type ClassificationCsvPreview = {
 
 export type ClassificationList = {
   __typename?: 'ClassificationList';
+  codeCount?: Maybe<Scalars['Int']['output']>;
   codes: Array<ClassificationCode>;
+  external?: Maybe<Scalars['Boolean']['output']>;
   id: Scalars['String']['output'];
+  levels?: Maybe<Scalars['Int']['output']>;
   name: Scalars['String']['output'];
   version: Scalars['Float']['output'];
 };
@@ -919,6 +922,17 @@ export type FormulaStaticType = {
   unitOpen: Scalars['Boolean']['output'];
 };
 
+export type FoundClassificationCode = {
+  __typename?: 'FoundClassificationCode';
+  active: Scalars['Boolean']['output'];
+  code: Scalars['String']['output'];
+  hasChildren: Scalars['Boolean']['output'];
+  label: Scalars['String']['output'];
+  level: Scalars['Int']['output'];
+  /** Labels of the ancestors, from the root */
+  path: Array<Scalars['String']['output']>;
+};
+
 export type GeoDistance = {
   __typename?: 'GeoDistance';
   unit: Scalars['String']['output'];
@@ -1147,6 +1161,7 @@ export type Mutation = {
   importCollectionRelations: Scalars['Boolean']['output'];
   importEntriesBatch: ImportEntriesResult;
   importGeoPoints: GeoImportResult;
+  importReferential: Collection;
   installDomainPackage: DomainPackageInstallResult;
   linkCollectionDataFormat: TransferResult;
   linkImportedEntries: Scalars['Boolean']['output'];
@@ -1484,6 +1499,16 @@ export type MutationImportGeoPointsArgs = {
   importKey: Scalars['String']['input'];
   kind: Scalars['String']['input'];
   text: Scalars['String']['input'];
+};
+
+
+export type MutationImportReferentialArgs = {
+  collectionId: Scalars['String']['input'];
+  content: Scalars['String']['input'];
+  expectedVersion?: InputMaybe<Scalars['Int']['input']>;
+  format: Scalars['String']['input'];
+  listId?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
 };
 
 
@@ -1908,6 +1933,12 @@ export type ObjectReferenceSnapshot = {
   properties: Array<ObjectPropertySnapshot>;
 };
 
+export type PlatformCapabilities = {
+  __typename?: 'PlatformCapabilities';
+  frozenModules: Array<Scalars['String']['output']>;
+  maxEntryAttachmentBytes: Scalars['Int']['output'];
+};
+
 export type ProfileInput = {
   fieldOfStudy: Scalars['String']['input'];
   hobbies: Array<Scalars['String']['input']>;
@@ -1961,6 +1992,8 @@ export type Query = {
   backgroundJobs: Array<BackgroundJob>;
   calculateCollectionFormula: FormulaResult;
   classificationCodePaths: Array<ClassificationCodePath>;
+  /** Codes by value, to label the codes already saved in entries */
+  classificationCodesByValue: Array<ClassificationCode>;
   classificationCopyPreview: ClassificationCopyPreview;
   classificationMergePreview: ClassificationMergePreview;
   collectionAuditLogs: Array<AuditLog>;
@@ -2014,15 +2047,18 @@ export type Query = {
   objectModelTemplates: Array<ObjectModelTemplate>;
   objectMovePreview: TransferPreview;
   objectVariableProperty: ResolvedObjectVariable;
+  platformCapabilities: PlatformCapabilities;
   previewClassificationCsv: ClassificationCsvPreview;
   previewCollectionFormula?: Maybe<FormulaPreview>;
   previewDomainPackage: DomainPackagePreview;
   previewEntryStockEffect: StockPreview;
   previewGeoImport: GeoImportResult;
+  previewReferential: ReferentialPreview;
   previewStockMovement: StockPreview;
   publicContributionForm: PublicContributionForm;
   pushDevices: Array<PushDevice>;
   reminderCapabilities: ReminderCapabilities;
+  searchClassificationCodes: Array<FoundClassificationCode>;
   starterTemplates: Array<StarterTemplate>;
   stockDailyReport: Array<StockDailyRow>;
   stockLedgerProof: Scalars['String']['output'];
@@ -2061,6 +2097,13 @@ export type QueryCalculateCollectionFormulaArgs = {
 export type QueryClassificationCodePathsArgs = {
   collectionId: Scalars['String']['input'];
   language?: InputMaybe<Scalars['String']['input']>;
+  listId: Scalars['String']['input'];
+};
+
+
+export type QueryClassificationCodesByValueArgs = {
+  codes: Array<Scalars['String']['input']>;
+  collectionId: Scalars['String']['input'];
   listId: Scalars['String']['input'];
 };
 
@@ -2423,6 +2466,12 @@ export type QueryPreviewGeoImportArgs = {
 };
 
 
+export type QueryPreviewReferentialArgs = {
+  content: Scalars['String']['input'];
+  format: Scalars['String']['input'];
+};
+
+
 export type QueryPreviewStockMovementArgs = {
   collectionId: Scalars['String']['input'];
   input: StockMovementInput;
@@ -2431,6 +2480,17 @@ export type QueryPreviewStockMovementArgs = {
 
 export type QueryPublicContributionFormArgs = {
   token: Scalars['String']['input'];
+};
+
+
+export type QuerySearchClassificationCodesArgs = {
+  collectionId: Scalars['String']['input'];
+  includeInactive?: InputMaybe<Scalars['Boolean']['input']>;
+  language?: InputMaybe<Scalars['String']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  listId: Scalars['String']['input'];
+  parentCode?: InputMaybe<Scalars['String']['input']>;
+  query?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -2483,6 +2543,22 @@ export type QueryVerifyStockLedgerArgs = {
 
 export type QueryWorkspaceBackupArgs = {
   includeSensitive?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type ReferentialError = {
+  __typename?: 'ReferentialError';
+  message: Scalars['String']['output'];
+  row: Scalars['Int']['output'];
+};
+
+export type ReferentialPreview = {
+  __typename?: 'ReferentialPreview';
+  codeCount: Scalars['Int']['output'];
+  errors: Array<ReferentialError>;
+  /** More than 5,000 codes: stored apart and searched on the server */
+  large: Scalars['Boolean']['output'];
+  levels: Scalars['Int']['output'];
+  sample: Array<ClassificationCode>;
 };
 
 export type RegisterInput = {

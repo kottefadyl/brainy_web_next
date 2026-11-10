@@ -6,6 +6,8 @@ import type { ClassificationCode, Language } from "../lib/brainy";
 import { buildCodeTree, reachableCodes, searchCodes, type CodeNode } from "../lib/code-tree";
 import { useLabelText } from "./components/ui/LocalizedDateInput";
 import { cycleTab } from "./components/ui/use-dialog-focus";
+import { RemoteCodeBrowser } from "./remote-code-browser";
+import { referentialApi } from "../lib/referentials";
 
 const MAX_ROWS = 300;
 type Row = { node: CodeNode; indent: number };
@@ -115,16 +117,26 @@ export function CodeBrowser({ codes, language, value = "", onSelect, canSelect, 
 }
 
 /** A form control: a button showing the chosen code, opening the browser in the top layer. */
-export function CodePicker({ codes, language, value, onChange, canSelect, emptyLabel, ariaLabel, disabled }: {
+export function CodePicker({ codes, language, value, onChange, canSelect, emptyLabel, ariaLabel, disabled, remote }: {
   codes: ClassificationCode[]; language: Language; value: string; onChange: (code: string) => void;
   canSelect?: BrowserProps["canSelect"]; emptyLabel?: string; ariaLabel?: string; disabled?: boolean;
+  /** A large list (T39/3): codes are searched on the server instead of `codes`. */
+  remote?: { collectionId: string; listId: string };
 }) {
   const fr = language === "fr";
   const root = useRef<HTMLSpanElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLSpanElement>(null);
   const [open, setOpen] = useState(false);
-  const tree = useMemo(() => buildCodeTree(codes, language), [codes, language]);
+  // A large list sends no codes: the chosen one is fetched to show its label.
+  const [remoteCodes, setRemoteCodes] = useState<ClassificationCode[]>([]);
+  useEffect(() => {
+    if (!remote || !value || remoteCodes.some((item) => item.code === value)) return;
+    let current = true;
+    referentialApi.byValue(remote.collectionId, remote.listId, [value]).then((found) => { if (current) setRemoteCodes(found); }).catch(() => undefined);
+    return () => { current = false; };
+  }, [remote, value, remoteCodes]);
+  const tree = useMemo(() => buildCodeTree(remote ? remoteCodes : codes, language), [remote, remoteCodes, codes, language]);
   const node = tree.nodes.get(value);
   const shown = node ? `${node.label} (${node.code})` : value || (fr ? "Aucun" : "None");
   useLabelText(trigger, ariaLabel, shown);
@@ -169,7 +181,10 @@ export function CodePicker({ codes, language, value, onChange, canSelect, emptyL
     {open && <span ref={panel} className="code-picker-panel" popover="manual" role="dialog" aria-label={fr ? "Choisir un code" : "Choose a code"} tabIndex={-1}
       onClick={(event) => event.preventDefault() /* Inside a <label>, a click must not reopen the button. */}
       onKeyDown={(event) => { if (event.key === "Tab") { event.stopPropagation(); cycleTab(event, panel.current); } }}>
-      <CodeBrowser codes={codes} language={language} value={value} canSelect={canSelect} emptyLabel={value ? emptyLabel : undefined} onEscape={() => close(true)} onSelect={(code) => { onChange(code); close(true); }} />
+      {remote
+        ? <RemoteCodeBrowser collectionId={remote.collectionId} listId={remote.listId} language={language} value={value} emptyLabel={value ? emptyLabel : undefined} onEscape={() => close(true)}
+          onSelect={(code, found) => { if (found.code) setRemoteCodes([{ code: found.code, labelEn: found.label, labelFr: found.label, active: found.active }]); onChange(code); close(true); }} />
+        : <CodeBrowser codes={codes} language={language} value={value} canSelect={canSelect} emptyLabel={value ? emptyLabel : undefined} onEscape={() => close(true)} onSelect={(code) => { onChange(code); close(true); }} />}
     </span>}
   </span>;
 }

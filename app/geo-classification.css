@@ -29,3 +29,7 @@
 .geo-pick-actions{display:flex;flex-wrap:wrap;gap:8px}.geo-pick-actions .btn{display:inline-flex;align-items:center;gap:8px;min-height:44px}
 .geo-pick-notice{margin:0;color:var(--muted)}.geo-pick-map{display:grid;gap:8px}.geo-pick-map>p{margin:0;color:var(--muted);font-size:13px}
 .geo-pick-map .osm-map-viewport{height:clamp(240px,40vh,340px)}
+/* Referential imports and large lists (T39/1, T39/3). */
+.referential-import,.large-code-list{display:grid;gap:10px}.referential-import>p,.large-code-list>p{margin:0}
+.referential-import-note,.referential-preview span{color:var(--muted)}.referential-preview{display:grid;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.referential-sample{margin:0;padding-inline-start:18px}.referential-import .btn{display:inline-flex;align-items:center;gap:8px;justify-self:start;min-height:44px}

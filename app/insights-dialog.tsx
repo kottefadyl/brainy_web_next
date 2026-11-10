@@ -266,7 +266,10 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
   const multi = useMemo(() => (result ? splitCrossTab(rows, result.groupBy, result.secondaryGroupBy) : null), [result, rows]);
   const canLine = !!multi || (nonnegative && (groupBy === "DAY" || groupBy === "MONTH" || ["CUMULATIVE", "MOVING_AVERAGE", "LINEAR_TREND"].includes(operation)));
   const canBar = nonnegative || !!multi;
-  const groupCodes = collection.codeLists?.find((list) => list.id === format?.fields.find((field) => field.id === (groupFieldId || groupFields[0]?.id))?.codeListId)?.codes ?? [];
+  const groupList = collection.codeLists?.find((list) => list.id === format?.fields.find((field) => field.id === (groupFieldId || groupFields[0]?.id))?.codeListId);
+  const groupCodes = groupList?.codes ?? [];
+  // A large list sends no codes, only its number of levels (T39/3).
+  const groupLevels = groupList?.external ? groupList.levels ?? 1 : maxCodeLevels(groupCodes);
   const effectiveChart = (chart === "PIE" && (!nonnegative || total <= 0)) || (chart === "LINE" && !canLine) || (chart === "BAR" && !canBar) ? "TABLE" : chart;
 
   return (
@@ -304,7 +307,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
           {dateFields.length > 0 && <label>{fr ? "Champ date" : "Date field"}<select value={dateFieldId} onChange={(event) => setDateFieldId(event.target.value)}>{dateFields.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
           {(groupBy === "CATEGORY" || groupBy === "OBJECT" || groupBy === "ZONE") && <label>{groupBy === "ZONE" ? fr ? "Champ position" : "Position field" : fr ? "Champ groupe" : "Group field"}<select value={groupFieldId} onChange={(event) => setGroupFieldId(event.target.value)}>{groupFields.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
           {groupBy === "ZONE" && <><label>{fr ? "Format de données des zones" : "Zone data format"}<select value={zoneFormatId} onChange={(event) => { setZoneFormatId(event.target.value); setZoneFieldId(""); }}>{zoneFormats.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>{fr ? "Champ zone" : "Zone field"}<select value={zoneFieldId} onChange={(event) => setZoneFieldId(event.target.value)}>{zoneFields.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></>}
-          {groupBy === "CATEGORY" && format?.fields.some((field) => field.id === (groupFieldId || groupFields[0]?.id) && field.kind === "CODE") && <label>{fr ? "Niveau de regroupement" : "Grouping level"}<select value={groupDepth} onChange={(event) => setGroupDepth(Number(event.target.value))}>{Array.from({ length: Math.max(0, maxCodeLevels(groupCodes) - 1) }, (_, level) => <option key={level} value={level}>{level === 0 ? (fr ? "Racine" : "Root") : fr ? `Niveau ${level + 1}` : `Level ${level + 1}`}</option>)}<option value={EXACT_CODE_DEPTH}>{fr ? "Code précis" : "Exact code"}</option></select></label>}
+          {groupBy === "CATEGORY" && format?.fields.some((field) => field.id === (groupFieldId || groupFields[0]?.id) && field.kind === "CODE") && <label>{fr ? "Niveau de regroupement" : "Grouping level"}<select value={groupDepth} onChange={(event) => setGroupDepth(Number(event.target.value))}>{Array.from({ length: Math.max(0, groupLevels - 1) }, (_, level) => <option key={level} value={level}>{level === 0 ? (fr ? "Racine" : "Root") : fr ? `Niveau ${level + 1}` : `Level ${level + 1}`}</option>)}<option value={EXACT_CODE_DEPTH}>{fr ? "Code précis" : "Exact code"}</option></select></label>}
           {operation === "CROSSTAB" && <>
             <label>{fr ? "Second axe (colonnes)" : "Secondary group (columns)"}
               <select value={secondaryGroupBy} onChange={(event) => setSecondaryGroupBy(event.target.value as NonNullable<AnalysisInput["secondaryGroupBy"]>)}>

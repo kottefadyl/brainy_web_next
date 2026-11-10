@@ -41,3 +41,10 @@ html[data-theme] .code-browser-clear { justify-self: start; min-height: 44px; ma
 
 .classification-panel .code-browser { padding-top: 8px; }
 @media (prefers-reduced-motion: reduce) { html[data-theme] .code-picker-panel:popover-open { animation: none; } }
+
+/* Large lists browsed on the server (remote-code-browser.tsx). */
+.remote-code-trail { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 4px 4px 6px; border-bottom: 1px solid var(--line); }
+.remote-code-trail small { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+html[data-theme] .remote-code-trail button { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: 8px; background: transparent; color: var(--ink); font-size: 13px; }
+html[data-theme] .remote-code-open { display: grid; place-items: center; flex: none; width: 36px; height: 36px; min-height: 0; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--muted); }
+html[data-theme] .remote-code-open:hover { background: var(--hover); color: var(--ink); }
