@@ -1217,6 +1217,7 @@ export type Mutation = {
   updateEntry: Entry;
   updateNote?: Maybe<Note>;
   updateProfile: User;
+  updateProfilePhoto: User;
   uploadDataSourceDelivery: DataSourceRun;
   uploadLargeFilePart: LargeFileUpload;
   useCollectionObject: Entry;
@@ -1872,6 +1873,11 @@ export type MutationUpdateProfileArgs = {
 };
 
 
+export type MutationUpdateProfilePhotoArgs = {
+  photo?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationUploadDataSourceDeliveryArgs = {
   content: Scalars['String']['input'];
   contentType: Scalars['String']['input'];
@@ -2055,6 +2061,7 @@ export type Query = {
   previewGeoImport: GeoImportResult;
   previewReferential: ReferentialPreview;
   previewStockMovement: StockPreview;
+  profilePhoto?: Maybe<Scalars['String']['output']>;
   publicContributionForm: PublicContributionForm;
   pushDevices: Array<PushDevice>;
   reminderCapabilities: ReminderCapabilities;
@@ -2915,6 +2922,7 @@ export type User = {
   __typename?: 'User';
   email: Scalars['String']['output'];
   fieldOfStudy?: Maybe<Scalars['String']['output']>;
+  hasProfilePhoto: Scalars['Boolean']['output'];
   hobbies: Array<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   interests: Array<Scalars['String']['output']>;

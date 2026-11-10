@@ -3,7 +3,7 @@ export type Language = "en" | "fr";
 export type FieldKind = "TITLE" | "DATE" | "NUMBER" | "TIME" | "LINK" | "CHARACTER" | "TEXT" | "BOOLEAN" | "SELECT" | "MULTI_SELECT" | "DATETIME" | "DURATION" | "LONG_TEXT" | "ATTACHMENT" | "OBJECT_REF" | "MEASURE" | "CODE" | "POSITION" | "ZONE";
 export type SensitivityLevel = "ORDINARY" | "PERSONAL" | "SENSITIVE";
 
-export type User = { id: string; name: string; email: string; profession?: string | null; job?: string | null; fieldOfStudy?: string | null; interests: string[]; hobbies: string[]; profileCompleted: boolean };
+export type User = { id: string; name: string; email: string; profession?: string | null; job?: string | null; fieldOfStudy?: string | null; interests: string[]; hobbies: string[]; profileCompleted: boolean; hasProfilePhoto?: boolean };
 export type ProfileInput = { name: string; profession: string; job: string; fieldOfStudy: string; interests: string[]; hobbies: string[] };
 export const formatColors = ["#EEF5FF", "#EDF9F3", "#FFF5EB", "#F4F0FF", "#FFF0F4", "#EAF8FA", "#FBF7E9", "#F1F8ED", "#F8F0FA", "#F1F5FA", "#FFF7F1", "#EFF8FF", "#FDEFF7", "#EDF7FF", "#F7FBEA", "#FFF0E8", "#EFEFFD", "#E9F8F4", "#FBF1E8", "#F0F8F9", "#FFF2EF", "#F4F8E8", "#F1F2FF", "#EFFAF0"] as const;
 export type Field = { id: string; name: string; kind: FieldKind; sensitivity?: SensitivityLevel; unit?: string | null; options?: string[] | null; codeListId?: string | null; targetObjectFormatId?: string | null; multiple?: boolean | null; variableName?: string | null; referenceMode?: "CURRENT" | "SNAPSHOT" | null; sourceFieldId?: string | null };
@@ -163,6 +163,22 @@ const messages = {
     profileInterestRule: "Add at least one interest or hobby.",
     profileLimit: "Keep up to 12 interests or hobbies, with 60 characters per item.",
     profileDuplicate: "Remove repeated interests or hobbies.",
+    profilePhoto: "Profile photo",
+    choosePhoto: "Choose a photo",
+    changePhoto: "Change photo",
+    removePhoto: "Remove photo",
+    photoHint: "JPEG, PNG or WebP. Photos over 1 MB are compressed automatically.",
+    photoPreparing: "Preparing photo…",
+    photoCompressed: "Photo compressed to {size} to fit the 1 MB limit.",
+    photoUnreadable: "This image can’t be read. Choose a JPEG, PNG or WebP photo.",
+    photoTooLarge: "This photo can’t be reduced below 1 MB. Choose a smaller one.",
+    suggestHint: "Choose from the list or type your own.",
+    tagsHint: "Choose from the list or type your own. A comma adds exactly what you typed.",
+    addTyped: "Add “{value}”",
+    useTyped: "Use “{value}”",
+    removeItem: "Remove {item}",
+    suggestionsLabel: "Suggestions",
+    choosePlaceholder: "Search or type…",
     saveProfile: "Save profile",
     continueToWorkspace: "Continue to workspace",
     noCollections: "Make space for your first idea",
@@ -393,6 +409,22 @@ const messages = {
     profileInterestRule: "Ajoutez au moins un centre d’intérêt ou un loisir.",
     profileLimit: "Gardez au plus 12 centres d’intérêt ou loisirs, avec 60 caractères par élément.",
     profileDuplicate: "Supprimez les centres d’intérêt ou loisirs répétés.",
+    profilePhoto: "Photo de profil",
+    choosePhoto: "Choisir une photo",
+    changePhoto: "Changer la photo",
+    removePhoto: "Retirer la photo",
+    photoHint: "JPEG, PNG ou WebP. Les photos de plus de 1 Mo sont compressées automatiquement.",
+    photoPreparing: "Préparation de la photo…",
+    photoCompressed: "Photo compressée à {size} pour respecter la limite de 1 Mo.",
+    photoUnreadable: "Cette image est illisible. Choisissez une photo JPEG, PNG ou WebP.",
+    photoTooLarge: "Cette photo ne peut pas descendre sous 1 Mo. Choisissez-en une plus petite.",
+    suggestHint: "Choisissez dans la liste ou saisissez votre propre réponse.",
+    tagsHint: "Choisissez dans la liste ou saisissez votre propre réponse. Une virgule ajoute exactement votre saisie.",
+    addTyped: "Ajouter « {value} »",
+    useTyped: "Utiliser « {value} »",
+    removeItem: "Retirer {item}",
+    suggestionsLabel: "Suggestions",
+    choosePlaceholder: "Rechercher ou saisir…",
     saveProfile: "Enregistrer le profil",
     continueToWorkspace: "Continuer vers l’espace",
     noCollections: "Faites place à votre première idée",
@@ -664,6 +696,8 @@ export function translateError(error: unknown, language: Language): string {
   if (message.includes("Attachment not found")) return t(language, "fileMissing");
   if (message.includes("needs a date, time") || message.includes("needs a valid date and time")) return t(language, "invalidDateTime");
   if (message.includes("Add at least one interest or hobby")) return t(language, "profileInterestRule");
+  if (message.includes("Profile photo must be at most")) return t(language, "photoTooLarge");
+  if (message.includes("Profile photo must be a")) return t(language, "photoUnreadable");
   if (language === "fr") {
     const contributionErrors: [string, string][] = [
       ["Contribution link unavailable", "Ce lien de contribution est indisponible ou expiré."],

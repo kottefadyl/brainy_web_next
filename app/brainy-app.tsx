@@ -20,6 +20,7 @@ import LedgerPanel from "./ledger-panel";
 import SensitivityPanel from "./sensitivity-panel";
 import CollectionToolsHub from "./collection-tools-hub";
 import SavedViewTable from "./saved-view-table";
+import { ProfileScreen, useProfilePhoto } from "./profile-screen";
 import { AppShell } from "./components/shell/AppShell";
 import Modal from "./components/ui/Modal";
 import { AccessibleListbox } from "./components/ui/AccessibleListbox";
@@ -225,49 +226,6 @@ function AuthScreen({ language, onLanguage, colorMode, onColorMode, onAuthentica
       </div>
     </div>
   );
-}
-
-function ProfileScreen({ user, language, onLanguage, colorMode, onColorMode, onSaved, onCancel, onSignOut }: { user: User; language: Language; onLanguage: (value: Language) => void; colorMode: ColorMode; onColorMode: (mode: ColorMode) => void; onSaved: (user: User) => void; onCancel?: () => void; onSignOut: () => void }) {
-  const [name, setName] = useState(user.name);
-  const [profession, setProfession] = useState(user.profession ?? "");
-  const [job, setJob] = useState(user.job ?? "");
-  const [fieldOfStudy, setFieldOfStudy] = useState(user.fieldOfStudy ?? "");
-  const [interests, setInterests] = useState(user.interests?.join(", ") ?? "");
-  const [hobbies, setHobbies] = useState(user.hobbies?.join(", ") ?? "");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const items = (value: string) => value.split(/[,;\n]/).map((item) => item.trim()).filter(Boolean);
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError("");
-    const cleanInterests = items(interests);
-    const cleanHobbies = items(hobbies);
-    if (name.trim().length < 2) return setError(t(language, "nameRule"));
-    if (!cleanInterests.length && !cleanHobbies.length) return setError(t(language, "profileInterestRule"));
-    if ([cleanInterests, cleanHobbies].some((list) => list.length > 12 || list.some((item) => item.length > 60))) return setError(t(language, "profileLimit"));
-    if ([cleanInterests, cleanHobbies].some((list) => new Set(list.map((item) => item.toLocaleLowerCase())).size !== list.length)) return setError(t(language, "profileDuplicate"));
-    setBusy(true);
-    try { onSaved(await api.updateProfile({ name: name.trim(), profession: profession.trim(), job: job.trim(), fieldOfStudy: fieldOfStudy.trim(), interests: cleanInterests, hobbies: cleanHobbies })); }
-    catch (cause) { setError(errorMessage(cause, language)); }
-    finally { setBusy(false); }
-  }
-  return <div className="profile-shell">
-    <div className="profile-top"><Brand compact /><div className="theme-controls"><ThemeToggle language={language} mode={colorMode} onChange={onColorMode} /><LanguagePicker language={language} onChange={onLanguage} /></div></div>
-    <section className="profile-card">
-      <div className="profile-intro"><span className="eyebrow blue"><Sparkles size={16} /> brainy</span><h1>{t(language, user.profileCompleted ? "editProfile" : "setupProfile")}</h1><p>{t(language, "profileIntro")}</p><small>{t(language, "profilePrivate")}</small></div>
-      <form className="profile-form" onSubmit={submit}>
-        <label className="input-label">{t(language, "name")}<input autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} maxLength={80} required /></label>
-        <label className="input-label">{t(language, "profession")} <span className="optional-label">{t(language, "optional")}</span><input value={profession} onChange={(event) => setProfession(event.target.value)} maxLength={100} /></label>
-        <label className="input-label">{t(language, "job")} <span className="optional-label">{t(language, "optional")}</span><input value={job} onChange={(event) => setJob(event.target.value)} maxLength={100} /></label>
-        <label className="input-label">{t(language, "fieldOfStudy")} <span className="optional-label">{t(language, "optional")}</span><input value={fieldOfStudy} onChange={(event) => setFieldOfStudy(event.target.value)} maxLength={100} /></label>
-        <label className="input-label">{t(language, "interests")}<textarea rows={2} value={interests} onChange={(event) => setInterests(event.target.value)} placeholder={t(language, "listHint")} maxLength={730} /></label>
-        <label className="input-label">{t(language, "hobbies")}<textarea rows={2} value={hobbies} onChange={(event) => setHobbies(event.target.value)} placeholder={t(language, "listHint")} maxLength={730} /></label>
-        {error && <div className="form-error" role="alert">{error}</div>}
-        <div className="profile-actions">{onCancel && <Button type="button" variant="secondary" onClick={onCancel}>{t(language, "cancel")}</Button>}<Button type="submit" disabled={busy}>{busy ? t(language, "saving") : t(language, user.profileCompleted ? "saveProfile" : "continueToWorkspace")} <ArrowRight size={17} /></Button></div>
-      </form>
-    </section>
-    {!user.profileCompleted && <button type="button" className="profile-signout" onClick={onSignOut}>{t(language, "signOut")}</button>}
-  </div>;
 }
 
 type DraftField = { key: number; id?: string; name: string; kind: FieldKind; unit: string; optionsText: string; codeListId?: string; custom?: boolean; targetObjectFormatId?: string; multiple?: boolean; variableName?: string; referenceMode?: "CURRENT" | "SNAPSHOT" };
@@ -1013,6 +971,7 @@ export default function BrainyApp() {
   const { returnTool, rememberTool } = useToolSectionFocus(activeSection);
   const [tabSelection, setTabSelection] = useState<{ collectionId: string | null; tab: CollectionTab }>({ collectionId: null, tab: "entries" });
   const [profileEditing, setProfileEditing] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useProfilePhoto(user);
   const entryGeneration = useRef(0);
   const [calendarRefresh, setCalendarRefresh] = useState(0);
   const selected = useMemo(() => collections.find((item) => item.id === selectedId) ?? null, [collections, selectedId]);
@@ -1177,11 +1136,11 @@ export default function BrainyApp() {
 
   if (booting) return <div className="boot-screen"><Brand /><div className="boot-spinner" /><p>{t(language, "loading")}</p></div>;
   if (!user) return <AuthScreen language={language} onLanguage={setLanguage} colorMode={colorMode} onColorMode={chooseColorMode} onAuthenticated={setUser} />;
-  if (!user.profileCompleted || profileEditing) return <ProfileScreen user={user} language={language} onLanguage={setLanguage} colorMode={colorMode} onColorMode={chooseColorMode} onSaved={(updated) => { setUser(updated); setProfileEditing(false); }} onCancel={user.profileCompleted ? () => setProfileEditing(false) : undefined} onSignOut={signOut} />;
+  if (!user.profileCompleted || profileEditing) return <ProfileScreen brand={<Brand compact />} user={user} photo={profilePhoto} language={language} onLanguage={setLanguage} colorMode={colorMode} onColorMode={chooseColorMode} onSaved={(updated, photo) => { setUser(updated); setProfilePhoto(photo); setProfileEditing(false); }} onCancel={user.profileCompleted ? () => setProfileEditing(false) : undefined} onSignOut={signOut} />;
 
   return (
     <AppShell>
-      <Sidebar brand={<Brand />} collections={collections} selectedId={selectedId} loading={loadingCollections} language={language} userName={user.name} userEmail={user.email} onSelect={selectCollection} onTemplate={() => setDialog({ kind: "starter" })} onManual={() => setDialog({ kind: "collection" })} onTransfer={() => setDialog({ kind: "transfer" })} onTools={() => setDialog({ kind: "workspaceTools" })} onEditProfile={() => setProfileEditing(true)} onSignOut={signOut} />
+      <Sidebar brand={<Brand />} collections={collections} selectedId={selectedId} loading={loadingCollections} language={language} userName={user.name} userEmail={user.email} userPhoto={profilePhoto} onSelect={selectCollection} onTemplate={() => setDialog({ kind: "starter" })} onManual={() => setDialog({ kind: "collection" })} onTransfer={() => setDialog({ kind: "transfer" })} onTools={() => setDialog({ kind: "workspaceTools" })} onEditProfile={() => setProfileEditing(true)} onSignOut={signOut} />
       <main className="workspace">
         <TopBar brand={<Brand compact />} selectedName={selected?.name} language={language} themeControl={<ThemeToggle language={language} mode={colorMode} onChange={chooseColorMode} />} languageControl={<LanguagePicker language={language} onChange={setLanguage} />} refreshBusy={loadingCollections} menuOpen={menuOpen} menuButtonRef={mobileMenuButtonRef} onCapture={() => { setSharedContent(undefined); setQuickCapture(true); }} onRefresh={() => { void refresh(); }} onToggleMenu={menuOpen ? closeMenu : openMenu} />
         {drawerMounted && <MobileCollectionDrawer open={menuOpen} collections={collections} selectedId={selectedId} language={language} triggerRef={mobileMenuButtonRef} onClose={closeMenu} onSelect={selectCollection} onTemplate={() => setDialog({ kind: "starter" })} onManual={() => setDialog({ kind: "collection" })} onTools={() => setDialog({ kind: "workspaceTools" })} onEditProfile={() => setProfileEditing(true)} onSignOut={signOut} />}

@@ -121,7 +121,7 @@ export const sensitivityApi = {
     return (await request<{ setMinimumAggregateSize: Collection }>(`mutation($collectionId:String!,$minimum:Int!){setMinimumAggregateSize(collectionId:$collectionId,minimum:$minimum){${collectionFields}}}`, { collectionId, minimum })).setMinimumAggregateSize;
   },
 };
-const userFields = "id name email profession job fieldOfStudy interests hobbies profileCompleted";
+const userFields = "id name email profession job fieldOfStudy interests hobbies profileCompleted hasProfilePhoto";
 
 export const api = {
   async setWorkflow(collectionId: string, formatId: string, input: WorkflowDefinition & { expectedVersion: number }): Promise<Collection> {
@@ -294,6 +294,15 @@ export const api = {
     try { response = await fetch("/api/session", { method: "DELETE", credentials: "same-origin" }); }
     catch { throw new ApiError("Could not reach Brainy. Check your connection and try again."); }
     if (!response.ok) throw new ApiError("Brainy is temporarily unavailable. Please try again.");
+  },
+  async profilePhoto(): Promise<string | null> {
+    return (await request<{ profilePhoto: string | null }>("query { profilePhoto }")).profilePhoto;
+  },
+  async updateProfilePhoto(photo: string | null): Promise<User> {
+    return (await request<{ updateProfilePhoto: User }>(
+      `mutation UpdateProfilePhoto($photo: String) { updateProfilePhoto(photo: $photo) { ${userFields} } }`,
+      { photo },
+    )).updateProfilePhoto;
   },
   async updateProfile(input: ProfileInput): Promise<User> {
     return (await request<{ updateProfile: User }>(
