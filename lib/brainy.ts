@@ -1,3 +1,4 @@
+import { entryAttachmentLimit } from "./platform";
 export type Language = "en" | "fr";
 export type FieldKind = "TITLE" | "DATE" | "NUMBER" | "TIME" | "LINK" | "CHARACTER" | "TEXT" | "BOOLEAN" | "SELECT" | "MULTI_SELECT" | "DATETIME" | "DURATION" | "LONG_TEXT" | "ATTACHMENT" | "OBJECT_REF" | "MEASURE" | "CODE" | "POSITION" | "ZONE";
 export type SensitivityLevel = "ORDINARY" | "PERSONAL" | "SENSITIVE";
@@ -143,7 +144,7 @@ const messages = {
     chooseFile: "Choose a file",
     downloadFile: "Download file",
     removeFile: "Remove file",
-    fileTooLarge: "Choose a file smaller than 2 MB. An entry can hold at most 8 MB of files.",
+    fileTooLarge: "Choose a file smaller than 2 MB. An entry can hold at most {max} of files.",
     invalidChoice: "Choose one of the available options.",
     invalidBoolean: "Choose yes or no.",
     invalidFile: "Choose a valid file.",
@@ -373,7 +374,7 @@ const messages = {
     chooseFile: "Choisir un fichier",
     downloadFile: "Télécharger le fichier",
     removeFile: "Retirer le fichier",
-    fileTooLarge: "Choisissez un fichier de moins de 2 Mo. Une entrée peut contenir au plus 8 Mo de fichiers.",
+    fileTooLarge: "Choisissez un fichier de moins de 2 Mo. Une entrée peut contenir au plus {max} de fichiers.",
     invalidChoice: "Choisissez parmi les options disponibles.",
     invalidBoolean: "Choisissez oui ou non.",
     invalidFile: "Choisissez un fichier valide.",
@@ -655,7 +656,8 @@ export function translateError(error: unknown, language: Language): string {
   if (message.includes("has saved values")) return t(language, "formatProtected");
   if (message.includes("Choice fields need")) return t(language, "choicesRule");
   if (message.includes("needs a duration")) return t(language, "invalidDuration");
-  if (message.includes("file is too large") || message.includes("Attachments in one entry") || message.includes("Request too large")) return t(language, "fileTooLarge");
+  if (message.includes("file is too large") || message.includes("Attachments in one entry") || message.includes("Request too large")) return fileTooLargeText(language);
+  if (message.includes("paused on this hosting plan")) return language === "fr" ? "Cette fonction est en pause sur cet hébergement." : "This feature is paused on this hosting.";
   if (message.includes("needs one of its choices") || message.includes("needs valid choices")) return t(language, "invalidChoice");
   if (message.includes("must be yes or no")) return t(language, "invalidBoolean");
   if (message.includes("needs a valid file") || message.includes("needs a file")) return t(language, "invalidFile");
@@ -734,3 +736,6 @@ export function translateError(error: unknown, language: Language): string {
   if (message.includes("Collection not found") || message.includes("Entry not found")) return "Cet élément n’est plus disponible. Actualisez et réessayez.";
   return t(language, "unexpected");
 }
+
+/** File size message with this hosting's limit per entry. */
+export const fileTooLargeText = (language: Language): string => t(language, "fileTooLarge").replace("{max}", entryAttachmentLimit(language));

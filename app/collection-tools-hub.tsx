@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import type { Collection, Language, User } from "../lib/brainy";
 import { t } from "../lib/brainy";
+import { isFrozen, usePlatform } from "../lib/platform";
 
 export default function CollectionToolsHub({
   collection,
@@ -46,6 +47,7 @@ export default function CollectionToolsHub({
   ) => void;
   onOpenDialog: (kind: "units" | "objects") => void;
 }) {
+  const platform = usePlatform();
   const [open, setOpen] = useState(defaultOpen);
   const drawerId = useId();
   const isOwner = collection.ownerId === user.id;
@@ -226,7 +228,7 @@ export default function CollectionToolsHub({
                 <ArrowRight className="collection-hub-arrow" size={17} />
               </button>
 
-              {canSend && (
+              {canSend && !isFrozen("dataSources", platform) && (
                 <button
                   type="button"
                   className="collection-hub-card"

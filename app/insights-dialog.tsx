@@ -10,6 +10,7 @@ import { splitCrossTab } from "../lib/chart-math";
 import { EXACT_CODE_DEPTH, maxCodeLevels } from "../lib/code-tree";
 import { FormulaEditorPanel } from "./formula-editor-panel";
 import { AccessibleListbox } from "./components/ui/AccessibleListbox";
+import { isFrozen, usePlatform } from "../lib/platform";
 
 type Props = {
   collection: Collection;
@@ -45,6 +46,7 @@ const OPERATIONS: { id: AnalysisOperationId; fr: string; en: string }[] = [
 ];
 
 export default function InsightsDialog({ collection, language, onClose, onCollectionChanged, onOpenEntry }: Props) {
+  const backgroundOn = !isFrozen("backgroundJobs", usePlatform());
   const fr = language === "fr";
   const resultsRef = useRef<HTMLDivElement | null>(null);
   const [formatId, setFormatId] = useState(collection.formats[0]?.id ?? "");
@@ -362,8 +364,8 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
         {filters.length > 0 && <p>{filters.map((item, index) => <button key={index} type="button" onClick={() => setFilters(filters.filter((_, idx) => idx !== index))}>{format?.fields.find((field) => field.id === item.fieldId)?.name} {item.operator} {item.value} ×</button>)}</p>}
         <div className="insights-actions">
           <button type="button" className="btn primary" disabled={busy} onClick={runAnalysis}>{fr ? "Calculer" : "Calculate"}</button>
-          <button type="button" className="btn secondary" disabled={busy} onClick={() => void queueAnalysis("RECALCULATE")}>{fr ? "Recalculer en arrière-plan" : "Recalculate in background"}</button>
-          <button type="button" className="btn secondary" disabled={busy} onClick={() => void queueAnalysis("CHART")}>{fr ? "Préparer un graphique" : "Prepare chart"}</button>
+          {backgroundOn && <button type="button" className="btn secondary" disabled={busy} onClick={() => void queueAnalysis("RECALCULATE")}>{fr ? "Recalculer en arrière-plan" : "Recalculate in background"}</button>}
+          {backgroundOn && <button type="button" className="btn secondary" disabled={busy} onClick={() => void queueAnalysis("CHART")}>{fr ? "Préparer un graphique" : "Prepare chart"}</button>}
           {quickChartOption && <button type="button" className="insights-quick" disabled={busy} onClick={runQuickChart}>{fr ? "Graphique rapide" : "Quick chart"}</button>}
         </div>
       </section>
@@ -379,7 +381,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
         {(!measure || measure.startsWith("formula:") || !(dateFieldId || dateFields[0]?.id)) && <p className="action-help">{fr ? "Choisissez une mesure numérique et un champ date pour continuer." : "Choose a numeric measure and a date field to continue."}</p>}
         <div className="forecast-actions">
           <button type="button" className="btn secondary" disabled={busy || !measure || measure.startsWith("formula:") || !(dateFieldId || dateFields[0]?.id)} onClick={runForecast}>{fr ? "Estimer" : "Estimate"}</button>
-          <button type="button" className="btn secondary" disabled={busy || !measure || measure.startsWith("formula:") || !(dateFieldId || dateFields[0]?.id)} onClick={() => void queueForecast()}>{fr ? "Estimer en arrière-plan" : "Estimate in background"}</button>
+          {backgroundOn && <button type="button" className="btn secondary" disabled={busy || !measure || measure.startsWith("formula:") || !(dateFieldId || dateFields[0]?.id)} onClick={() => void queueForecast()}>{fr ? "Estimer en arrière-plan" : "Estimate in background"}</button>}
         </div>
         {forecastResult && <div className="forecast-results">
           <p>{fr ? "Sources" : "Sources"} : {forecastResult.sourceFrom} → {forecastResult.sourceTo} ({forecastResult.trainingCount} {fr ? "périodes d'apprentissage" : "training periods"}, {forecastResult.holdoutCount} {fr ? "périodes tenues à l'écart" : "held-out periods"}).</p>

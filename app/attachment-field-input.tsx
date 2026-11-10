@@ -4,7 +4,8 @@
 // above, it is uploaded as a large file by reference (T44) with progress, pause and resume.
 import { useEffect, useRef, useState } from "react";
 import type { Entry, Field, Language } from "../lib/brainy";
-import { t } from "../lib/brainy";
+import { fileTooLargeText, t } from "../lib/brainy";
+import { isFrozen, usePlatform } from "../lib/platform";
 import { LARGE_FILE_THRESHOLD, formatBytes, largeFileApi, largeFileError, largeFileStateLabel, openLargeFile, uploadLargeFile } from "../lib/large-files";
 import "./large-files.css";
 
@@ -15,6 +16,7 @@ export default function AttachmentFieldInput({ field, language, collectionId, en
   onSmallFile: (file: File) => void; onLargeFile: (largeFileId: string, fileName: string) => void; onClear: () => void;
   onUploadingChange: (uploading: boolean) => void; onError: (message: string) => void; onDownloadSmall: () => void;
 }) {
+  const platform = usePlatform();
   const saved = entry?.values.find((item) => item.fieldId === field.id);
   const savedLarge = saved?.largeFileId && saved.value === value && !largeFileId ? saved : undefined;
   const [pending, setPending] = useState<File | null>(null);
@@ -37,8 +39,10 @@ export default function AttachmentFieldInput({ field, language, collectionId, en
     } finally { setUploading(false); onUploadingChange(false); }
   };
   const choose = (file: File) => {
-    if (!file.size) { onError(t(language, "fileTooLarge")); return; }
+    if (!file.size) { onError(fileTooLargeText(language)); return; }
     if (file.size <= LARGE_FILE_THRESHOLD) { setPending(null); setProgress(null); onSmallFile(file); return; }
+    // Large files need storage and uploads this hosting does not offer.
+    if (isFrozen("largeFiles", platform)) { onError(fileTooLargeText(language)); return; }
     void upload(file);
   };
   const run = (action: () => Promise<unknown>) => { setStatus(""); action().catch((cause) => onError(largeFileError(cause, language))); };

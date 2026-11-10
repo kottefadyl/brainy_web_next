@@ -7,6 +7,7 @@ import WorkspaceBackupPanel from "./workspace-backup-panel";
 import BackgroundJobsPanel from "./background-jobs-panel";
 import type { Collection, Language } from "../lib/brainy";
 import { t } from "../lib/brainy";
+import { isFrozen, usePlatform } from "../lib/platform";
 
 export default function WorkspaceToolsDialog({
   collections,
@@ -19,6 +20,7 @@ export default function WorkspaceToolsDialog({
   onClose: () => void;
   onRestored: () => void;
 }) {
+  const platform = usePlatform();
   const fr = language === "fr";
   const dialogRef = useRef<HTMLDivElement>(null);
   useDialogFocus(dialogRef, onClose);
@@ -62,9 +64,9 @@ export default function WorkspaceToolsDialog({
           <div className="workspace-tools-section">
             <WorkspaceBackupPanel language={language} onRestored={onRestored} />
           </div>
-          <div className="workspace-tools-section">
+          {!isFrozen("backgroundJobs", platform) && <div className="workspace-tools-section">
             <BackgroundJobsPanel collections={collections} language={language} />
-          </div>
+          </div>}
         </div>
       </div>
     </div>
