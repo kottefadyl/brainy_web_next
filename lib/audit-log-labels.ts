@@ -1,4 +1,5 @@
 import type { AuditLog, CollectionMember, Language } from "./brainy";
+import { operationLabel } from "./analysis-operations";
 
 /** Natural wording for the privacy journal (T43/3). Codes the clients do not know are shown as they are. */
 const labels: Record<string, [string, string]> = {
@@ -26,14 +27,27 @@ export function auditActionLabel(action: string, language: Language): string {
   return known ? known[language === "fr" ? 1 : 0] : action.toLowerCase().replaceAll("_", " ");
 }
 
-/** The alert reason in plain words; other details stay as the API wrote them, without the technical query key. */
+/**
+ * The alert reason in plain words. Other details lose the technical query key and data format id,
+ * and the API's "operation X; observations N" becomes "Average · 57 observations" in the person's language.
+ */
 export function auditDetailText(log: AuditLog, language: Language): string {
+  const fr = language === "fr";
   const details = log.details ?? "";
   if (log.action === "SENSITIVE_AGGREGATE_ALERT") {
     const reason = reasons[details.split(":")[0]];
-    if (reason) return reason[language === "fr" ? 1 : 0];
+    if (reason) return reason[fr ? 1 : 0];
   }
-  return details.replace(/;?\s*query [0-9a-f]{16}/, "").replace(/^Data format [^;]+;\s*/, "").trim();
+  const rest = details.replace(/;?\s*query [0-9a-f]{16}/, "").replace(/^Data format [^;]+;\s*/, "").trim();
+  return rest.split(/;\s*/).filter(Boolean).map((part) => {
+    const operation = /^operation (\w+)$/.exec(part);
+    if (operation) return operationLabel(operation[1], language);
+    const observations = /^observations (\d+)$/.exec(part);
+    if (observations) return `${observations[1]} observation${observations[1] === "1" ? "" : "s"}`;
+    const refused = /^refused: (.*)$/.exec(part);
+    if (refused) return `${fr ? "refusée : " : "refused: "}${refused[1]}`;
+    return part;
+  }).join(" · ");
 }
 
 export function auditActor(log: AuditLog, members: CollectionMember[] | undefined, ownerId: string | undefined, language: Language): string {
