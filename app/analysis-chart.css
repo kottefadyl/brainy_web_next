@@ -4,7 +4,7 @@ html[data-theme="dark"] .analysis-line-chart { --series-main: #4F8BE6; --series-
 
 .analysis-chart-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; min-width: 0; }
 html[data-theme] .analysis-chart-legend { flex: 1 1 180px; flex-wrap: wrap; min-width: 0; }
-.analysis-chart-tools { display: flex; align-items: center; gap: 6px; flex: none; margin-inline-start: auto; }
+.analysis-chart-tools { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; flex: 0 1 auto; max-width: 100%; min-width: 0; margin-inline-start: auto; }
 .analysis-view-switch { display: flex; padding: 2px; border: 1px solid var(--line); border-radius: 10px; }
 
 html[data-theme] .analysis-view-switch button,
@@ -62,3 +62,11 @@ html[data-theme] .insights-chart.analysis-line-chart svg.analysis-series-swatch 
 .analysis-tooltip-series { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; column-gap: 8px; margin-top: 2px; }
 .analysis-tooltip-series b { font-weight: 650; font-variant-numeric: tabular-nums; text-align: end; }
 .analysis-tooltip-series small { grid-column: 2 / 4; color: var(--muted); font-size: 13px; }
+
+/* Zoom (chart-zoom-controls.tsx): pinch and drag stay on the chart, vertical scrolling stays with the page. */
+.analysis-chart-plot { touch-action: pan-y; }
+html[data-theme] .analysis-view-switch button:disabled { color: var(--muted); opacity: .45; cursor: not-allowed; background: transparent; }
+.analysis-scrubber { position: relative; height: 44px; margin: 0; border-radius: 8px; cursor: pointer; touch-action: none; }
+.analysis-scrubber::before { content: ""; position: absolute; inset: 19px 0; border-radius: 3px; background: var(--line); }
+.analysis-scrubber-thumb { position: absolute; top: 12px; bottom: 12px; min-width: 16px; border-radius: 6px; background: var(--blue-soft); border: 1px solid var(--blue); cursor: grab; }
+.analysis-scrubber:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }

@@ -2,6 +2,7 @@
 // dedicated Chrome from README.md. Synthetic data only.
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
+import { clampWindow, isZoomed, shiftWindow, zoomWindow } from "../../../lib/chart-zoom.ts";
 import { alignSeries, chartCsv, chooseAxisTicks, deltaPercent, lttbIndices, niceScale, splitCrossTab } from "../../../lib/chart-math.ts";
 
 // Pure logic first: it needs neither a browser nor a server.
@@ -59,6 +60,18 @@ const row = (group, value, count = 1) => ({ group, label: group, value, count, s
   assert.equal(splitCrossTab(cells, "CATEGORY", "OBJECT"), null, "no period axis, no series chart");
   const gap = splitCrossTab([cell("2026-01", "a", "A", 1), cell("2026-02", "b", "B", 1)], "MONTH", "CATEGORY");
   assert.equal(gap.series[0].points[1], undefined, "a missing cell is a gap, not a zero");
+}
+{
+  // Zoom windows (T23/4).
+  assert.deepEqual(zoomWindow({ start: 0, end: 12 }, 12, 0.5), { start: 3, end: 9 }, "zoom in keeps the centre");
+  assert.deepEqual(zoomWindow({ start: 0, end: 12 }, 12, 0.5, 0), { start: 0, end: 6 }, "anchor on the left edge stays there");
+  assert.deepEqual(zoomWindow({ start: 0, end: 12 }, 12, 0.1), { start: 4, end: 9 }, "never narrower than five points");
+  assert.deepEqual(zoomWindow({ start: 0, end: 3 }, 3, 0.5), { start: 0, end: 3 }, "a short series cannot zoom in");
+  assert.deepEqual(zoomWindow({ start: 8, end: 12 }, 12, 4), { start: 0, end: 12 }, "zoom out stops at the whole series");
+  assert.deepEqual(shiftWindow({ start: 3, end: 9 }, 12, 10), { start: 6, end: 12 }, "panning stops at the end");
+  assert.deepEqual(shiftWindow({ start: 3, end: 9 }, 12, -10), { start: 0, end: 6 });
+  assert.deepEqual(clampWindow({ start: 0, end: 12 }, 7), { start: 0, end: 7 }, "fewer rows shrink the window");
+  assert.equal(isZoomed({ start: 0, end: 12 }, 12), false);
 }
 console.log("PASS: chart logic.");
 if (process.argv.includes("--logic")) process.exit(0);
@@ -201,9 +214,9 @@ async function compareScenario(language, theme, tag) {
 
   // Bars.
   await capture(`${tag}-line`);
-  await evaluate("document.querySelectorAll('.analysis-view-switch button')[1].click()");
+  await evaluate("document.querySelectorAll('.analysis-view-switch:not(.analysis-zoom-switch) button')[1].click()");
   await pause(240);
-  assert.equal(await evaluate("document.querySelectorAll('.analysis-view-switch button')[1].getAttribute('aria-pressed')"), "true");
+  assert.equal(await evaluate("document.querySelectorAll('.analysis-view-switch:not(.analysis-zoom-switch) button')[1].getAttribute('aria-pressed')"), "true");
   const bars = await evaluate("(()=>{const b=[...document.querySelectorAll('.analysis-chart-rect')];return {count:b.length,maxWidth:Math.max(...b.map(e=>e.getBBox().width)),polylines:document.querySelectorAll('.analysis-line-chart polyline').length}})()");
   assert(bars.count >= 22 && bars.maxWidth <= 24.01 && bars.polylines === 0, `${tag} bars ${JSON.stringify(bars)}`);
   await assertLayout(`${tag} bars`);
@@ -238,7 +251,7 @@ async function compareScenario(language, theme, tag) {
   assert.equal(lines[0], fr ? '"Groupe","Libellé","Valeur","Unité","Nombre","Série"' : '"Group","Label","Value","Unit","Count","Series"');
   assert.equal(lines[1].split(",")[2], '"12450"', "exact value");
   assert.equal(await evaluate("document.querySelector('.analysis-line-chart .form-error')"), null, "no export error");
-  await evaluate("document.querySelectorAll('.analysis-view-switch button')[0].click()");
+  await evaluate("document.querySelectorAll('.analysis-view-switch:not(.analysis-zoom-switch) button')[0].click()");
   await pause(160);
 }
 
@@ -256,6 +269,73 @@ async function denseScenario(tag) {
   const drawn = await evaluate("new Promise(r=>setTimeout(()=>{const p=document.querySelector('.analysis-line-path'),s=getComputedStyle(p);r({pathLength:p.getAttribute('pathLength'),offset:parseFloat(s.strokeDashoffset),dash:s.strokeDasharray})},600))");
   assert.equal(drawn.offset, 0, JSON.stringify(drawn));
   assert.equal(drawn.pathLength, "1500", "dash is relative to the whole line");
+}
+
+async function zoomScenario(language, tag) {
+  const fr = language === "fr";
+  const zoomButton = (index) => `document.querySelectorAll('.analysis-line-chart .analysis-zoom-switch button')[${index}]`;
+  const slider = () => evaluate("(()=>{const s=document.querySelector('.analysis-scrubber');return s?{now:+s.getAttribute('aria-valuenow'),max:+s.getAttribute('aria-valuemax'),text:s.getAttribute('aria-valuetext'),height:s.getBoundingClientRect().height}:null})()");
+  await showView("compare");
+  assert.equal(await slider(), null, "no scroll bar before zooming");
+  assert.equal(await evaluate(`${zoomButton(1)}.disabled`), true, "zoom out is unavailable at full width");
+  await evaluate(`${zoomButton(0)}.click()`);
+  await pause(200);
+  let state = await slider();
+  assert.deepEqual([state.now, state.max], [3, 6], `${tag} zoom in keeps the centre: ${JSON.stringify(state)}`);
+  assert(state.height >= 44, `${tag} scroll bar target`);
+  assert.match(state.text, fr ? /avril 2026 – septembre 2026/ : /April 2026 – September 2026/);
+  assert.equal(await evaluate("document.querySelectorAll('.analysis-line-chart .analysis-chart-target').length"), 6);
+  assert.match(await evaluate("document.querySelector('.analysis-line-chart .analysis-chart-note').textContent"), fr ? /Zoom : 6 points sur 12/ : /Zoomed: 6 of 12 points/);
+  await assertLayout(`${tag} zoomed`);
+  await capture(`${tag}-zoom`);
+  // Scroll bar by keyboard, then mouse drag on the plot pans back.
+  await evaluate("document.querySelector('.analysis-scrubber').focus()");
+  await press("End");
+  assert.equal((await slider()).now, 6, "End shows the last periods");
+  await evaluate("document.activeElement.blur()");
+  const box = await evaluate("(()=>{const r=document.querySelector('.analysis-line-chart .analysis-chart-plot').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2,w:r.width}})()");
+  await send("Input.dispatchMouseEvent", { type: "mousePressed", x: box.x, y: box.y, button: "left", buttons: 1, clickCount: 1 });
+  await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: box.x + box.w / 3, y: box.y, button: "left", buttons: 1 });
+  await send("Input.dispatchMouseEvent", { type: "mouseReleased", x: box.x + box.w / 3, y: box.y, button: "left", buttons: 0, clickCount: 1 });
+  await pause(200);
+  assert((await slider()).now < 6, `${tag} drag pans to earlier periods`);
+  // Keyboard on a point: + zooms around it, 0 shows everything again.
+  await evaluate("document.querySelector('.analysis-line-chart .analysis-chart-target[tabindex=\"0\"]').focus()");
+  await press("Home");
+  await evaluate("document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'0',bubbles:true}))");
+  await pause(200);
+  assert.equal(await slider(), null, "0 resets the zoom");
+  await evaluate("document.querySelector('.analysis-line-chart .analysis-chart-target[tabindex=\"0\"]').focus()");
+  await evaluate("document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'+',bubbles:true}))");
+  await pause(200);
+  assert.ok(await slider(), "+ zooms in");
+  await evaluate(`${zoomButton(2)}.click()`);
+  await pause(200);
+  assert.equal(await slider(), null, "Show all resets");
+  // Ctrl + wheel on a dense series zooms in under the pointer; a plain wheel does not.
+  await showView("dense");
+  const dense = await evaluate("(()=>{const r=document.querySelector('.analysis-line-chart .analysis-chart-plot').getBoundingClientRect();return {x:r.x+r.width*0.5,y:r.y+r.height/2}})()");
+  await send("Input.dispatchMouseEvent", { type: "mouseWheel", x: dense.x, y: dense.y, deltaX: 0, deltaY: 120 });
+  await pause(200);
+  assert.equal(await slider(), null, "a plain wheel leaves the zoom alone");
+  await send("Input.dispatchMouseEvent", { type: "mouseWheel", x: dense.x, y: dense.y, deltaX: 0, deltaY: -300, modifiers: 2 });
+  await pause(250);
+  state = await slider();
+  assert(state && state.max > 0, `${tag} ctrl + wheel zooms in`);
+  const notes = await evaluate("[...document.querySelectorAll('.analysis-line-chart .analysis-chart-note')].map(n=>n.textContent).join(' | ')");
+  assert.doesNotMatch(notes, fr ? /simplifiée/ : /Simplified/, `${tag} a narrow window shows every point: ${notes}`);
+  await assertLayout(`${tag} dense zoom`);
+  await capture(`${tag}-zoom-dense`);
+  await evaluate(`${zoomButton(2)}.click()`);
+  await pause(150);
+  // Several series zoom the same way.
+  await showView("multi");
+  await evaluate(`${zoomButton(0)}.click()`);
+  await pause(200);
+  assert.equal(await evaluate("document.querySelectorAll('.analysis-multi-chart .analysis-chart-target').length"), 6, "multi chart zooms");
+  await assertLayout(`${tag} multi zoom`);
+  await evaluate(`${zoomButton(2)}.click()`);
+  await pause(150);
 }
 
 async function multiScenario(language, tag) {
@@ -296,7 +376,7 @@ async function multiScenario(language, tag) {
   await evaluate("document.activeElement.blur()");
   await capture(`${tag}-multi-line`);
   // Grouped bars.
-  await evaluate("document.querySelectorAll('.analysis-multi-chart .analysis-view-switch button')[1].click()");
+  await evaluate("document.querySelectorAll('.analysis-multi-chart .analysis-view-switch:not(.analysis-zoom-switch) button')[1].click()");
   await pause(240);
   const bars = await evaluate("document.querySelectorAll('.analysis-multi-chart .analysis-chart-rect').length");
   assert(bars >= 47, `${tag} grouped bars ${bars}`);
@@ -308,7 +388,7 @@ async function multiScenario(language, tag) {
   assert.equal((svg.text.match(/stroke-dasharray/g) ?? []).length >= 3, true, "dash patterns exported");
   assert.match(svg.text, /Café/);
   assert(!svg.text.includes("var("), "export colours resolved");
-  await evaluate("document.querySelectorAll('.analysis-multi-chart .analysis-view-switch button')[0].click()");
+  await evaluate("document.querySelectorAll('.analysis-multi-chart .analysis-view-switch:not(.analysis-zoom-switch) button')[0].click()");
   await pause(160);
 }
 
@@ -332,6 +412,7 @@ for (const width of [320, 390, 1280]) for (const theme of ["light", "dark"]) for
   await compareScenario(language, theme, tag);
   await denseScenario(tag);
   await multiScenario(language, tag);
+  await zoomScenario(language, tag);
   done += 1;
   console.log("ok", tag);
 }

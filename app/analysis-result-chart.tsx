@@ -8,6 +8,8 @@ import { alignSeries, chartCsv, chooseAxisTicks, entryCount, formatChartValue, f
 import { todayLocalIso } from "../lib/date-input";
 import { buildChartSvg, saveSvgAsPng, saveText, type ExportLegendItem } from "./analysis-chart-export";
 import { ActionPopover } from "./components/ui/ActionPopover";
+import { ChartScrubber, ChartZoomButtons, useChartZoom, zoomKey } from "./chart-zoom-controls";
+import { MIN_ZOOM_POINTS } from "../lib/chart-zoom";
 
 export type ChartView = "LINE" | "BAR";
 type SeriesId = "main" | "comparison";
@@ -62,8 +64,10 @@ function SeriesChart({ rows, comparisonRows, unit, language, title, view: contro
   const showComparison = compared && isolated !== "main";
 
   const allSlots = useMemo(() => alignSeries(rows, comparisonRows), [rows, comparisonRows]);
-  const slots = useMemo(() => sampleSlots(allSlots), [allSlots]);
-  const scale = useMemo(() => niceScale(allSlots.flatMap((slot) => [...(showMain && slot.main ? [slot.main.value] : []), ...(showComparison && slot.comparison ? [slot.comparison.value] : [])])), [allSlots, showMain, showComparison]);
+  const zoom = useChartZoom(allSlots.length, svg);
+  const windowSlots = useMemo(() => allSlots.slice(zoom.window.start, zoom.window.end), [allSlots, zoom.window.start, zoom.window.end]);
+  const slots = useMemo(() => sampleSlots(windowSlots), [windowSlots]);
+  const scale = useMemo(() => niceScale(windowSlots.flatMap((slot) => [...(showMain && slot.main ? [slot.main.value] : []), ...(showComparison && slot.comparison ? [slot.comparison.value] : [])])), [windowSlots, showMain, showComparison]);
   const axisNumber = compactNumber(language);
   const left = Math.min(72, Math.max(36, Math.max(...scale.ticks.map((tick) => axisNumber.format(tick).length)) * 8 + 12));
   const plotWidth = Math.max(40, width - left - RIGHT);
@@ -76,6 +80,8 @@ function SeriesChart({ rows, comparisonRows, unit, language, title, view: contro
   const showDots = plotWidth / slots.length >= 14;
   const current = active !== null && active < slots.length ? slots[active] : null;
   const currentX = active !== null ? positions[active] : undefined;
+
+  useEffect(() => { zoom.setFrame({ width, left, plotWidth }); });
 
   useEffect(() => {
     const element = svg.current;
@@ -108,7 +114,10 @@ function SeriesChart({ rows, comparisonRows, unit, language, title, view: contro
 
   const choose = (index: number, focus: boolean) => { setActive(index); setRove(index); if (focus) targets.current[index]?.focus(); };
   const onKey = (event: KeyboardEvent<SVGRectElement>, index: number) => {
+    if (zoomKey(event, zoom, index / Math.max(1, slots.length - 1))) { event.preventDefault(); return; }
     const next = ({ ArrowRight: index + 1, ArrowLeft: index - 1, Home: 0, End: slots.length - 1 } as Record<string, number | undefined>)[event.key];
+    // Past an edge of a zoomed, unsampled window, the window follows the point.
+    if (next !== undefined && (next < 0 || next >= slots.length) && zoom.zoomed && slots.length === windowSlots.length) { event.preventDefault(); zoom.shift(next < 0 ? -1 : 1); return; }
     if (next !== undefined) { event.preventDefault(); choose(Math.max(0, Math.min(slots.length - 1, next)), true); }
     if (event.key === "Escape" && active !== null) { event.stopPropagation(); setActive(null); }
   };
@@ -169,6 +178,7 @@ function SeriesChart({ rows, comparisonRows, unit, language, title, view: contro
         </button>) : <><span className="analysis-chart-key" data-series="main" aria-hidden="true" />{legendItems[0].label}</>}
       </div>
       <div className="analysis-chart-tools">
+        {allSlots.length > MIN_ZOOM_POINTS && <ChartZoomButtons zoom={zoom} language={language} />}
         {views.length > 1 && <div className="analysis-view-switch" role="group" aria-label={fr ? "Type de graphique" : "Chart type"}>
           {views.includes("LINE") && iconButton("LINE", fr ? "Courbe" : "Line", <ChartLine size={18} aria-hidden="true" />)}
           {views.includes("BAR") && iconButton("BAR", fr ? "Barres" : "Bars", <ChartColumn size={18} aria-hidden="true" />)}
@@ -180,7 +190,7 @@ function SeriesChart({ rows, comparisonRows, unit, language, title, view: contro
         ]} />
       </div>
     </div>
-    <svg ref={svg} className="analysis-chart-plot" viewBox={`0 0 ${width} ${HEIGHT}`} role="group" aria-label={title ?? (fr ? "Graphique des résultats" : "Results chart")}>
+    <svg ref={svg} className="analysis-chart-plot" viewBox={`0 0 ${width} ${HEIGHT}`} role="group" aria-label={title ?? (fr ? "Graphique des résultats" : "Results chart")} {...zoom.plotHandlers}>
       <defs><linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor={COLORS.main} stopOpacity="0.2" /><stop offset="1" stopColor={COLORS.main} stopOpacity="0.02" /></linearGradient></defs>
       {scale.ticks.map((tick) => <g key={tick}>
         <line x1={left} x2={width - RIGHT} y1={y(tick)} y2={y(tick)} stroke="var(--line)" strokeWidth="1" />
@@ -226,7 +236,9 @@ function SeriesChart({ rows, comparisonRows, unit, language, title, view: contro
         {showComparison && current.comparison && <span className="analysis-tooltip-comparison"><span className="analysis-chart-key" data-series="comparison" aria-hidden="true" /><b>{formatChartValue(current.comparison.value, unit, language)}</b> {fullLabel(current.comparison.row.label, language)} · {entryCount(current.comparison.row.count, language)}</span>}
       </>}
     </div>
-    {allSlots.length > MAX_CHART_POINTS && <p className="analysis-chart-note">{fr ? `Courbe simplifiée : ${slots.length} points affichés sur ${allSlots.length}. Le tableau et l’export CSV contiennent tout.` : `Simplified chart: ${slots.length} of ${allSlots.length} points shown. The table and CSV export contain every point.`}</p>}
+    <ChartScrubber zoom={zoom} total={allSlots.length} language={language} label={windowSlots.length ? `${fullLabel(windowSlots[0].label, language)} – ${fullLabel(windowSlots.at(-1)!.label, language)}` : ""} />
+    {zoom.zoomed && <p className="analysis-chart-note">{fr ? `Zoom : ${windowSlots.length} points sur ${allSlots.length}.` : `Zoomed: ${windowSlots.length} of ${allSlots.length} points.`}</p>}
+    {windowSlots.length > MAX_CHART_POINTS && <p className="analysis-chart-note">{fr ? `Courbe simplifiée : ${slots.length} points affichés sur ${windowSlots.length}. Le tableau et l’export CSV contiennent tout.` : `Simplified chart: ${slots.length} of ${windowSlots.length} points shown. The table and CSV export contain every point.`}</p>}
     {exportError && <p className="form-error" role="alert">{exportError}</p>}
   </div>;
 }

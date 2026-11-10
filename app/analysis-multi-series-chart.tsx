@@ -9,6 +9,8 @@ import { todayLocalIso } from "../lib/date-input";
 import { buildChartSvg, saveSvgAsPng, saveText, type ExportLegendItem } from "./analysis-chart-export";
 import type { ChartView } from "./analysis-result-chart";
 import { ActionPopover } from "./components/ui/ActionPopover";
+import { ChartScrubber, ChartZoomButtons, useChartZoom, zoomKey } from "./chart-zoom-controls";
+import { MIN_ZOOM_POINTS } from "../lib/chart-zoom";
 
 type Props = {
   multi: MultiSeries; rows: AnalysisResult["rows"]; unit?: string; language: Language;
@@ -59,13 +61,16 @@ export function AnalysisMultiSeriesChart({ multi, rows, unit, language, title, v
   const width = exportWidth ?? measured;
   const visible = useMemo(() => multi.series.map((series, index) => ({ series, index })).filter(({ series }) => !hidden.has(series.key)), [multi, hidden]);
 
+  const zoom = useChartZoom(multi.periods.length, svg);
+  const { start, end } = zoom.window;
   // Thin long periods on the visible total, so that peaks of every series survive.
   const kept = useMemo(() => {
-    if (multi.periods.length <= MAX_CHART_POINTS) return multi.periods.map((_, index) => index);
-    const sums = multi.periods.map((_, index) => visible.reduce((sum, { series }) => sum + Math.abs(series.points[index]?.value ?? 0), 0));
-    return lttbIndices(sums, MAX_CHART_POINTS);
-  }, [multi, visible]);
-  const scale = useMemo(() => niceScale(visible.flatMap(({ series }) => series.points.flatMap((point) => (point ? [point.value] : [])))), [visible]);
+    const inWindow = Array.from({ length: end - start }, (_, offset) => start + offset);
+    if (inWindow.length <= MAX_CHART_POINTS) return inWindow;
+    const sums = inWindow.map((index) => visible.reduce((sum, { series }) => sum + Math.abs(series.points[index]?.value ?? 0), 0));
+    return lttbIndices(sums, MAX_CHART_POINTS).map((offset) => start + offset);
+  }, [visible, start, end]);
+  const scale = useMemo(() => niceScale(visible.flatMap(({ series }) => series.points.slice(start, end).flatMap((point) => (point ? [point.value] : [])))), [visible, start, end]);
   const axisNumber = compactNumber(language);
   const left = Math.min(72, Math.max(36, Math.max(...scale.ticks.map((tick) => axisNumber.format(tick).length)) * 8 + 12));
   const plotWidth = Math.max(40, width - left - RIGHT);
@@ -77,6 +82,8 @@ export function AnalysisMultiSeriesChart({ multi, rows, unit, language, title, v
   const showMarkers = band >= 14;
   const current = active !== null && active < kept.length ? kept[active] : null;
   const currentX = active !== null ? positions[active] : undefined;
+
+  useEffect(() => { zoom.setFrame({ width, left, plotWidth }); });
 
   useEffect(() => {
     const element = svg.current;
@@ -108,7 +115,10 @@ export function AnalysisMultiSeriesChart({ multi, rows, unit, language, title, v
 
   const choose = (order: number, focus: boolean) => { setActive(order); setRove(order); if (focus) targets.current[order]?.focus(); };
   const onKey = (event: KeyboardEvent<SVGRectElement>, order: number) => {
+    if (zoomKey(event, zoom, order / Math.max(1, kept.length - 1))) { event.preventDefault(); return; }
     const next = ({ ArrowRight: order + 1, ArrowLeft: order - 1, Home: 0, End: kept.length - 1 } as Record<string, number | undefined>)[event.key];
+    // Past an edge of a zoomed, unsampled window, the window follows the point.
+    if (next !== undefined && (next < 0 || next >= kept.length) && zoom.zoomed && kept.length === end - start) { event.preventDefault(); zoom.shift(next < 0 ? -1 : 1); return; }
     if (next !== undefined) { event.preventDefault(); choose(Math.max(0, Math.min(kept.length - 1, next)), true); }
     if (event.key === "Escape" && active !== null) { event.stopPropagation(); setActive(null); }
   };
@@ -164,6 +174,7 @@ export function AnalysisMultiSeriesChart({ multi, rows, unit, language, title, v
         </button>)}
       </div>
       <div className="analysis-chart-tools">
+        {multi.periods.length > MIN_ZOOM_POINTS && <ChartZoomButtons zoom={zoom} language={language} />}
         {views.length > 1 && <div className="analysis-view-switch" role="group" aria-label={fr ? "Type de graphique" : "Chart type"}>
           {views.includes("LINE") && iconButton("LINE", fr ? "Courbes" : "Lines", <ChartLine size={18} aria-hidden="true" />)}
           {views.includes("BAR") && iconButton("BAR", fr ? "Barres" : "Bars", <ChartColumn size={18} aria-hidden="true" />)}
@@ -175,7 +186,7 @@ export function AnalysisMultiSeriesChart({ multi, rows, unit, language, title, v
         ]} />
       </div>
     </div>
-    <svg ref={svg} className="analysis-chart-plot" viewBox={`0 0 ${width} ${HEIGHT}`} role="group" aria-label={chartTitle}>
+    <svg ref={svg} className="analysis-chart-plot" viewBox={`0 0 ${width} ${HEIGHT}`} role="group" aria-label={chartTitle} {...zoom.plotHandlers}>
       {scale.ticks.map((tick) => <g key={tick}>
         <line x1={left} x2={width - RIGHT} y1={y(tick)} y2={y(tick)} stroke="var(--line)" strokeWidth="1" />
         <text x={left - 6} y={y(tick) + 4} textAnchor="end" fill="var(--muted)" fontSize="13">{axisNumber.format(tick)}</text>
@@ -226,11 +237,13 @@ export function AnalysisMultiSeriesChart({ multi, rows, unit, language, title, v
         })}
       </>}
     </div>
+    <ChartScrubber zoom={zoom} total={multi.periods.length} language={language} label={`${fullLabel(multi.periods[start], language)} – ${fullLabel(multi.periods[end - 1], language)}`} />
+    {zoom.zoomed && <p className="analysis-chart-note">{fr ? `Zoom : ${end - start} périodes sur ${multi.periods.length}.` : `Zoomed: ${end - start} of ${multi.periods.length} periods.`}</p>}
     {multi.hiddenSeries > 0 && <p className="analysis-chart-note">{fr ? `${multi.series.length} catégories sur ${total} tracées : celles dont le total est le plus grand. Le tableau et l’export CSV contiennent tout.` : `${multi.series.length} of ${total} categories drawn: those with the largest totals. The table and CSV export contain every value.`}</p>}
     {multi.skippedRows > 0 && <p className="analysis-chart-note">{multi.skippedRows === 1
       ? (fr ? "1 valeur sans date n’est pas tracée ; elle reste dans le tableau." : "1 value without a date is not drawn; it stays in the table.")
       : (fr ? `${multi.skippedRows} valeurs sans date ne sont pas tracées ; elles restent dans le tableau.` : `${multi.skippedRows} values without a date are not drawn; they stay in the table.`)}</p>}
-    {multi.periods.length > MAX_CHART_POINTS && <p className="analysis-chart-note">{fr ? `Graphique simplifié : ${kept.length} périodes affichées sur ${multi.periods.length}.` : `Simplified chart: ${kept.length} of ${multi.periods.length} periods shown.`}</p>}
+    {end - start > MAX_CHART_POINTS && <p className="analysis-chart-note">{fr ? `Graphique simplifié : ${kept.length} périodes affichées sur ${end - start}.` : `Simplified chart: ${kept.length} of ${end - start} periods shown.`}</p>}
     {exportError && <p className="form-error" role="alert">{exportError}</p>}
   </div>;
 }
