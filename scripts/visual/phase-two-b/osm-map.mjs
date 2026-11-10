@@ -219,6 +219,50 @@ async function scenario(language, tag) {
   assert.equal(await evaluate("localStorage.getItem('brainy:map:osm-tiles')"), null);
 }
 
+async function pickScenario(language, tag) {
+  const fr = language === "fr";
+  const picked = () => evaluate("(()=>{try{return JSON.parse(document.querySelector('.picked-value').textContent)}catch{return null}})()");
+  const button = (index) => `document.querySelectorAll('.geo-pick-actions button')[${index}]`;
+  await evaluate("[...document.querySelectorAll('.preview-controls button')].find(b=>b.textContent==='pick').click()");
+  await pause(300);
+  assert.equal(await evaluate("document.querySelectorAll('.geo-pick-map').length"), 0, "the map opens only on request");
+  // Device location, only on request, with its accuracy.
+  await send("Browser.grantPermissions", { permissions: ["geolocation"], origin: "http://localhost:3001" });
+  await send("Emulation.setGeolocationOverride", { latitude: 6.524412, longitude: 3.379206, accuracy: 18.4 });
+  await evaluate(`${button(0)}.click()`);
+  await pause(600);
+  assert.deepEqual(await picked(), { latitude: 6.524412, longitude: 3.379206, accuracy: 18 }, `${tag} device position`);
+  assert.match(await evaluate("document.querySelector('.geo-pick-notice').textContent"), fr ? /précise à 18 m/ : /accurate to 18 m/);
+  // Refused permission: a clear message, the value unchanged.
+  await send("Browser.setPermission", { permission: { name: "geolocation" }, setting: "denied", origin: "http://localhost:3001" });
+  await evaluate(`${button(0)}.click()`);
+  await pause(400);
+  assert.match(await evaluate("document.querySelector('.geo-pick-notice').textContent"), fr ? /refusé/ : /denied/, `${tag} denied`);
+  assert.equal((await picked()).latitude, 6.524412);
+  await send("Browser.resetPermissions", {});
+  // Pointing on the map: a click places the point under it, Enter the centre.
+  await evaluate(`${button(1)}.click()`);
+  await pause(500);
+  assert.equal(await evaluate(`${button(1)}.getAttribute('aria-expanded')`), "true");
+  await evaluate("document.querySelector('.geo-pick-map .osm-map-viewport').scrollIntoView({block:'center'})");
+  await pause(200);
+  await capture(`${tag}-pick-open`);
+  const box = await evaluate("(()=>{const r=document.querySelector('.geo-pick-map .osm-map-viewport').getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height}})()");
+  const centre = { x: box.x + box.w / 2, y: box.y + box.h / 2 };
+  // Top left, clear of the consent box and of the zoom buttons.
+  for (const type of ["mousePressed", "mouseReleased"]) await send("Input.dispatchMouseEvent", { type, x: centre.x - box.w * 0.3, y: centre.y - box.h * 0.3, button: "left", clickCount: 1 });
+  await pause(300);
+  const clicked = await picked();
+  assert(clicked && clicked.longitude < 3.379206 && clicked.latitude > 6.524412 && Math.abs(clicked.latitude - 6.524412) < 0.1 && clicked.accuracy === undefined, `${tag} click north-west of the point ${JSON.stringify(clicked)}`);
+  await evaluate("document.querySelector('.geo-pick-map .osm-map-viewport').focus()");
+  await press("Enter");
+  await pause(300);
+  const entered = await picked();
+  assert(entered && Math.abs(entered.latitude - 6.524412) < 0.05, `${tag} Enter picks the centre ${JSON.stringify(entered)}`);
+  await assertLayout(`${tag} pick`);
+  await capture(`${tag}-pick`);
+}
+
 await send("Runtime.enable");
 await send("Page.enable");
 await send("Network.enable");
@@ -239,6 +283,7 @@ for (const width of [320, 390, 1280]) for (const theme of ["light", "dark"]) for
   if (language === "en") await evaluate("[...document.querySelectorAll('.preview-controls button')].find(b=>b.textContent==='Language').click()");
   await pause(200);
   await scenario(language, `${width}-${theme}-${language}`);
+  await pickScenario(language, `${width}-${theme}-${language}`);
   done += 1;
   console.log("ok", `${width}-${theme}-${language}`);
 }

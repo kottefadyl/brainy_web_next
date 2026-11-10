@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEve
 import { Maximize, Minus, Plus, X } from "lucide-react";
 import type { GeoPoint, Language } from "../lib/brainy";
 import { formatColorStyle } from "../lib/format-colors";
-import { clampView, fitBounds, panBy, project, tileLevel, toScreen, visibleTiles, zoomAround, type MapView } from "../lib/map-math";
+import { clampView, fitBounds, fromScreen, panBy, project, roundCoordinate, tileLevel, toScreen, unproject, visibleTiles, zoomAround, type MapView } from "../lib/map-math";
 import { CachedTile } from "./cached-tile";
 
 const TILES_PREFERENCE = "brainy:map:osm-tiles";
@@ -24,8 +24,10 @@ const reducedMotion = () => typeof matchMedia === "function" && matchMedia("(pre
  * Slippy map. No tile is requested until the person turns the OpenStreetMap
  * background on (product rule 13); without it the points stay fully usable.
  */
-export default function OsmMap({ points, formatColor, language, selected, onOpenEntry }: {
+export default function OsmMap({ points, formatColor, language, selected, onOpenEntry, onPick }: {
   points: GeoPoint[]; formatColor?: string; language: Language; selected: string[]; onOpenEntry: (id: string) => void;
+  /** Pointing mode (T38/3): a click, a tap, or Enter for the centre, gives a position. */
+  onPick?: (latitude: number, longitude: number) => void;
 }) {
   const fr = language === "fr";
   const viewport = useRef<HTMLDivElement>(null);
@@ -141,11 +143,20 @@ export default function OsmMap({ points, formatColor, language, selected, onOpen
       setRawView((current) => panBy(zoomAround(current, current.zoom + Math.log2(ratio), (next.x + other.x) / 2 - box.left, (next.y + other.y) / 2 - box.top, box.width, box.height), dx / 2, dy / 2));
     } else if (others.length === 0) setRawView((current) => panBy(current, dx, dy));
   };
+  const pick = (left: number, top: number) => {
+    const { latitude, longitude } = unproject(fromScreen(left, top, view, width, height));
+    onPick?.(roundCoordinate(latitude), roundCoordinate(longitude));
+  };
   const onPointerEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (!pointers.current.delete(event.pointerId)) return;
     if (moved.current < 5) setOpenId(null);
+    if (moved.current < 5 && onPick && !pointers.current.size && event.type === "pointerup") {
+      const box = event.currentTarget.getBoundingClientRect();
+      pick(event.clientX - box.left, event.clientY - box.top);
+    }
   };
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (onPick && event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); pick(width / 2, height / 2); return; }
     const pans: Record<string, [number, number]> = { ArrowLeft: [KEY_PAN, 0], ArrowRight: [-KEY_PAN, 0], ArrowUp: [0, KEY_PAN], ArrowDown: [0, -KEY_PAN] };
     if (pans[event.key]) { event.preventDefault(); animateTo(panBy(view, ...pans[event.key])); }
     else if (event.key === "+" || event.key === "=") { event.preventDefault(); zoomBy(1); }
@@ -188,7 +199,7 @@ export default function OsmMap({ points, formatColor, language, selected, onOpen
   const title = (point: GeoPoint) => point.name || point.entryId;
 
   return <div className="osm-map" data-tiles={tilesOn && !offline ? "on" : "off"} style={formatColor ? formatColorStyle(formatColor) : undefined}>
-    <div ref={viewport} className="osm-map-viewport" role="group" tabIndex={0} aria-label={fr ? `Carte, ${points.length} points. Flèches pour déplacer, plus et moins pour zoomer.` : `Map, ${points.length} points. Arrow keys to move, plus and minus to zoom.`}
+    <div ref={viewport} className="osm-map-viewport" role="group" tabIndex={0} aria-label={`${fr ? `Carte, ${points.length} points. Flèches pour déplacer, plus et moins pour zoomer.` : `Map, ${points.length} points. Arrow keys to move, plus and minus to zoom.`}${onPick ? (fr ? " Entrée choisit le centre de la carte." : " Enter picks the centre of the map.") : ""}`}
       onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerEnd} onPointerCancel={onPointerEnd} onKeyDown={onKeyDown}>
       <div className="osm-map-tiles" aria-hidden="true">{renderTiles(backdropTiles, false)}{renderTiles(currentTiles, true)}</div>
       {onScreen.map(({ point, at }, index) => <button key={point.entryId} type="button" className="osm-map-marker" data-selected={selected.includes(point.entryId)}

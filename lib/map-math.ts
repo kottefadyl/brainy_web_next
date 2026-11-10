@@ -81,3 +81,19 @@ export function visibleTiles(view: MapView, z: number, width: number, height: nu
   }
   return tiles;
 }
+
+/** Latitude and longitude of a world point (inverse of `project`). */
+export function unproject(point: WorldPoint): { latitude: number; longitude: number } {
+  const longitude = point.x * 360 - 180;
+  const latitude = Math.atan(Math.sinh(Math.PI * (1 - 2 * point.y))) * 180 / Math.PI;
+  return { latitude, longitude: ((longitude + 540) % 360) - 180 };
+}
+
+/** The world point under a viewport position (inverse of `toScreen`). */
+export function fromScreen(left: number, top: number, view: MapView, width: number, height: number): WorldPoint {
+  const size = worldSize(view.zoom);
+  return { x: view.x + (left - width / 2) / size, y: view.y + (top - height / 2) / size };
+}
+
+/** Six decimals: about 11 cm, finer than any phone or map click. */
+export const roundCoordinate = (value: number) => Math.round(value * 1e6) / 1e6;

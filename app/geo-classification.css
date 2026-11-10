@@ -25,3 +25,7 @@
 .geo-field-input{display:grid;gap:12px;margin:0;padding:14px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
 .geo-field-input legend{font-weight:700}.geo-field-input small{color:var(--muted)}.geo-coordinate-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 @media(max-width:600px){.geo-point-row{grid-template-columns:1fr auto}.geo-point-row span{grid-column:1/-1;grid-row:2}.geo-coordinate-row{grid-template-columns:1fr}.classification-table-wrap{margin-inline:-8px}}
+/* Pointing and device location (T38/3). */
+.geo-pick-actions{display:flex;flex-wrap:wrap;gap:8px}.geo-pick-actions .btn{display:inline-flex;align-items:center;gap:8px;min-height:44px}
+.geo-pick-notice{margin:0;color:var(--muted)}.geo-pick-map{display:grid;gap:8px}.geo-pick-map>p{margin:0;color:var(--muted);font-size:13px}
+.geo-pick-map .osm-map-viewport{height:clamp(240px,40vh,340px)}
