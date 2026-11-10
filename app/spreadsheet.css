@@ -1,0 +1,59 @@
+/* Spreadsheet mode of the table view (T46). Theme tokens only, so light and dark follow theme.css. */
+.spreadsheet-switch-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin:4px 0 12px; }
+.spreadsheet-switch { display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 14px 0 10px; border:1px solid var(--line-strong); border-radius:12px; background:var(--surface); color:var(--ink); font:inherit; font-weight:600; cursor:pointer; transition:background-color .12s ease, border-color .12s ease; }
+.spreadsheet-switch:hover { background:var(--surface-soft); }
+.spreadsheet-switch:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
+.spreadsheet-switch-track { position:relative; width:34px; height:20px; border-radius:999px; background:var(--line-strong); transition:background-color .14s ease; }
+.spreadsheet-switch-track span { position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:var(--surface); box-shadow:0 1px 2px rgba(0,0,0,.25); transition:transform .14s ease; }
+.spreadsheet-switch[aria-checked="true"] { border-color:var(--focus); background:var(--accent-tint); }
+.spreadsheet-switch[aria-checked="true"] .spreadsheet-switch-track { background:var(--focus); }
+.spreadsheet-switch[aria-checked="true"] .spreadsheet-switch-track span { transform:translateX(14px); }
+.spreadsheet-switch-hint { color:var(--muted); font-size:.85rem; }
+
+.spreadsheet { display:grid; gap:10px; }
+.spreadsheet-format { display:grid; gap:4px; max-width:320px; font-size:.85rem; font-weight:600; color:var(--ink); }
+.spreadsheet-format select { min-height:44px; border:1px solid var(--line-strong); border-radius:10px; background:var(--surface); color:var(--ink); padding:0 10px; font:inherit; font-weight:500; }
+.spreadsheet-problem { margin:0; padding:10px 12px; border-radius:10px; border:1px solid var(--danger); color:var(--danger); background:var(--surface); font-size:.88rem; }
+.spreadsheet-scroll { overflow:auto; max-height:min(70vh, 720px); border:1px solid var(--line); border-top:3px solid var(--format-tint, var(--line)); border-radius:14px; background:var(--surface); }
+.spreadsheet-grid { border-collapse:separate; border-spacing:0; min-width:100%; font-size:.88rem; color:var(--ink); }
+.spreadsheet-grid th, .spreadsheet-grid td { border-right:1px solid var(--line); border-bottom:1px solid var(--line); padding:0; text-align:left; vertical-align:middle; }
+.spreadsheet-grid thead th { position:sticky; top:0; z-index:2; background:var(--surface-elevated); padding:8px 10px; min-width:150px; font-weight:600; white-space:nowrap; }
+.spreadsheet-col-name { display:block; }
+.spreadsheet-col-kind { display:block; color:var(--muted); font-size:.78rem; font-weight:500; }
+.spreadsheet-grid .spreadsheet-rownum { position:sticky; left:0; z-index:1; min-width:44px; width:44px; padding:0 8px; text-align:center; color:var(--muted); font-weight:500; background:var(--surface-elevated); }
+.spreadsheet-grid thead .spreadsheet-rownum { z-index:3; }
+.spreadsheet-grid td { height:40px; min-width:150px; max-width:320px; padding:0 10px; background:var(--surface); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:cell; }
+.spreadsheet-grid td.is-number { text-align:right; font-variant-numeric:tabular-nums; }
+.spreadsheet-grid td.is-readonly { color:var(--muted); cursor:default; }
+.spreadsheet-grid tr.is-locked td { background:var(--surface-soft); }
+.spreadsheet-grid td:focus { outline:none; }
+.spreadsheet-grid td.is-active { box-shadow:inset 0 0 0 2px var(--focus); }
+.spreadsheet-grid td.is-editing { padding:0; overflow:visible; box-shadow:inset 0 0 0 2px var(--focus); background:var(--surface-elevated); }
+.spreadsheet-grid td[aria-busy="true"] { background:var(--accent-soft); }
+.spreadsheet-grid td input, .spreadsheet-grid td select, .spreadsheet-grid td textarea { width:100%; min-height:40px; border:0; outline:none; padding:0 10px; background:transparent; color:var(--ink); font:inherit; }
+.spreadsheet-grid td textarea { min-width:260px; padding:8px 10px; resize:vertical; position:relative; z-index:2; background:var(--surface-elevated); box-shadow:0 0 0 2px var(--focus); border-radius:4px; }
+.spreadsheet-text-editor { display:flex; align-items:center; }
+.spreadsheet-unit { padding:0 10px 0 4px; color:var(--muted); font-size:.8rem; }
+.spreadsheet-temporal { display:flex; align-items:center; min-height:40px; padding:0 6px; }
+.spreadsheet-check { display:inline-grid; place-items:center; width:20px; height:20px; border:1.5px solid var(--line-strong); border-radius:5px; font-size:.8rem; font-weight:700; }
+.spreadsheet-check.is-on { border-color:var(--focus); background:var(--focus); color:var(--surface); }
+.spreadsheet-blank { display:inline-block; min-width:1px; }
+.spreadsheet-grid .spreadsheet-add-col { min-width:120px; }
+.spreadsheet-add-col button { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 10px; border:1px dashed var(--line-strong); border-radius:8px; background:transparent; color:var(--ink); font:inherit; font-weight:600; cursor:pointer; }
+.spreadsheet-add-col button:hover:not(:disabled) { background:var(--surface-soft); }
+.spreadsheet-add-col button:disabled { opacity:.55; cursor:not-allowed; }
+.spreadsheet-add-col button:focus-visible, .spreadsheet-open button:focus-visible, .spreadsheet-more-kinds:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
+.spreadsheet-why { display:block; margin-top:4px; color:var(--muted); font-size:.75rem; font-weight:500; white-space:normal; }
+.spreadsheet-grid td.spreadsheet-open { min-width:52px; width:52px; padding:0 4px; text-align:center; cursor:default; }
+.spreadsheet-open button { display:inline-grid; place-items:center; width:44px; height:36px; border:0; border-radius:8px; background:transparent; color:var(--ink); cursor:pointer; }
+.spreadsheet-open button:hover { background:var(--surface-soft); }
+.spreadsheet-actions { display:flex; align-items:center; gap:12px; }
+.spreadsheet-saving { color:var(--muted); font-size:.85rem; }
+.spreadsheet-empty { color:var(--muted); }
+.spreadsheet-column-form { display:grid; gap:14px; }
+.spreadsheet-column-intro { margin:0; color:var(--muted); font-size:.88rem; }
+.spreadsheet-column-form small { display:block; margin-top:4px; color:var(--muted); font-weight:500; }
+.spreadsheet-column-buttons { display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:8px; }
+.spreadsheet-more-kinds { margin-right:auto; min-height:44px; border:0; background:transparent; color:var(--focus); font:inherit; text-decoration:underline; cursor:pointer; text-align:left; }
+@media (prefers-reduced-motion: reduce) { .spreadsheet-switch, .spreadsheet-switch-track, .spreadsheet-switch-track span { transition:none; } }
+@media (max-width: 640px) { .spreadsheet-grid td, .spreadsheet-grid thead th { min-width:120px; } .spreadsheet-switch-hint { flex-basis:100%; } }
