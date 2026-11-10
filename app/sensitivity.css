@@ -19,3 +19,9 @@
 .sensitivity-check input { width: 20px; height: 20px; }
 .sensitivity-members { display: flex; flex-wrap: wrap; gap: 8px; }
 .sensitivity-box form { gap: 12px; }
+.audit-log-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.audit-log-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.audit-log-item { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); display: grid; gap: 4px; }
+.audit-log-item[data-alert] { border-color: var(--danger, #C8202F); }
+.audit-log-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; }
+.audit-log-head time, .audit-log-body { color: var(--muted); font-size: 14px; overflow-wrap: anywhere; }
