@@ -250,3 +250,15 @@ export function chartCsv(rows: Row[], comparison: Row[] | undefined, unit: strin
   const other = fr ? "Période comparée" : "Comparison period";
   return [[...header, ...(compared ? [fr ? "Série" : "Series"] : [])].map(csvText).join(","), ...rows.map((row) => line(row, main)), ...(comparison ?? []).map((row) => line(row, other))].join("\r\n");
 }
+
+/** Running tops of stacked series (T23/1): `tops[order][i]` is the sum of the first `order + 1` series at `indices[i]`; a missing or negative value counts as 0. */
+export function stackedTops(series: { points: (SeriesPoint | undefined)[] }[], indices: number[]): number[][] {
+  const tops: number[][] = [];
+  let previous = indices.map(() => 0);
+  for (const item of series) {
+    const current = indices.map((index, order) => previous[order] + Math.max(0, item.points[index]?.value ?? 0));
+    tops.push(current);
+    previous = current;
+  }
+  return tops;
+}

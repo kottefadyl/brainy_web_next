@@ -88,7 +88,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
   const [filterOperator, setFilterOperator] = useState<EntryFilter["operator"]>("EQ");
   const [filterValue, setFilterValue] = useState("");
   const [filters, setFilters] = useState<EntryFilter[]>([]);
-  const [chart, setChart] = useState<"TABLE" | "BAR" | "LINE" | "PIE">("BAR");
+  const [chart, setChart] = useState<"TABLE" | "BAR" | "LINE" | "STACKED" | "PIE">("BAR");
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [forecastMethod, setForecastMethod] = useState<"MEAN" | "LINEAR">("MEAN");
   const [forecastFrequency, setForecastFrequency] = useState<"DAY" | "MONTH">("DAY");
@@ -270,7 +270,8 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
   const groupCodes = groupList?.codes ?? [];
   // A large list sends no codes, only its number of levels (T39/3).
   const groupLevels = groupList?.external ? groupList.levels ?? 1 : maxCodeLevels(groupCodes);
-  const effectiveChart = (chart === "PIE" && (!nonnegative || total <= 0)) || (chart === "LINE" && !canLine) || (chart === "BAR" && !canBar) ? "TABLE" : chart;
+  const canStack = !!multi && nonnegative;
+  const effectiveChart = (chart === "PIE" && (!nonnegative || total <= 0)) || (chart === "LINE" && !canLine) || (chart === "BAR" && !canBar) || (chart === "STACKED" && !canStack) ? "TABLE" : chart;
 
   return (
     <div className="insights-layout">
@@ -407,10 +408,11 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
             { id: "TABLE", label: fr ? "Tableau" : "Table" },
             ...(canBar ? [{ id: "BAR", label: fr ? "Barres" : "Bars" }] : []),
             ...(canLine ? [{ id: "LINE", label: multi ? (fr ? "Courbes" : "Lines") : (fr ? "Courbe" : "Line") }] : []),
+            ...(canStack ? [{ id: "STACKED", label: fr ? "Aires empilées" : "Stacked areas" }] : []),
             ...(nonnegative && total > 0 ? [{ id: "PIE", label: fr ? "Répartition" : "Shares" }] : []),
           ]} onChange={(value) => setChart(value as typeof chart)} />
           {rows.length === 1 && <AnalysisResultChart rows={rows} unit={result.unit} language={language} />}
-          {multi && (effectiveChart === "BAR" || effectiveChart === "LINE") && <AnalysisMultiSeriesChart multi={multi} rows={rows} unit={result.unit} language={language} title={OPERATIONS.find((item) => item.id === result.operation)?.[fr ? "fr" : "en"] ?? result.operation} view={effectiveChart} onViewChange={setChart} />}
+          {multi && (effectiveChart === "BAR" || effectiveChart === "LINE" || effectiveChart === "STACKED") && <AnalysisMultiSeriesChart multi={multi} rows={rows} views={canStack ? ["LINE", "BAR", "STACKED"] : ["LINE", "BAR"]} unit={result.unit} language={language} title={OPERATIONS.find((item) => item.id === result.operation)?.[fr ? "fr" : "en"] ?? result.operation} view={effectiveChart} onViewChange={setChart} />}
           {!multi && rows.length > 1 && (effectiveChart === "BAR" || effectiveChart === "LINE") && <AnalysisResultChart rows={rows} comparisonRows={result.comparisonRows} unit={result.unit} language={language} title={OPERATIONS.find((item) => item.id === result.operation)?.[fr ? "fr" : "en"] ?? result.operation} view={effectiveChart} views={[...(canLine ? ["LINE" as const] : []), ...(nonnegative ? ["BAR" as const] : [])]} onViewChange={setChart} />}
           {rows.length > 1 && effectiveChart === "PIE" && (
             <div className="insights-chart insights-pie-layout" role="img" aria-label={fr ? "Graphique de répartition" : "Share chart"}>

@@ -70,3 +70,12 @@ html[data-theme] .analysis-view-switch button:disabled { color: var(--muted); op
 .analysis-scrubber::before { content: ""; position: absolute; inset: 19px 0; border-radius: 3px; background: var(--line); }
 .analysis-scrubber-thumb { position: absolute; top: 12px; bottom: 12px; min-width: 16px; border-radius: 6px; background: var(--blue-soft); border: 1px solid var(--blue); cursor: grab; }
 .analysis-scrubber:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.analysis-area-path { stroke-width: 1.5; fill-opacity: .55; stroke-linejoin: round; }
+.analysis-gauge { display: grid; gap: 8px; margin-top: 12px; }
+.analysis-gauge label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.analysis-gauge input { max-width: 200px; min-height: 40px; padding: 6px 10px; border: 1px solid var(--control-border); border-radius: 8px; background: var(--surface); color: var(--ink); font-size: 15px; }
+.analysis-gauge input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.analysis-gauge-figure { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.analysis-gauge-figure svg { width: 150px; height: 84px; flex: none; }
+.analysis-gauge-figure p { margin: 0; color: var(--muted); font-size: 14px; }
+.analysis-gauge-figure p b { color: var(--ink); font-size: 18px; }

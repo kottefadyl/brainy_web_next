@@ -2,9 +2,9 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { flushSync } from "react-dom";
-import { ChartColumn, ChartLine, Download, FileCode2, FileImage, FileSpreadsheet } from "lucide-react";
+import { ChartArea, ChartColumn, ChartLine, Download, FileCode2, FileImage, FileSpreadsheet } from "lucide-react";
 import type { AnalysisResult, Language } from "../lib/brainy";
-import { chartCsv, chooseAxisTicks, entryCount, formatChartValue, fullLabel, lttbIndices, MAX_CHART_POINTS, niceScale, type MultiSeries } from "../lib/chart-math";
+import { chartCsv, chooseAxisTicks, entryCount, formatChartValue, fullLabel, lttbIndices, MAX_CHART_POINTS, niceScale, stackedTops, type MultiSeries } from "../lib/chart-math";
 import { todayLocalIso } from "../lib/date-input";
 import { buildChartSvg, saveSvgAsPng, saveText, type ExportLegendItem } from "./analysis-chart-export";
 import type { ChartView } from "./analysis-result-chart";
@@ -58,6 +58,9 @@ export function AnalysisMultiSeriesChart({ multi, rows, unit, language, title, v
   const [exportError, setExportError] = useState("");
   const view = controlled ?? ownView;
   const line = view === "LINE";
+  // Stacked areas (T23/1): each series sits on the previous ones; points are spread like a line chart.
+  const stacked = view === "STACKED";
+  const flowing = line || stacked;
   const width = exportWidth ?? measured;
   const visible = useMemo(() => multi.series.map((series, index) => ({ series, index })).filter(({ series }) => !hidden.has(series.key)), [multi, hidden]);
 
@@ -70,12 +73,13 @@ export function AnalysisMultiSeriesChart({ multi, rows, unit, language, title, v
     const sums = inWindow.map((index) => visible.reduce((sum, { series }) => sum + Math.abs(series.points[index]?.value ?? 0), 0));
     return lttbIndices(sums, MAX_CHART_POINTS).map((offset) => start + offset);
   }, [visible, start, end]);
-  const scale = useMemo(() => niceScale(visible.flatMap(({ series }) => series.points.slice(start, end).flatMap((point) => (point ? [point.value] : [])))), [visible, start, end]);
+  const tops = useMemo(() => stackedTops(visible.map(({ series }) => series), kept), [visible, kept]);
+  const scale = useMemo(() => niceScale(stacked ? [0, ...(tops.at(-1) ?? [])] : visible.flatMap(({ series }) => series.points.slice(start, end).flatMap((point) => (point ? [point.value] : [])))), [visible, start, end, stacked, tops]);
   const axisNumber = compactNumber(language);
   const left = Math.min(72, Math.max(36, Math.max(...scale.ticks.map((tick) => axisNumber.format(tick).length)) * 8 + 12));
   const plotWidth = Math.max(40, width - left - RIGHT);
   const band = plotWidth / kept.length;
-  const positions = kept.map((_, order) => (line ? left + order * plotWidth / Math.max(1, kept.length - 1) : left + band * (order + 0.5)));
+  const positions = kept.map((_, order) => (flowing ? left + order * plotWidth / Math.max(1, kept.length - 1) : left + band * (order + 0.5)));
   const y = (value: number) => AXIS - (value - scale.low) / (scale.high - scale.low) * (AXIS - TOP);
   const baseline = y(0);
   const ticks = chooseAxisTicks(kept.map((index) => multi.periods[index]), positions, language);
@@ -103,7 +107,7 @@ export function AnalysisMultiSeriesChart({ multi, rows, unit, language, title, v
   useLayoutEffect(() => {
     const [box, tip, plot] = [wrapper.current, tooltip.current, svg.current];
     if (!box || !tip || !plot || current === null || currentX === undefined) return;
-    const highest = Math.max(scale.low, ...visible.map(({ series }) => series.points[current]?.value ?? scale.low));
+    const highest = stacked ? (tops.at(-1)?.[active ?? 0] ?? scale.low) : Math.max(scale.low, ...visible.map(({ series }) => series.points[current]?.value ?? scale.low));
     const outer = box.getBoundingClientRect();
     const inner = plot.getBoundingClientRect();
     const anchorX = inner.left - outer.left + currentX;
@@ -131,7 +135,8 @@ export function AnalysisMultiSeriesChart({ multi, rows, unit, language, title, v
   const changeView = (next: ChartView) => { setOwnView(next); onViewChange?.(next); };
   const valueText = (value: number | undefined) => (value === undefined ? (fr ? "aucune donnée" : "no data") : formatChartValue(value, unit, language));
   const accessibleLabel = (index: number) => [fullLabel(multi.periods[index], language),
-    ...visible.map(({ series }) => `${series.label} : ${valueText(series.points[index]?.value)}`)].join(" · ");
+    ...visible.map(({ series }) => `${series.label} : ${valueText(series.points[index]?.value)}`),
+    ...(stacked ? [`Total : ${valueText(tops.at(-1)?.[kept.indexOf(index)])}`] : [])].join(" · ");
 
   const legend: (ExportLegendItem & { key: string })[] = visible.map(({ series, index }) => ({ key: series.key, label: series.label, color: STYLES[index].color, dashed: !!STYLES[index].dash, dash: STYLES[index].dash }));
   const chartTitle = `${title ?? (fr ? "Résultat par catégorie" : "Result by category")}${unit ? ` · ${unit}` : ""}`;
@@ -178,6 +183,7 @@ export function AnalysisMultiSeriesChart({ multi, rows, unit, language, title, v
         {views.length > 1 && <div className="analysis-view-switch" role="group" aria-label={fr ? "Type de graphique" : "Chart type"}>
           {views.includes("LINE") && iconButton("LINE", fr ? "Courbes" : "Lines", <ChartLine size={18} aria-hidden="true" />)}
           {views.includes("BAR") && iconButton("BAR", fr ? "Barres" : "Bars", <ChartColumn size={18} aria-hidden="true" />)}
+          {views.includes("STACKED") && iconButton("STACKED", fr ? "Aires empilées" : "Stacked areas", <ChartArea size={18} aria-hidden="true" />)}
         </div>}
         <ActionPopover label={fr ? "Exporter le graphique" : "Export chart"} triggerIcon={<Download size={18} aria-hidden="true" />} actions={[
           { label: fr ? "Image vectorielle (SVG)" : "Vector image (SVG)", icon: <FileCode2 size={17} aria-hidden="true" />, onSelect: () => void runExport(() => saveText(`${baseName}.svg`, reportSvg().markup, "image/svg+xml")) },
@@ -191,9 +197,14 @@ export function AnalysisMultiSeriesChart({ multi, rows, unit, language, title, v
         <line x1={left} x2={width - RIGHT} y1={y(tick)} y2={y(tick)} stroke="var(--line)" strokeWidth="1" />
         <text x={left - 6} y={y(tick) + 4} textAnchor="end" fill="var(--muted)" fontSize="13">{axisNumber.format(tick)}</text>
       </g>)}
-      {current !== null && currentX !== undefined && (line
+      {current !== null && currentX !== undefined && (flowing
         ? <line data-export-skip="" x1={currentX} x2={currentX} y1={TOP} y2={AXIS} stroke="var(--muted)" strokeWidth="1" />
         : <rect data-export-skip="" className="analysis-chart-band" x={currentX - band / 2} width={band} y={TOP} height={AXIS - TOP} />)}
+      {stacked && visible.map(({ series, index }, order) => {
+        const upper = tops[order].map((top, at) => `${positions[at]},${y(top)}`);
+        const lower = order === 0 ? [`${positions.at(-1)},${baseline}`, `${positions[0]},${baseline}`] : tops[order - 1].map((top, at) => `${positions[at]},${y(top)}`).reverse();
+        return <polygon key={series.key} className="analysis-area-path" points={[...upper, ...lower].join(" ")} fill={STYLES[index].color} fillOpacity="0.55" stroke={STYLES[index].color} strokeWidth="1.5" strokeLinejoin="round" />;
+      })}
       {line && visible.map(({ series, index }) => <g key={series.key}>
         {runs(series.points).map((run, part) => <polyline key={part} className="analysis-line-path" pathLength={1500} fill="none" stroke={STYLES[index].color} strokeWidth="2" strokeDasharray={STYLES[index].dash} strokeLinecap="round" strokeLinejoin="round" points={run.map((point) => `${point.x},${point.y}`).join(" ")} />)}
         {(showMarkers || runs(series.points).some((run) => run.length === 1)) && kept.map((pointIndex, order) => {
@@ -201,7 +212,7 @@ export function AnalysisMultiSeriesChart({ multi, rows, unit, language, title, v
           return point ? <path key={order} d={markerPath(STYLES[index].marker, positions[order], y(point.value), 3.5)} fill={STYLES[index].color} stroke="var(--surface)" strokeWidth="1.5" /> : null;
         })}
       </g>)}
-      {!line && kept.map((pointIndex, order) => {
+      {!flowing && kept.map((pointIndex, order) => {
         let cursor = positions[order] - (barWidth * visible.length + (visible.length - 1) * 2) / 2;
         return <g key={pointIndex}>{visible.map(({ series, index }) => {
           const x = cursor;
@@ -214,15 +225,15 @@ export function AnalysisMultiSeriesChart({ multi, rows, unit, language, title, v
       })}
       <line x1={left} x2={width - RIGHT} y1={baseline} y2={baseline} stroke="var(--muted)" strokeWidth="1" />
       {ticks.map((tick) => <text key={tick.index} className="analysis-axis-label" x={positions[tick.index]} y="201" textAnchor={anchorFor(tick)} fill="var(--muted)" fontSize="13">{tick.label}</text>)}
-      {current !== null && currentX !== undefined && line && <g data-export-skip="">
-        {visible.map(({ series, index }) => {
+      {current !== null && currentX !== undefined && flowing && <g data-export-skip="">
+        {visible.map(({ series, index }, order) => {
           const point = series.points[current];
-          return point ? <path key={series.key} d={markerPath(STYLES[index].marker, currentX, y(point.value), 5.5)} fill={STYLES[index].color} stroke="var(--surface)" strokeWidth="2" /> : null;
+          return point ? <path key={series.key} d={markerPath(STYLES[index].marker, currentX, y(stacked ? tops[order][active ?? 0] : point.value), 5.5)} fill={STYLES[index].color} stroke="var(--surface)" strokeWidth="2" /> : null;
         })}
       </g>}
       {kept.map((pointIndex, order) => {
-        const halfBefore = order === 0 ? (line ? 0 : band / 2) : (positions[order] - positions[order - 1]) / 2;
-        const halfAfter = order === kept.length - 1 ? (line ? RIGHT : band / 2) : (positions[order + 1] - positions[order]) / 2;
+        const halfBefore = order === 0 ? (flowing ? 0 : band / 2) : (positions[order] - positions[order - 1]) / 2;
+        const halfAfter = order === kept.length - 1 ? (flowing ? RIGHT : band / 2) : (positions[order + 1] - positions[order]) / 2;
         return <rect key={pointIndex} data-export-skip="" className="analysis-chart-target" ref={(element) => { targets.current[order] = element; }}
           x={positions[order] - halfBefore} width={halfBefore + halfAfter} y={0} height={AXIS + 6} fill="transparent" role="img" aria-label={accessibleLabel(pointIndex)} tabIndex={order === Math.min(rove, kept.length - 1) ? 0 : -1}
           onPointerEnter={() => choose(order, false)} onPointerDown={() => choose(order, false)} onFocus={() => choose(order, false)} onBlur={() => setActive(null)} onKeyDown={(event) => onKey(event, order)} />;
@@ -235,6 +246,7 @@ export function AnalysisMultiSeriesChart({ multi, rows, unit, language, title, v
           const point = series.points[current];
           return <span key={series.key} className="analysis-tooltip-series"><Swatch index={index} /><span>{series.label}</span><b>{valueText(point?.value)}</b>{point && <small>{entryCount(point.row.count, language)}</small>}</span>;
         })}
+        {stacked && <span className="analysis-tooltip-series"><span>Total</span><b>{valueText(tops.at(-1)?.[active ?? 0])}</b></span>}
       </>}
     </div>
     <ChartScrubber zoom={zoom} total={multi.periods.length} language={language} label={`${fullLabel(multi.periods[start], language)} – ${fullLabel(multi.periods[end - 1], language)}`} />

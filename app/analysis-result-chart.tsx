@@ -10,8 +10,9 @@ import { buildChartSvg, saveSvgAsPng, saveText, type ExportLegendItem } from "./
 import { ActionPopover } from "./components/ui/ActionPopover";
 import { ChartScrubber, ChartZoomButtons, useChartZoom, zoomKey } from "./chart-zoom-controls";
 import { MIN_ZOOM_POINTS } from "../lib/chart-zoom";
+import { KeyFigureGauge } from "./analysis-gauge";
 
-export type ChartView = "LINE" | "BAR";
+export type ChartView = "LINE" | "BAR" | "STACKED";
 type SeriesId = "main" | "comparison";
 type Props = {
   rows: AnalysisResult["rows"]; comparisonRows?: AnalysisResult["rows"]; unit?: string; language: Language;
@@ -38,6 +39,7 @@ export function AnalysisResultChart(props: Props) {
       <span className="section-overline">{fr ? "Chiffre clé" : "Key figure"}</span>
       <strong>{row.value}<small>{unit}</small></strong>
       <span>{row.label} · {row.count} {fr ? row.count === 1 ? "entrée" : "entrées" : row.count === 1 ? "entry" : "entries"}</span>
+      {Number.isFinite(Number(row.value)) && <KeyFigureGauge value={Number(row.value)} unit={unit} language={language} />}
     </div>;
   }
   return rows.length < 2 ? null : <SeriesChart {...props} />;
