@@ -28,7 +28,8 @@ function respond(body) {
   if (query.includes("classificationCodesByValue")) return { data: { classificationCodesByValue: variables.codes.map((code) => byCode.get(code)).filter(Boolean).map((item) => ({ code: item.code, labelEn: item.en, labelFr: item.fr, parentCode: item.parent ?? null, active: true })) } };
   if (query.includes("previewReferential")) {
     const lines = variables.c.trim().split(/\r?\n/);
-    const repeated = lines.findIndex((line, index) => index > 0 && lines.slice(1, index).some((other) => other.split(/[;,]/)[0] === line.split(/[;,]/)[0]));
+    const seen = new Set();
+    const repeated = lines.findIndex((line, index) => { if (index === 0) return false; const code = line.split(/[;,]/)[0]; if (seen.has(code)) return true; seen.add(code); return false; });
     return { data: { previewReferential: { codeCount: lines.length - 1, levels: 2, large: lines.length - 1 > 5000, errors: repeated > 0 ? [{ row: repeated + 1, message: `Repeated code ${lines[repeated].split(/[;,]/)[0]}` }] : [], sample: lines.slice(1, 4).map((line) => { const [code, label] = line.split(/[;,]/); return { code, labelEn: label, labelFr: label, parentCode: null, active: true }; }) } } };
   }
   return { data: {} };
@@ -116,7 +117,7 @@ async function scenario(language, tag) {
   // Referential import: preview, then a repeated code blocks the import.
   const content = ["code;label", ...Array.from({ length: 6000 }, (_, i) => `C${i};Code ${i}`), "C5;Again"].join("\n");
   await evaluate(`(()=>{const input=document.querySelector('.referential-file input');const data=new DataTransfer();data.items.add(new File([${JSON.stringify(content)}],'communes.csv',{type:'text/csv'}));input.files=data.files;input.dispatchEvent(new Event('change',{bubbles:true}))})()`);
-  await pause(800);
+  await evaluate("new Promise((r,j)=>{const s=Date.now(),t=()=>document.querySelector('.referential-preview')?r():Date.now()-s>10000?j(Error('no preview')):setTimeout(t,50);t()})");
   const preview = await evaluate("(()=>({text:document.querySelector('.referential-preview')?.textContent??'',name:document.querySelector('.referential-import input:not([type=file])').value,disabled:document.querySelector('.referential-import .btn').disabled}))()");
   assert.match(preview.text, fr ? /6\s?001 codes sur 2 niveaux/ : /6,001 codes on 2 levels/, `${tag} preview ${preview.text}`);
   assert.match(preview.text, fr ? /Ligne 6002/ : /Row 6002/);
