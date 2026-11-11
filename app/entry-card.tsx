@@ -2,6 +2,8 @@ import { CalendarDays, Pencil } from "lucide-react";
 import { formatColorStyle } from "../lib/format-colors";
 import { formatDisplayName, formatFieldValue, formatForEntry, t, valuesByField, type Collection, type Entry, type Language } from "../lib/brainy";
 import EntryRowActions from "./entry-row-actions";
+import LinkPreviewCard from "./link-preview-card";
+import { previewableUrl } from "../lib/link-preview";
 
 function dateTime(value: string, language: Language): string {
   return new Intl.DateTimeFormat(language, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
@@ -18,6 +20,8 @@ export default function EntryCard({ entry, collection, language, selected, onDet
   // Without a title the first value heads the row, so the next readable one takes the preview place.
   const second = title ? undefined : visible.slice(1).find((field) => field.kind !== "OBJECT_REF" && field.kind !== "ATTACHMENT");
   const secondValue = second ? formatFieldValue(second, values[second.id], language, entry.values.find((item) => item.fieldId === second.id)?.unitSnapshot, collection) : null;
+  // T48: only Saved links collections, and only when the link field holds a web address.
+  const linkUrl = collection.templateId === "links" ? format.fields.filter((field) => field.kind === "LINK").map((field) => previewableUrl(values[field.id])).find(Boolean) ?? null : null;
   const edited = Math.abs(new Date(entry.updatedAt).getTime() - new Date(entry.createdAt).getTime()) > 2000;
   return (
     <article className="entry-card entry-row" style={formatColorStyle(format.color)} data-selected={selected || undefined}>
@@ -33,6 +37,7 @@ export default function EntryCard({ entry, collection, language, selected, onDet
           <h3 className="entry-title"><button type="button" onClick={onDetails} title={title ?? undefined}>{title ?? previewValue ?? formatDisplayName(format, language)}</button></h3>
           {title && previewValue && <span className="entry-preview" title={previewValue}>{previewValue}</span>}
           {secondValue && <span className="entry-preview" title={secondValue}>{secondValue}</span>}
+          {linkUrl && <LinkPreviewCard url={linkUrl} language={language} />}
         </div>
         <EntryRowActions language={language} appendOnly={!!format.appendOnly} onDetails={onDetails} onCopy={onCopy} onEdit={onEdit} onDelete={onDelete} onLinks={onLinks} onReminder={onReminder} />
       </div>
