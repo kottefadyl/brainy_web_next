@@ -4,6 +4,7 @@ import { formatDisplayName, formatFieldValue, formatForEntry, t, valuesByField, 
 import EntryRowActions from "./entry-row-actions";
 import LinkPreviewCard from "./link-preview-card";
 import { previewableUrl } from "../lib/link-preview";
+import { EntryAuthors } from "./entry-authors";
 
 function dateTime(value: string, language: Language): string {
   return new Intl.DateTimeFormat(language, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
@@ -34,6 +35,7 @@ export default function EntryCard({ entry, collection, language, selected, onDet
           {format.appendOnly && <span className="entry-edited">{language === "fr" ? "Écriture" : "Writing"} #{entry.ledgerSequence}{entry.correctionOf ? ` · ${language === "fr" ? "Correction de" : "Correction of"} ${entry.correctionOf}` : ""}</span>}
         </div>
         <div className="entry-row-content">
+          <EntryAuthors entry={entry} collection={collection} language={language} />
           <h3 className="entry-title"><button type="button" onClick={onDetails} title={title ?? undefined}>{title ?? previewValue ?? formatDisplayName(format, language)}</button></h3>
           {title && previewValue && <span className="entry-preview" title={previewValue}>{previewValue}</span>}
           {secondValue && <span className="entry-preview" title={secondValue}>{secondValue}</span>}

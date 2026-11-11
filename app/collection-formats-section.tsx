@@ -1,6 +1,7 @@
 import { Copy, Layers3, Link2, Palette, Pencil, Plus } from "lucide-react";
 import { ActionPopover } from "./components/ui/ActionPopover";
 import { formatColorStyle } from "../lib/format-colors";
+import { FormatAuthors } from "./entry-authors";
 import {
   fieldKindLabel, formatColors, formatDisplayName, t,
   type Collection, type Language,
@@ -37,6 +38,7 @@ export default function CollectionFormatsSection({ collection, language, entryCo
         const fieldText = fr ? `${format.fields.length} ${format.fields.length === 1 ? "champ" : "champs"}` : `${format.fields.length} ${format.fields.length === 1 ? "field" : "fields"}`;
         const entryText = fr ? `${count} ${count === 1 ? "entrée" : "entrées"}${countPartial ? count === 1 ? " affichée" : " affichées" : ""}` : `${count} ${count === 1 ? "entry" : "entries"}${countPartial ? " shown" : ""}`;
         return <article key={format.id} className="format-card" style={formatColorStyle(format.color)}>
+          <FormatAuthors collection={collection} language={language} />
           <div className="format-card-head"><span className="format-card-symbol" aria-hidden="true"><Layers3 size={18} /></span><div className="format-card-title"><strong>{name}</strong><span className="format-card-subtitle">{fieldText} · {entryText}</span></div></div>
           {format.linkedSource && <div className="format-linked-source"><span>{fr ? "Version source acceptée" : "Accepted source version"}: {format.linkedSource.acceptedVersion}</span><button type="button" onClick={() => onReviewUpdate(format.id)}>{fr ? "Voir les mises à jour" : "Review updates"}</button></div>}
           <div className="format-card-fields">

@@ -47,6 +47,7 @@ export type CollectionRole = "OWNER" | "EDITOR" | "READER";
 export type CollectionMember = { userId: string; email: string; name: string; role: CollectionRole; addedAt: string; sharedFieldIds?: string[]; sensitiveFieldIds?: string[] };
 export type AuditLog = { id: string; collectionId: string; userId: string; action: string; details?: string | null; occurredAt: string };
 export type Collection = { id: string; name: string; ownerId?: string; templateId?: string | null; bookView?: BookViewSettings | null; taskPlanner?: TaskPlanner | null; minAggregateSize?: number; periodTotals?: { formatId: string; dateFieldId: string; amountFieldId: string } | null; fields: Field[]; formats: CollectionFormat[]; codeLists: ClassificationList[]; units: CollectionUnit[]; exchangeRates: ExchangeRate[]; sharedObjects: SharedObjectGrant[]; savedViews: SavedView[]; formulas: Formula[]; stockRules?: StockRule[]; allowNegativeStock?: boolean; members?: CollectionMember[]; sharedBy?: { userId: string; name: string } | null };
+export type PersonSummary = { userId: string; name: string; hasPhoto: boolean };
 export type Entry = {
   id: string;
   offlinePending?: boolean;
@@ -57,6 +58,9 @@ export type Entry = {
   values: { fieldId: string; value: string; attachmentSize?: number | null; attachmentMimeType?: string | null; largeFileId?: string | null; largeFileSha256?: string | null; unitSnapshot?: UnitSnapshot | null; objectIds?: string[] | null; objectSnapshots?: { objectId: string; capturedAt: string; properties: { fieldId: string; name: string; kind: FieldKind; value: string; unitSnapshot?: UnitSnapshot | null }[] }[] | null; measureValue?: { status?: string; uncertainty?: string; uncertaintyType?: string; quality?: string; instrument?: string; observedAt?: string; recordedAt?: string; revisedAt?: string; revisionNote?: string } | null }[];
   createdAt: string;
   updatedAt: string;
+  /** T53: creator and last editor (shown in shared collections). */
+  createdBy?: PersonSummary | null;
+  updatedBy?: PersonSummary | null;
   sourceObjectId?: string | null;
   taskCompletions?: string[] | null;
   contributionLinkId?: string | null;
