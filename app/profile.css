@@ -48,14 +48,14 @@
 .suggest-anchor{position:relative}
 .suggest-anchor>input{width:100%}
 .suggest-hint{color:var(--c-muted,#5a6f8d);font-size:12.5px;font-weight:400;line-height:1.4}
-.suggest-list{position:absolute;z-index:30;top:calc(100% + 6px);left:0;right:0;max-height:min(320px,46vh);margin:0;padding:6px;overflow:auto;list-style:none;border:1px solid var(--c-line-strong,#cdd9e7);border-radius:12px;background:var(--dialog-surface,var(--c-surface,#fff));box-shadow:var(--shadow-lg,0 18px 40px #173b6e24);animation:suggest-in .16s cubic-bezier(.2,.8,.2,1) both}
+.suggest-list{position:fixed;z-index:80;max-height:320px;margin:0;padding:6px;overflow:auto;list-style:none;border:1px solid var(--c-line-strong,#cdd9e7);border-radius:12px;background:var(--dialog-surface,var(--c-surface,#fff));box-shadow:var(--shadow-lg,0 18px 40px #173b6e24);animation:suggest-in .16s cubic-bezier(.2,.8,.2,1) both}
 .suggest-option{min-height:40px;display:flex;align-items:center;padding:8px 11px;border-radius:8px;color:var(--c-ink,#1d3150);font-size:14px;font-weight:500;cursor:pointer}
 .suggest-option.active{background:var(--selection,#e8f0fe);color:var(--c-ink,#12284a)}
 .suggest-option.typed{color:var(--c-accent,#2a62c8);font-weight:650}
 .tag-box{min-height:48px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--c-control,#dce5f0);border-radius:10px;background:var(--c-surface,#fff);cursor:text}
 .tag-box:hover:not(:focus-within){border-color:var(--c-ink,#8da2bf)}
 .tag-box:focus-within{border-color:var(--c-focus,#7da4f8);outline:2px solid var(--c-focus,#a9c9fa);outline-offset:1px;box-shadow:0 0 0 5px color-mix(in srgb,var(--c-focus,#7da4f8) 16%,transparent)}
-html .profile-form .tag-box input{flex:1 1 140px;width:auto;min-width:120px;min-height:34px!important;padding:4px 6px!important;border:0!important;background:transparent!important;color:var(--c-ink,#1d3150);font:inherit;outline:none!important;box-shadow:none!important}
+html[data-theme] .profile-form .tag-box input,html[data-theme] .profile-form .tag-box input:is(:hover,:focus,:focus-visible){flex:1 1 140px;width:auto;min-width:120px;min-height:34px!important;padding:4px 6px!important;border:0!important;background:transparent!important;color:var(--c-ink,#1d3150);font:inherit;outline:none!important;box-shadow:none!important}
 .tag-box input:disabled{display:none}
 .tag-chip{max-width:100%;min-height:34px;display:inline-flex;align-items:center;gap:2px;padding:0 4px 0 11px;border-radius:999px;background:var(--c-accent-soft,#e8f0fe);color:var(--c-ink,#173766);font-size:13.5px;font-weight:600}
 .tag-chip-text{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
@@ -64,6 +64,8 @@ html .profile-form .tag-box input{flex:1 1 140px;width:auto;min-width:120px;min-
 .tag-chip-remove:hover{background:color-mix(in srgb,currentColor 14%,transparent)}
 .tag-chip-remove:focus-visible{outline:2px solid var(--c-focus,#397dd0);outline-offset:2px}
 @keyframes suggest-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.suggest-list[data-side="above"]{animation-name:suggest-in-up}
+@keyframes suggest-in-up{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.suggest-list{animation:suggest-fade .08s linear both}}
 @keyframes suggest-fade{from{opacity:0}to{opacity:1}}
 @media(max-width:490px){.profile-photo-picker{align-items:flex-start;gap:14px}.profile-photo-preview{width:64px;height:64px;font-size:25px}.profile-photo-actions{flex-direction:column}.profile-photo-actions .button{justify-content:center}}

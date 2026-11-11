@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useId, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { t, type Language } from "../lib/brainy";
 import type { Suggestion } from "../lib/profile-suggestions";
@@ -8,7 +9,7 @@ import type { Suggestion } from "../lib/profile-suggestions";
 const fold = (text: string) => text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLocaleLowerCase().trim();
 
 /** Ranks suggestions matching the query in either language; labels are shown in the interface language. */
-export function searchSuggestions(suggestions: readonly Suggestion[], query: string, language: Language, exclude: readonly string[] = [], limit = 8): string[] {
+export function searchSuggestions(suggestions: readonly Suggestion[], query: string, language: Language, exclude: readonly string[] = [], limit = Infinity): string[] {
   const needle = fold(query);
   const excluded = new Set(exclude.map(fold));
   const ranked: { label: string; rank: number }[] = [];
@@ -29,13 +30,46 @@ export function searchSuggestions(suggestions: readonly Suggestion[], query: str
 
 type Option = { value: string; text: string; typed?: boolean };
 
-function useCombobox(options: Option[], onPick: (option: Option) => void, closeOnPick: boolean) {
+function useCombobox(options: Option[], onPick: (option: Option) => void, closeOnPick: boolean, anchorRef: RefObject<HTMLDivElement | null>) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   function pick(option: Option) { onPick(option); setActive(-1); if (closeOnPick) setOpen(false); }
   const listId = useId();
   const visible = open && options.length > 0;
   const current = visible && active >= 0 && active < options.length ? active : -1;
+  const listRef = useRef<HTMLUListElement>(null);
+  // The list floats above the page (fixed) so cards with hidden overflow never cut it off,
+  // and opens upwards when there is more room above the field than below it.
+  useLayoutEffect(() => {
+    if (!visible) return;
+    const place = () => {
+      const anchor = anchorRef.current, list = listRef.current;
+      if (!anchor || !list) return;
+      const rect = anchor.getBoundingClientRect();
+      const viewport = window.visualViewport?.height ?? window.innerHeight;
+      const below = viewport - rect.bottom - 12, above = rect.top - 12;
+      const wanted = Math.min(320, list.scrollHeight);
+      const down = below >= wanted || below >= above;
+      list.style.left = `${rect.left}px`;
+      list.style.width = `${rect.width}px`;
+      list.style.maxHeight = `${Math.max(120, Math.min(320, down ? below : above))}px`;
+      list.style.top = down ? `${rect.bottom + 6}px` : "auto";
+      list.style.bottom = down ? "auto" : `${window.innerHeight - rect.top + 6}px`;
+      list.dataset.side = down ? "below" : "above";
+    };
+    place();
+    window.addEventListener("scroll", place, true);
+    window.addEventListener("resize", place);
+    window.visualViewport?.addEventListener("resize", place);
+    return () => {
+      window.removeEventListener("scroll", place, true);
+      window.removeEventListener("resize", place);
+      window.visualViewport?.removeEventListener("resize", place);
+    };
+  }, [visible, options.length, anchorRef]);
+  useLayoutEffect(() => {
+    if (current >= 0) listRef.current?.children[current]?.scrollIntoView({ block: "nearest" });
+  }, [current]);
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>): boolean {
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
@@ -52,11 +86,12 @@ function useCombobox(options: Option[], onPick: (option: Option) => void, closeO
     role: "combobox" as const, "aria-autocomplete": "list" as const, "aria-expanded": visible, "aria-controls": listId,
     "aria-activedescendant": current >= 0 ? `${listId}-${current}` : undefined,
   };
-  const list = (label: string) => visible ? <ul className="suggest-list" id={listId} role="listbox" aria-label={label}>
+  // Rendered at the page root: a card with hidden overflow or a transform cannot crop it.
+  const list = (label: string) => visible ? createPortal(<ul ref={listRef} className="suggest-list" id={listId} role="listbox" aria-label={label}>
     {options.map((option, index) => <li key={`${option.typed ? "typed" : "item"}-${option.value}`} id={`${listId}-${index}`} role="option" aria-selected={index === current}
       className={`suggest-option${index === current ? " active" : ""}${option.typed ? " typed" : ""}`}
       onMouseDown={(event) => event.preventDefault()} onMouseEnter={() => setActive(index)} onClick={() => pick(option)}>{option.text}</li>)}
-  </ul> : null;
+  </ul>, document.body) : null;
   return { open, setOpen, setActive, onKeyDown, inputProps, list };
 }
 
@@ -67,13 +102,14 @@ export function SuggestField({ label, hint, language, suggestions, maxLength, va
   const inputId = useId();
   const hintId = useId();
   const options = useMemo(() => {
-    const matches = searchSuggestions(suggestions, value, language, [], 8);
+    const matches = searchSuggestions(suggestions, value, language);
     return matches.filter((item) => fold(item) !== fold(value)).map((item) => ({ value: item, text: item }));
   }, [suggestions, value, language]);
-  const combo = useCombobox(options, (option) => onChange(option.value), true);
+  const anchorRef = useRef<HTMLDivElement>(null);
+  const combo = useCombobox(options, (option) => onChange(option.value), true, anchorRef);
   return <div className="input-label suggest-field">
     <label htmlFor={inputId}>{label}</label>
-    <div className="suggest-anchor">
+    <div className="suggest-anchor" ref={anchorRef}>
       <input id={inputId} {...combo.inputProps} aria-describedby={hintId} autoComplete="off" value={value} maxLength={maxLength}
         onChange={(event) => { onChange(event.target.value); combo.setOpen(true); combo.setActive(-1); }}
         onFocus={() => combo.setOpen(true)} onBlur={() => combo.setOpen(false)} onKeyDown={combo.onKeyDown} />
@@ -93,7 +129,7 @@ export function SuggestTagsField({ label, hint, language, suggestions, maxLength
   const options = useMemo<Option[]>(() => {
     if (full) return [];
     const typed = query.trim();
-    const matches = searchSuggestions(suggestions, typed, language, values, typed ? 8 : 10).map((item) => ({ value: item, text: item }));
+    const matches = searchSuggestions(suggestions, typed, language, values).map((item) => ({ value: item, text: item }));
     const exact = matches.some((item) => fold(item.value) === fold(typed)) || values.some((item) => fold(item) === fold(typed));
     return typed && !exact ? [...matches, { value: typed.slice(0, maxLength), text: t(language, "addTyped").replace("{value}", typed.slice(0, maxLength)), typed: true }] : matches;
   }, [full, query, suggestions, language, values, maxLength]);
@@ -115,7 +151,8 @@ export function SuggestTagsField({ label, hint, language, suggestions, maxLength
     combo.setOpen(true);
     combo.setActive(parts[parts.length - 1].trim() ? 0 : -1);
   }
-  const combo = useCombobox(options, (option) => add(option.value), false);
+  const anchorRef = useRef<HTMLDivElement>(null);
+  const combo = useCombobox(options, (option) => add(option.value), false, anchorRef);
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Backspace" && !query && values.length) { onChange(values.slice(0, -1)); return; }
     if (combo.onKeyDown(event)) return;
@@ -123,7 +160,7 @@ export function SuggestTagsField({ label, hint, language, suggestions, maxLength
   }
   return <div className="input-label suggest-field">
     <label htmlFor={inputId}>{label}</label>
-    <div className="suggest-anchor">
+    <div className="suggest-anchor" ref={anchorRef}>
       <div className="tag-box" onClick={() => inputRef.current?.focus()}>
         {values.map((item) => <span className="tag-chip" key={item}>
           <span className="tag-chip-text" title={item}>{item}</span>
