@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
-import { FolderHeart, Plus, Search, Settings2, SlidersHorizontal, Upload } from "lucide-react";
+import { FolderHeart, Plus, Search, Settings2, SlidersHorizontal, Compass, Upload } from "lucide-react";
 import { t, type Collection, type Language } from "../lib/brainy";
 
 type Props = {
@@ -14,9 +14,10 @@ type Props = {
   onManual: () => void;
   onTransfer: () => void;
   onTools: () => void;
+  onGuide?: () => void;
 };
 
-export default function CollectionSidebar({ collections, selectedId, loading, language, onSelect, onTemplate, onManual, onTransfer, onTools }: Props) {
+export default function CollectionSidebar({ collections, selectedId, loading, language, onSelect, onTemplate, onManual, onTransfer, onTools, onGuide }: Props) {
   const [query, setQuery] = useState("");
   const visible = collections.filter((item) => item.name.toLocaleLowerCase(language).includes(query.trim().toLocaleLowerCase(language)));
   const activeIndex = visible.findIndex((item) => item.id === selectedId);
@@ -37,6 +38,7 @@ export default function CollectionSidebar({ collections, selectedId, loading, la
           <button type="button" onClick={(event) => { event.currentTarget.closest("details")!.open = false; onManual(); }}><Plus size={16} />{fr ? "Créer manuellement" : "Create manually"}</button>
           <button type="button" onClick={(event) => { event.currentTarget.closest("details")!.open = false; onTransfer(); }}><Upload size={16} />{t(language, "importData")} / {t(language, "exportData")}</button>
           <button type="button" onClick={(event) => { event.currentTarget.closest("details")!.open = false; onTools(); }}><SlidersHorizontal size={16} />{fr ? "Outils de l’espace" : "Workspace tools"}</button>
+          {onGuide && <button type="button" onClick={(event) => { event.currentTarget.closest("details")!.open = false; onGuide(); }}><Compass size={16} />{fr ? "Guide de démarrage" : "Getting started guide"}</button>}
         </div>
       </details>
     </div>

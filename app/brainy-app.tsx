@@ -57,6 +57,7 @@ import QuickEntryDialog from "./quick-entry-dialog";
 import PeriodTotalsPanel from "./period-totals-panel";
 import BookView, { BookViewLauncher } from "./book-view";
 import TaskAgendaView from "./task-agenda-view";
+import OnboardingGuide from "./onboarding-guide";
 import { hiddenTaskFields } from "../lib/task-planner";
 import { bookText, downloadTransfer, exportCollection, importCollection, parseTransfer, transferCsv, transferMapping, type TransferBundle } from "../lib/transfer";
 import {
@@ -943,6 +944,7 @@ export default function BrainyApp() {
   const [user, setUser] = useState<User | null>(null);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [guideOpen, setGuideOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<"collection" | "insights" | "stock" | "classifications" | "map" | "workflow" | "contributions" | "dataSources" | "ledger" | "sensitivity" | "book">("collection");
   const [entries, setEntries] = useState<Entry[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -1143,9 +1145,11 @@ export default function BrainyApp() {
   if (!user) return <AuthScreen language={language} onLanguage={setLanguage} colorMode={colorMode} onColorMode={chooseColorMode} onAuthenticated={setUser} />;
   if (!user.profileCompleted || profileEditing) return <ProfileScreen brand={<Brand compact />} user={user} photo={profilePhoto} language={language} onLanguage={setLanguage} colorMode={colorMode} onColorMode={chooseColorMode} onSaved={(updated, photo) => { setUser(updated); setProfilePhoto(photo); setProfileEditing(false); }} onCancel={user.profileCompleted ? () => setProfileEditing(false) : undefined} onSignOut={signOut} />;
 
+  if (guideOpen || !user.onboardingCompleted) return <OnboardingGuide user={user} language={language} brand={<Brand compact />} onFinished={(updated, created, openTemplates) => { setUser(updated); setGuideOpen(false); if (created) { setCollections((current) => [created, ...current.filter((item) => item.id !== created.id)]); setTabSelection({ collectionId: created.id, tab: "entries" }); selectCollection(created.id); } if (openTemplates) setDialog({ kind: "starter" }); }} />;
+
   return (
     <AppShell>
-      <Sidebar brand={<Brand />} collections={collections} selectedId={selectedId} loading={loadingCollections} language={language} userName={user.name} userEmail={user.email} userPhoto={profilePhoto} onSelect={selectCollection} onTemplate={() => setDialog({ kind: "starter" })} onManual={() => setDialog({ kind: "collection" })} onTransfer={() => setDialog({ kind: "transfer" })} onTools={() => setDialog({ kind: "workspaceTools" })} onEditProfile={() => setProfileEditing(true)} onSignOut={signOut} />
+      <Sidebar onGuide={() => setGuideOpen(true)} brand={<Brand />} collections={collections} selectedId={selectedId} loading={loadingCollections} language={language} userName={user.name} userEmail={user.email} userPhoto={profilePhoto} onSelect={selectCollection} onTemplate={() => setDialog({ kind: "starter" })} onManual={() => setDialog({ kind: "collection" })} onTransfer={() => setDialog({ kind: "transfer" })} onTools={() => setDialog({ kind: "workspaceTools" })} onEditProfile={() => setProfileEditing(true)} onSignOut={signOut} />
       <main className="workspace">
         <TopBar brand={<Brand compact />} selectedName={selected?.name} language={language} themeControl={<ThemeToggle language={language} mode={colorMode} onChange={chooseColorMode} />} languageControl={<LanguagePicker language={language} onChange={setLanguage} />} account={<AccountButton name={user.name} photo={profilePhoto} language={language} onClick={() => setProfileEditing(true)} />} refreshBusy={loadingCollections} menuOpen={menuOpen} menuButtonRef={mobileMenuButtonRef} onCapture={() => { setSharedContent(undefined); setQuickCapture(true); }} onRefresh={() => { void refresh(); }} onToggleMenu={menuOpen ? closeMenu : openMenu} />
         {drawerMounted && <MobileCollectionDrawer open={menuOpen} collections={collections} selectedId={selectedId} language={language} triggerRef={mobileMenuButtonRef} onClose={closeMenu} onSelect={selectCollection} onTemplate={() => setDialog({ kind: "starter" })} onManual={() => setDialog({ kind: "collection" })} onTools={() => setDialog({ kind: "workspaceTools" })} onEditProfile={() => setProfileEditing(true)} onSignOut={signOut} />}

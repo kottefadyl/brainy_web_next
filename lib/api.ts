@@ -121,7 +121,7 @@ export const sensitivityApi = {
     return (await request<{ setMinimumAggregateSize: Collection }>(`mutation($collectionId:String!,$minimum:Int!){setMinimumAggregateSize(collectionId:$collectionId,minimum:$minimum){${collectionFields}}}`, { collectionId, minimum })).setMinimumAggregateSize;
   },
 };
-const userFields = "id name email profession job fieldOfStudy interests hobbies profileCompleted hasProfilePhoto";
+const userFields = "id name email profession job fieldOfStudy interests hobbies profileCompleted hasProfilePhoto onboardingCompleted";
 
 export const api = {
   async setWorkflow(collectionId: string, formatId: string, input: WorkflowDefinition & { expectedVersion: number }): Promise<Collection> {

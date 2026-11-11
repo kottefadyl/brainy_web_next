@@ -5,7 +5,7 @@ export type Language = "en" | "fr";
 export type FieldKind = "TITLE" | "DATE" | "NUMBER" | "TIME" | "LINK" | "CHARACTER" | "TEXT" | "BOOLEAN" | "SELECT" | "MULTI_SELECT" | "DATETIME" | "DURATION" | "LONG_TEXT" | "ATTACHMENT" | "OBJECT_REF" | "MEASURE" | "CODE" | "POSITION" | "ZONE";
 export type SensitivityLevel = "ORDINARY" | "PERSONAL" | "SENSITIVE";
 
-export type User = { id: string; name: string; email: string; profession?: string | null; job?: string | null; fieldOfStudy?: string | null; interests: string[]; hobbies: string[]; profileCompleted: boolean; hasProfilePhoto?: boolean };
+export type User = { id: string; name: string; email: string; profession?: string | null; job?: string | null; fieldOfStudy?: string | null; interests: string[]; hobbies: string[]; profileCompleted: boolean; hasProfilePhoto?: boolean; onboardingCompleted?: boolean };
 export type ProfileInput = { name: string; profession: string; job: string; fieldOfStudy: string; interests: string[]; hobbies: string[] };
 export const formatColors = ["#EEF5FF", "#EDF9F3", "#FFF5EB", "#F4F0FF", "#FFF0F4", "#EAF8FA", "#FBF7E9", "#F1F8ED", "#F8F0FA", "#F1F5FA", "#FFF7F1", "#EFF8FF", "#FDEFF7", "#EDF7FF", "#F7FBEA", "#FFF0E8", "#EFEFFD", "#E9F8F4", "#FBF1E8", "#F0F8F9", "#FFF2EF", "#F4F8E8", "#F1F2FF", "#EFFAF0"] as const;
 export type Field = { id: string; name: string; kind: FieldKind; sensitivity?: SensitivityLevel; unit?: string | null; options?: string[] | null; codeListId?: string | null; targetObjectFormatId?: string | null; multiple?: boolean | null; variableName?: string | null; referenceMode?: "CURRENT" | "SNAPSHOT" | null; sourceFieldId?: string | null };
