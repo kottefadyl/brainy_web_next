@@ -2,7 +2,7 @@
 
 import { focusableWithin } from "../ui/use-dialog-focus";
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { LogOut, Pencil, Plus, Search, SlidersHorizontal, X } from "lucide-react";
+import { GraduationCap, LogOut, Pencil, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import { t, type Collection, type Language } from "../../../lib/brainy";
 
 type Props = {
@@ -16,11 +16,12 @@ type Props = {
   onTemplate: () => void;
   onManual: () => void;
   onTools: () => void;
+  onGuideCenter?: () => void;
   onEditProfile: () => void;
   onSignOut: () => void;
 };
 
-export function MobileCollectionDrawer({ open, collections, selectedId, language, triggerRef, onClose, onSelect, onTemplate, onManual, onTools, onEditProfile, onSignOut }: Props) {
+export function MobileCollectionDrawer({ open, collections, selectedId, language, triggerRef, onClose, onSelect, onTemplate, onManual, onTools, onGuideCenter, onEditProfile, onSignOut }: Props) {
   const [query, setQuery] = useState("");
   const panelRef = useRef<HTMLDivElement>(null);
   const fr = language === "fr";
@@ -66,6 +67,7 @@ export function MobileCollectionDrawer({ open, collections, selectedId, language
         <button type="button" className="mobile-drawer-create" onClick={() => run(onTemplate)}><Plus size={17} aria-hidden="true" />{t(language, "newCollection")}</button>
         <button type="button" onClick={() => run(onManual)}>{fr ? "Créer manuellement" : "Create manually"}</button>
         <button type="button" onClick={() => run(onTools)}><SlidersHorizontal size={17} aria-hidden="true" />{fr ? "Outils de l’espace" : "Workspace tools"}</button>
+        {onGuideCenter && <button type="button" onClick={() => run(onGuideCenter)}><GraduationCap size={17} aria-hidden="true" />{fr ? "Guide et formation" : "Guide and training"}</button>}
         <button type="button" onClick={() => run(onEditProfile)}><Pencil size={17} aria-hidden="true" />{t(language, "editProfile")}</button>
         <button type="button" onClick={() => run(onSignOut)}><LogOut size={17} aria-hidden="true" />{t(language, "signOut")}</button>
       </div>

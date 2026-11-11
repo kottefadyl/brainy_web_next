@@ -58,6 +58,7 @@ import PeriodTotalsPanel from "./period-totals-panel";
 import BookView, { BookViewLauncher } from "./book-view";
 import TaskAgendaView from "./task-agenda-view";
 import OnboardingGuide from "./onboarding-guide";
+import GuideCenter from "./guide-center";
 import { hiddenTaskFields } from "../lib/task-planner";
 import { bookText, downloadTransfer, exportCollection, importCollection, parseTransfer, transferCsv, transferMapping, type TransferBundle } from "../lib/transfer";
 import {
@@ -945,7 +946,7 @@ export default function BrainyApp() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [guideOpen, setGuideOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<"collection" | "insights" | "stock" | "classifications" | "map" | "workflow" | "contributions" | "dataSources" | "ledger" | "sensitivity" | "book">("collection");
+  const [activeSection, setActiveSection] = useState<"collection" | "insights" | "stock" | "classifications" | "map" | "workflow" | "contributions" | "dataSources" | "ledger" | "sensitivity" | "book" | "guide">("collection");
   const [entries, setEntries] = useState<Entry[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [pageAfter, setPageAfter] = useState<string | null>(null);
@@ -1149,10 +1150,10 @@ export default function BrainyApp() {
 
   return (
     <AppShell>
-      <Sidebar onGuide={() => setGuideOpen(true)} brand={<Brand />} collections={collections} selectedId={selectedId} loading={loadingCollections} language={language} userName={user.name} userEmail={user.email} userPhoto={profilePhoto} onSelect={selectCollection} onTemplate={() => setDialog({ kind: "starter" })} onManual={() => setDialog({ kind: "collection" })} onTransfer={() => setDialog({ kind: "transfer" })} onTools={() => setDialog({ kind: "workspaceTools" })} onEditProfile={() => setProfileEditing(true)} onSignOut={signOut} />
+      <Sidebar onGuide={() => setGuideOpen(true)} onGuideCenter={() => setActiveSection("guide")} brand={<Brand />} collections={collections} selectedId={selectedId} loading={loadingCollections} language={language} userName={user.name} userEmail={user.email} userPhoto={profilePhoto} onSelect={selectCollection} onTemplate={() => setDialog({ kind: "starter" })} onManual={() => setDialog({ kind: "collection" })} onTransfer={() => setDialog({ kind: "transfer" })} onTools={() => setDialog({ kind: "workspaceTools" })} onEditProfile={() => setProfileEditing(true)} onSignOut={signOut} />
       <main className="workspace">
         <TopBar brand={<Brand compact />} selectedName={selected?.name} language={language} themeControl={<ThemeToggle language={language} mode={colorMode} onChange={chooseColorMode} />} languageControl={<LanguagePicker language={language} onChange={setLanguage} />} account={<AccountButton name={user.name} photo={profilePhoto} language={language} onClick={() => setProfileEditing(true)} />} refreshBusy={loadingCollections} menuOpen={menuOpen} menuButtonRef={mobileMenuButtonRef} onCapture={() => { setSharedContent(undefined); setQuickCapture(true); }} onRefresh={() => { void refresh(); }} onToggleMenu={menuOpen ? closeMenu : openMenu} />
-        {drawerMounted && <MobileCollectionDrawer open={menuOpen} collections={collections} selectedId={selectedId} language={language} triggerRef={mobileMenuButtonRef} onClose={closeMenu} onSelect={selectCollection} onTemplate={() => setDialog({ kind: "starter" })} onManual={() => setDialog({ kind: "collection" })} onTools={() => setDialog({ kind: "workspaceTools" })} onEditProfile={() => setProfileEditing(true)} onSignOut={signOut} />}
+        {drawerMounted && <MobileCollectionDrawer open={menuOpen} collections={collections} selectedId={selectedId} language={language} triggerRef={mobileMenuButtonRef} onClose={closeMenu} onSelect={selectCollection} onTemplate={() => setDialog({ kind: "starter" })} onManual={() => setDialog({ kind: "collection" })} onTools={() => setDialog({ kind: "workspaceTools" })} onGuideCenter={() => setActiveSection("guide")} onEditProfile={() => setProfileEditing(true)} onSignOut={signOut} />}
 
         <div className="workspace-body">
           {activeSection === "collection" && !selected && <div className="workspace-greeting"><span className="eyebrow blue"><Sparkles size={15} /> {t(language, "workspace")}</span><h1>{t(language, "workspace")}<span className="heading-sparkle">✳</span></h1><p>{t(language, "collectionSubtitle")}</p></div>}
@@ -1171,7 +1172,8 @@ export default function BrainyApp() {
           {selected && activeSection === "sensitivity" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{t(language, "collection")}</button><SensitivityPanel key={selected.id} collection={selected} language={language} userId={user.id} onChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} /></section>}
           {selected && activeSection === "classifications" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{t(language, "collection")}</button><ClassificationPanel key={selected.id} collection={selected} targets={collections} language={language} onChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} /></section>}
           {selected && activeSection === "map" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{t(language, "collection")}</button><GeoMapView key={selected.id} collection={selected} language={language} initialSearch={search} filters={filterFieldId && filterValue ? [{ fieldId: filterFieldId, operator: filterOperator, value: filterValue }] : undefined} viewId={selectedViewId || undefined} onImported={() => void refresh()} onOpenEntry={async (id) => { try { setDialog({ kind: "entry", entry: await api.entry(selected.id, id) }); } catch (cause) { setDialogError(String(cause)); } }} /></section>}
-          {!selected && !loadingCollections ? <div className="empty-state first-empty"><div className="empty-art"><FolderHeart size={52} strokeWidth={1.4} /></div><h2>{t(language, "noCollections")}</h2><p>{t(language, "noCollectionsDetail")}</p><Button onClick={() => setDialog({ kind: "starter" })}><Plus size={18} /> {t(language, "createCollection")}</Button><OfflineSyncPanel userId={user.id} collections={collections} language={language} onSynced={() => { void refresh(); }} /></div> : selected && activeSection === "collection" && <>
+          {activeSection === "guide" && <GuideCenter language={language} onClose={() => setActiveSection("collection")} />}
+          {!selected && !loadingCollections && activeSection !== "guide" ? <div className="empty-state first-empty"><div className="empty-art"><FolderHeart size={52} strokeWidth={1.4} /></div><h2>{t(language, "noCollections")}</h2><p>{t(language, "noCollectionsDetail")}</p><Button onClick={() => setDialog({ kind: "starter" })}><Plus size={18} /> {t(language, "createCollection")}</Button><OfflineSyncPanel userId={user.id} collections={collections} language={language} onSynced={() => { void refresh(); }} /></div> : selected && activeSection === "collection" && <>
             <OfflineSyncPanel userId={user.id} collections={collections} language={language} onSynced={() => { void refresh(); }} />
 
 
