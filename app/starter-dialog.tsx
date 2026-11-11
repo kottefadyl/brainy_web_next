@@ -5,6 +5,13 @@ import { Package } from "lucide-react";
 import { api } from "../lib/api";
 import { Button } from "./components/ui/Button";
 import type { Collection, Language } from "../lib/brainy";
+import "./book-view.css";
+
+/** T47: the Book template shows the three classic sections of a book. */
+function BookTemplateArt({ fr }: { fr: boolean }) {
+  const parts = fr ? [["I", "Pages liminaires", "Titre, dédicace, préface…"], ["II", "Corps de l’ouvrage", "Parties, chapitres, sections"], ["III", "Parties finales", "Annexes, glossaire, index"]] : [["I", "Front matter", "Title, dedication, preface…"], ["II", "Body", "Parts, chapters, sections"], ["III", "Back matter", "Appendices, glossary, index"]];
+  return <span className="book-template-art" aria-hidden="true">{parts.map(([number, name, detail]) => <span key={number}><b>{number}</b><span><em>{name}</em><small>{detail}</small></span></span>)}</span>;
+}
 
 export default function StarterDialog({ language, onClose, onCreated, onPackages }: { language: Language; onClose: () => void; onCreated: (collection: Collection) => void; onPackages?: () => void }) {
   const fr = language === "fr";
@@ -19,7 +26,7 @@ export default function StarterDialog({ language, onClose, onCreated, onPackages
     <p className="modal-intro">{fr ? "Choisissez un point de départ. Les formats de données restent modifiables et la collection n’a pas de type permanent." : "Choose a starting point. Data formats stay editable and the collection has no permanent type."}</p>
     {onPackages && <Button variant="subtle" className="starter-packages" onClick={onPackages}><Package size={16} aria-hidden="true" /> {fr ? "Installer un paquet de domaine (fichier, lien ou paquet Brainy)…" : "Install a domain package (file, link or Brainy package)…"}</Button>}
     <label className="starter-name">{fr ? "Nom de la collection" : "Collection name"}<input value={name} maxLength={80} required onChange={(event) => setName(event.target.value)} /></label>
-    <fieldset className="starter-choices"><legend>{fr ? "Point de départ" : "Starting point"}</legend><div className="starter-grid">{templates.map((template) => <button type="button" aria-pressed={selected === template.id} className={selected === template.id ? "selected" : ""} key={template.id} onClick={() => { setName((current) => current === templates.find((item) => item.id === selected)?.name ? template.name : current); setSelected(template.id); }}><strong>{template.name}</strong><span>{template.description}</span></button>)}</div></fieldset>
+    <fieldset className="starter-choices"><legend>{fr ? "Point de départ" : "Starting point"}</legend><div className="starter-grid">{templates.map((template) => <button type="button" aria-pressed={selected === template.id} className={selected === template.id ? "selected" : ""} key={template.id} onClick={() => { setName((current) => current === templates.find((item) => item.id === selected)?.name ? template.name : current); setSelected(template.id); }}><strong>{template.name}</strong><span>{template.description}</span>{template.id === "book" && <BookTemplateArt fr={fr} />}</button>)}</div></fieldset>
     {error && <p className="form-error" role="alert">{error}</p>}
     <div className="modal-actions"><button type="button" onClick={onClose}>{fr ? "Annuler" : "Cancel"}</button><button type="submit" disabled={busy || !selected || !name.trim()}>{busy ? fr ? "Création…" : "Creating…" : fr ? "Créer la collection" : "Create collection"}</button></div>
   </form>;

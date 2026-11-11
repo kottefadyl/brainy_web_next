@@ -54,6 +54,7 @@ import { queueEntry, reviseQueuedEntry } from "../lib/offline-queue";
 import QuickCaptureDialog from "./quick-capture-dialog";
 import QuickEntryDialog from "./quick-entry-dialog";
 import PeriodTotalsPanel from "./period-totals-panel";
+import BookView, { BookViewLauncher } from "./book-view";
 import { bookText, downloadTransfer, exportCollection, importCollection, parseTransfer, transferCsv, transferMapping, type TransferBundle } from "../lib/transfer";
 import {
   effectiveFieldSensitivity, entryClipboardText, fieldKindLabel, fieldKinds, formatColors, formatDisplayName, formatFieldValue, formatForEntry, numberUnits,
@@ -939,7 +940,7 @@ export default function BrainyApp() {
   const [user, setUser] = useState<User | null>(null);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<"collection" | "insights" | "stock" | "classifications" | "map" | "workflow" | "contributions" | "dataSources" | "ledger" | "sensitivity">("collection");
+  const [activeSection, setActiveSection] = useState<"collection" | "insights" | "stock" | "classifications" | "map" | "workflow" | "contributions" | "dataSources" | "ledger" | "sensitivity" | "book">("collection");
   const [entries, setEntries] = useState<Entry[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [pageAfter, setPageAfter] = useState<string | null>(null);
@@ -1157,6 +1158,7 @@ export default function BrainyApp() {
           {selected && activeSection === "stock" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{language === "fr" ? "Collection" : "Collection"}</button><StockPanel key={selected.id} collection={selected} language={language} userId={user.id} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} /></section>}
           {selected && activeSection === "workflow" && <WorkflowPanel key={selected.id} collection={selected} user={user} language={language} onClose={() => setActiveSection("collection")} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} onEntriesChanged={() => { void refresh(); }} />}
           {selected && activeSection === "dataSources" && <DataSourcesPanel key={selected.id} collection={selected} user={user} language={language} onClose={() => setActiveSection("collection")} onEntriesChanged={() => { void refresh(); }} />}
+          {selected && activeSection === "book" && selected.bookView?.enabled && <BookView key={selected.id} collection={selected} language={language} changeSignal={entries} onClose={() => setActiveSection("collection")} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} onOpenEntry={(entry) => setDialog({ kind: "entry", entry })} />}
           {selected && activeSection === "contributions" && <ContributionPanel key={selected.id} collection={selected} language={language} onClose={() => setActiveSection("collection")} onEntriesChanged={() => { void refresh(); }} />}
           {selected && activeSection === "ledger" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{t(language, "collection")}</button><LedgerPanel key={selected.id} collection={selected} language={language} userId={user.id} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} onEntriesChanged={() => { void refresh(); }} /></section>}
           {selected && activeSection === "sensitivity" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{t(language, "collection")}</button><SensitivityPanel key={selected.id} collection={selected} language={language} userId={user.id} onChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} /></section>}
@@ -1167,6 +1169,7 @@ export default function BrainyApp() {
 
 
             <CollectionHeader collection={selected} entryCount={entries.length} language={language} onNewEntry={() => setDialog({ kind: "entry" })} onInsights={() => setActiveSection("insights")} onRename={() => { setRename(selected.name); setDialogError(""); setDialog({ kind: "rename" }); }} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteCollection" }); }} onPackages={() => setDialog({ kind: "packages" })} />
+            <BookViewLauncher collection={selected} language={language} onOpen={() => setActiveSection("book")} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} />
             {selected.periodTotals && <PeriodTotalsPanel key={selected.id} collection={selected} entries={entries} language={language} onSaved={(entry) => setEntries((current) => [entry, ...current])} />}
             <CollectionTabs language={language} value={collectionTab} onChange={(tab) => setTabSelection({ collectionId: selectedId, tab })} />
             <CollectionTabPanel tab="entries" active={collectionTab === "entries"}>

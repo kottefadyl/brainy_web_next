@@ -1,4 +1,5 @@
 import { entryAttachmentLimit } from "./platform";
+import type { BookViewSettings } from "./book";
 export type Language = "en" | "fr";
 export type FieldKind = "TITLE" | "DATE" | "NUMBER" | "TIME" | "LINK" | "CHARACTER" | "TEXT" | "BOOLEAN" | "SELECT" | "MULTI_SELECT" | "DATETIME" | "DURATION" | "LONG_TEXT" | "ATTACHMENT" | "OBJECT_REF" | "MEASURE" | "CODE" | "POSITION" | "ZONE";
 export type SensitivityLevel = "ORDINARY" | "PERSONAL" | "SENSITIVE";
@@ -16,7 +17,7 @@ export type ExchangeRate = { id: string; from: string; to: string; rate: string;
 export type UnitSnapshot = { id: string; version: number; symbol: string; dimension: string; factor: string; root: string; objectFormatId?: string | null };
 export type WorkflowDefinition = { stateFieldId: string; initialState: string; transitions: { from: string; to: string; minimumRole: CollectionRole }[]; requirements: { state: string; fieldIds: string[] }[] };
 export type EntryWorkflow = { assigneeUserId?: string | null; dueAt?: string | null; reminderMinutesBefore?: number | null; history: { kind: string; from: string; to: string; actorUserId: string; at: string; assigneeUserId?: string | null; dueAt?: string | null }[] };
-export type CollectionFormat = { id: string; name: string; color: string; version?: number | null; objectModel?: boolean; appendOnly?: boolean; sensitivity?: SensitivityLevel; copiedFromFormatId?: string | null; linkedSource?: { sourceCollectionId: string; sourceFormatId: string; acceptedVersion: number; targetVersion: number } | null; workflow?: WorkflowDefinition | null; fields: Field[] };
+export type CollectionFormat = { id: string; name: string; color: string; version?: number | null; objectModel?: boolean; appendOnly?: boolean; sensitivity?: SensitivityLevel; copiedFromFormatId?: string | null; linkedSource?: { sourceCollectionId: string; sourceFormatId: string; acceptedVersion: number; targetVersion: number } | null; workflow?: WorkflowDefinition | null; singleEntry?: boolean | null; parentFormatIds?: string[] | null; fields: Field[] };
 const sensitivityRank: Record<SensitivityLevel, number> = { ORDINARY: 0, PERSONAL: 1, SENSITIVE: 2 };
 export const defaultFieldSensitivity = (field: Field): SensitivityLevel =>
   field.sensitivity ?? (field.kind === "POSITION" || field.kind === "ZONE" ? "SENSITIVE" : "ORDINARY");
@@ -44,7 +45,7 @@ export type SharedObjectGrant = { id: string; sourceCollectionId: string; source
 export type CollectionRole = "OWNER" | "EDITOR" | "READER";
 export type CollectionMember = { userId: string; email: string; name: string; role: CollectionRole; addedAt: string; sharedFieldIds?: string[]; sensitiveFieldIds?: string[] };
 export type AuditLog = { id: string; collectionId: string; userId: string; action: string; details?: string | null; occurredAt: string };
-export type Collection = { id: string; name: string; ownerId?: string; minAggregateSize?: number; periodTotals?: { formatId: string; dateFieldId: string; amountFieldId: string } | null; fields: Field[]; formats: CollectionFormat[]; codeLists: ClassificationList[]; units: CollectionUnit[]; exchangeRates: ExchangeRate[]; sharedObjects: SharedObjectGrant[]; savedViews: SavedView[]; formulas: Formula[]; stockRules?: StockRule[]; allowNegativeStock?: boolean; members?: CollectionMember[] };
+export type Collection = { id: string; name: string; ownerId?: string; templateId?: string | null; bookView?: BookViewSettings | null; minAggregateSize?: number; periodTotals?: { formatId: string; dateFieldId: string; amountFieldId: string } | null; fields: Field[]; formats: CollectionFormat[]; codeLists: ClassificationList[]; units: CollectionUnit[]; exchangeRates: ExchangeRate[]; sharedObjects: SharedObjectGrant[]; savedViews: SavedView[]; formulas: Formula[]; stockRules?: StockRule[]; allowNegativeStock?: boolean; members?: CollectionMember[] };
 export type Entry = {
   id: string;
   offlinePending?: boolean;
@@ -685,6 +686,9 @@ export function translateError(error: unknown, language: Language): string {
   if (message.includes("Choose a light data format color") || message.includes("Choose a light format color")) return t(language, "chooseColor");
   if (message.includes("Each data format needs a different color") || message.includes("Each format needs a different color")) return t(language, "colorUsed");
   if (message.includes("Data format changed")) return t(language, "formatConflict");
+  if (message.includes("can only have one entry")) return language === "fr" ? "Ce format de données n’accepte qu’une seule entrée. Modifiez celle qui existe." : "This data format accepts a single entry. Edit the existing one.";
+  if (message.includes("can only be placed under")) return language === "fr" ? `Cette partie se place seulement sous : ${message.split(": ").pop()}.` : message;
+  if (message.includes("already has several entries")) return language === "fr" ? "Ce format de données a déjà plusieurs entrées. N’en gardez qu’une avant d’activer cette règle." : message;
   if (message.includes("has saved values")) return t(language, "formatProtected");
   if (message.includes("Choice fields need")) return t(language, "choicesRule");
   if (message.includes("needs a duration")) return t(language, "invalidDuration");
