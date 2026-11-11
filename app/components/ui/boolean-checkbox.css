@@ -1,0 +1,5 @@
+/* T49: yes/no fields are checkboxes. */
+.boolean-check { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; }
+.boolean-check input { width: 22px; height: 22px; margin: 0; accent-color: var(--blue); cursor: pointer; }
+.boolean-check > span { color: var(--muted); font-size: 14px; }
+html[data-theme] .boolean-check input[type="checkbox"] { width: 22px; height: 22px; min-height: 0; min-width: 0; padding: 0; border-radius: 4px; flex: none; }

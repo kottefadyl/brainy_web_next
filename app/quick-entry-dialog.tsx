@@ -1,5 +1,6 @@
 "use client";
 
+import { BooleanCheckbox } from "./components/ui/BooleanCheckbox";
 import { TemporalFieldInput } from "./components/ui/LocalizedDateInput";
 import { useDialogFocus } from "./components/ui/use-dialog-focus";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -51,7 +52,7 @@ export default function QuickEntryDialog({ collection, userId, language, onClose
     const suggestions = [...new Set(recent.map((entry) => entry.values.find((item) => item.fieldId === field.id)?.value).filter((value): value is string => !!value))].slice(0, 8);
     if (field.kind === "LONG_TEXT") return <textarea {...common} rows={3} />;
     if (field.kind === "SELECT") return <select {...common}><option value="">—</option>{field.options?.map((option) => <option key={option} value={option}>{option}</option>)}</select>;
-    if (field.kind === "BOOLEAN") return <select {...common}><option value="">—</option><option value="true">{fr ? "Oui" : "Yes"}</option><option value="false">{fr ? "Non" : "No"}</option></select>;
+    if (field.kind === "BOOLEAN") return <BooleanCheckbox value={common.value} yes={fr ? "Oui" : "Yes"} no={fr ? "Non" : "No"} onChange={(next) => setField(field.id, next)} />;
     if (field.kind === "DATE" || field.kind === "DATETIME") return <TemporalFieldInput kind={field.kind} language={language} value={common.value} disabled={template.today.includes(field.id)} onChange={(next) => setField(field.id, next)} />;
     return <><input {...common} disabled={template.today.includes(field.id)} type="text" inputMode={field.kind === "NUMBER" ? "decimal" : undefined} list={`quick-${field.id}`} /><datalist id={`quick-${field.id}`}>{suggestions.map((item) => <option key={item} value={item} />)}</datalist></>;
   };

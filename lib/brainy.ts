@@ -1,5 +1,6 @@
 import { entryAttachmentLimit } from "./platform";
 import type { BookViewSettings } from "./book";
+import type { TaskPlanner } from "./task-planner";
 export type Language = "en" | "fr";
 export type FieldKind = "TITLE" | "DATE" | "NUMBER" | "TIME" | "LINK" | "CHARACTER" | "TEXT" | "BOOLEAN" | "SELECT" | "MULTI_SELECT" | "DATETIME" | "DURATION" | "LONG_TEXT" | "ATTACHMENT" | "OBJECT_REF" | "MEASURE" | "CODE" | "POSITION" | "ZONE";
 export type SensitivityLevel = "ORDINARY" | "PERSONAL" | "SENSITIVE";
@@ -26,7 +27,7 @@ export const effectiveFieldSensitivity = (format: CollectionFormat, field: Field
   const formatLevel = format.sensitivity ?? "ORDINARY";
   return sensitivityRank[formatLevel] >= sensitivityRank[fieldLevel] ? formatLevel : fieldLevel;
 };
-export type SavedView = { id: string; name: string; layout: "LIST" | "TABLE" | "CARDS" | "TASKS" | "CALENDAR"; formatIds: string[]; columnFieldIds: string[]; search: string; filterFieldId?: string | null; filterOperator?: EntryFilter["operator"] | null; filterValue?: string | null; sort: "NEWEST" | "OLDEST" | "MANUAL"; manualOrderFieldIds?: string[]; groupByFormat: boolean; taskDoneFieldId?: string | null; taskDueFieldId?: string | null; taskCompletedFieldId?: string | null; taskPriorityFieldId?: string | null; calendarStartFieldId?: string | null; calendarEndFieldId?: string | null; calendarTimeZone?: string | null };
+export type SavedView = { id: string; name: string; layout: "LIST" | "TABLE" | "CARDS" | "TASKS" | "CALENDAR" | "TASK_DAY" | "TASK_CALENDAR"; formatIds: string[]; columnFieldIds: string[]; search: string; filterFieldId?: string | null; filterOperator?: EntryFilter["operator"] | null; filterValue?: string | null; sort: "NEWEST" | "OLDEST" | "MANUAL"; manualOrderFieldIds?: string[]; groupByFormat: boolean; taskDoneFieldId?: string | null; taskDueFieldId?: string | null; taskCompletedFieldId?: string | null; taskPriorityFieldId?: string | null; calendarStartFieldId?: string | null; calendarEndFieldId?: string | null; calendarTimeZone?: string | null };
 export type Formula = { id: string; name: string; formatId: string; expression: string; version: number; dependencies: string[] };
 export type AnalysisOperationId = "COUNT" | "SUM" | "AVERAGE" | "MIN" | "MAX" | "MEDIAN" | "PERCENTILE" | "PERCENTILE_25" | "PERCENTILE_75" | "PERCENTILE_95" | "MODE" | "VARIANCE" | "STDDEV" | "STDDEV_SAMPLE" | "RANGE" | "RATE_PER_N" | "CROSSTAB" | "CUMULATIVE" | "MOVING_AVERAGE" | "SUCCESSIVE_DIFF" | "SUCCESSIVE_VARIATION" | "LINEAR_TREND";
 export type AnalysisInput = { formatId: string; fieldId?: string; formulaId?: string; dateFieldId?: string; groupFieldId?: string; zoneFormatId?: string; zoneFieldId?: string; search?: string; viewId?: string; groupBy: "NONE" | "DAY" | "MONTH" | "CATEGORY" | "OBJECT" | "ZONE"; secondaryGroupBy?: "NONE" | "DAY" | "MONTH" | "CATEGORY" | "OBJECT"; secondaryGroupFieldId?: string; groupDepth?: number; secondaryGroupDepth?: number; language?: Language; operation: AnalysisOperationId; measureKind: "EVENT" | "SNAPSHOT" | "RATE"; percentile?: number; rateBase?: number; denominatorFieldId?: string; denominatorValue?: string; weightFieldId?: string; windowSize?: number; counterResetFieldId?: string; from?: string; to?: string; comparisonFrom?: string; comparisonTo?: string; filters?: EntryFilter[]; sourceGroup?: string; sourceOffset?: number };
@@ -45,7 +46,7 @@ export type SharedObjectGrant = { id: string; sourceCollectionId: string; source
 export type CollectionRole = "OWNER" | "EDITOR" | "READER";
 export type CollectionMember = { userId: string; email: string; name: string; role: CollectionRole; addedAt: string; sharedFieldIds?: string[]; sensitiveFieldIds?: string[] };
 export type AuditLog = { id: string; collectionId: string; userId: string; action: string; details?: string | null; occurredAt: string };
-export type Collection = { id: string; name: string; ownerId?: string; templateId?: string | null; bookView?: BookViewSettings | null; minAggregateSize?: number; periodTotals?: { formatId: string; dateFieldId: string; amountFieldId: string } | null; fields: Field[]; formats: CollectionFormat[]; codeLists: ClassificationList[]; units: CollectionUnit[]; exchangeRates: ExchangeRate[]; sharedObjects: SharedObjectGrant[]; savedViews: SavedView[]; formulas: Formula[]; stockRules?: StockRule[]; allowNegativeStock?: boolean; members?: CollectionMember[] };
+export type Collection = { id: string; name: string; ownerId?: string; templateId?: string | null; bookView?: BookViewSettings | null; taskPlanner?: TaskPlanner | null; minAggregateSize?: number; periodTotals?: { formatId: string; dateFieldId: string; amountFieldId: string } | null; fields: Field[]; formats: CollectionFormat[]; codeLists: ClassificationList[]; units: CollectionUnit[]; exchangeRates: ExchangeRate[]; sharedObjects: SharedObjectGrant[]; savedViews: SavedView[]; formulas: Formula[]; stockRules?: StockRule[]; allowNegativeStock?: boolean; members?: CollectionMember[] };
 export type Entry = {
   id: string;
   offlinePending?: boolean;
@@ -57,6 +58,7 @@ export type Entry = {
   createdAt: string;
   updatedAt: string;
   sourceObjectId?: string | null;
+  taskCompletions?: string[] | null;
   contributionLinkId?: string | null;
   contributionReceivedAt?: string | null;
   recurrence?: { startFieldId: string; endFieldId: string; timeZone: string; frequency: "DAILY" | "WEEKLY" | "MONTHLY"; interval: number; untilDate?: string | null; excludedDates: string[] } | null;
@@ -291,7 +293,7 @@ const messages = {
     character: "Character",
     text: "Text",
     longText: "Long text",
-    boolean: "Yes or no",
+    boolean: "Checkbox (yes/no)",
     select: "Single choice",
     multiSelect: "Multiple choices",
     dateTime: "Date and time",
@@ -537,7 +539,7 @@ const messages = {
     character: "Caractère",
     text: "Texte",
     longText: "Texte long",
-    boolean: "Oui ou non",
+    boolean: "Case à cocher (oui/non)",
     select: "Choix unique",
     multiSelect: "Choix multiples",
     dateTime: "Date et heure",
