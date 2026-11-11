@@ -46,7 +46,7 @@ export type SharedObjectGrant = { id: string; sourceCollectionId: string; source
 export type CollectionRole = "OWNER" | "EDITOR" | "READER";
 export type CollectionMember = { userId: string; email: string; name: string; role: CollectionRole; addedAt: string; sharedFieldIds?: string[]; sensitiveFieldIds?: string[] };
 export type AuditLog = { id: string; collectionId: string; userId: string; action: string; details?: string | null; occurredAt: string };
-export type Collection = { id: string; name: string; ownerId?: string; templateId?: string | null; bookView?: BookViewSettings | null; taskPlanner?: TaskPlanner | null; minAggregateSize?: number; periodTotals?: { formatId: string; dateFieldId: string; amountFieldId: string } | null; fields: Field[]; formats: CollectionFormat[]; codeLists: ClassificationList[]; units: CollectionUnit[]; exchangeRates: ExchangeRate[]; sharedObjects: SharedObjectGrant[]; savedViews: SavedView[]; formulas: Formula[]; stockRules?: StockRule[]; allowNegativeStock?: boolean; members?: CollectionMember[] };
+export type Collection = { id: string; name: string; ownerId?: string; templateId?: string | null; bookView?: BookViewSettings | null; taskPlanner?: TaskPlanner | null; minAggregateSize?: number; periodTotals?: { formatId: string; dateFieldId: string; amountFieldId: string } | null; fields: Field[]; formats: CollectionFormat[]; codeLists: ClassificationList[]; units: CollectionUnit[]; exchangeRates: ExchangeRate[]; sharedObjects: SharedObjectGrant[]; savedViews: SavedView[]; formulas: Formula[]; stockRules?: StockRule[]; allowNegativeStock?: boolean; members?: CollectionMember[]; sharedBy?: { userId: string; name: string } | null };
 export type Entry = {
   id: string;
   offlinePending?: boolean;
@@ -731,6 +731,11 @@ export function translateError(error: unknown, language: Language): string {
       ["Keep the workflow state field", "Conservez le champ d’état et ses choix pendant que le flux est actif."],
       ["Only a collection owner can perform this action", "Seul le propriétaire de la collection peut effectuer cette action."],
       ["Read-only members cannot modify collection data", "Les membres en lecture seule ne peuvent pas modifier la collection."],
+      ["Share only with your collaborators", "Partagez seulement avec vos collaborateurs : envoyez-leur d’abord votre lien de collaboration."],
+      ["This collaboration link is no longer valid", "Ce lien de collaboration n’est plus valable. Demandez-en un nouveau à la personne qui vous l’a envoyé."],
+      ["You cannot collaborate with yourself", "C’est votre propre lien : envoyez-le à un collègue pour qu’il l’accepte."],
+      ["Collaborator not found", "Ce collaborateur n’existe plus."],
+      ["Choose read only or read and write", "Choisissez « Lecture seule » ou « Lecture et écriture »."],
       ["Assign to the owner or an editor", "Assignez l’entrée au propriétaire ou à un éditeur ayant accès à ce format de données."],
       ["Choose a valid due date and time", "Choisissez une échéance valide."],
       ["Choose a reminder advance", "Choisissez un délai de rappel entre 0 et 43 200 minutes."],

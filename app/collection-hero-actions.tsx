@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ChartNoAxesCombined, Package, Pencil, Plus, Trash2 } from "lucide-react";
+import { ChartNoAxesCombined, Package, Pencil, Plus, Trash2, UserPlus } from "lucide-react";
 import { t, type Language } from "../lib/brainy";
 
 type Props = {
@@ -11,9 +11,12 @@ type Props = {
   onRename: () => void;
   onDelete: () => void;
   onPackages?: () => void;
+  /** T52: only the owner shares, renames and deletes; false for a collection shared with me. */
+  onShare?: () => void;
+  owner?: boolean;
 };
 
-export default function CollectionHeroActions({ language, onNewEntry, onInsights, onRename, onDelete, onPackages }: Props) {
+export default function CollectionHeroActions({ language, onNewEntry, onInsights, onRename, onDelete, onPackages, onShare, owner = true }: Props) {
   const menuRef = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
     const closeOnOutside = (event: PointerEvent) => {
@@ -39,7 +42,10 @@ export default function CollectionHeroActions({ language, onNewEntry, onInsights
       <button type="button" className="button button-secondary" onClick={onInsights}>
         <ChartNoAxesCombined size={16} /> {language === "fr" ? "Calculs" : "Insights"}
       </button>
-      <details ref={menuRef} className="collection-hero-more" onKeyDown={(event) => {
+      {owner && onShare && <button type="button" className="button button-secondary" onClick={onShare}>
+        <UserPlus size={16} /> {language === "fr" ? "Partager" : "Share"}
+      </button>}
+      {owner && <details ref={menuRef} className="collection-hero-more" onKeyDown={(event) => {
         if (event.key === "Escape") {
           event.preventDefault();
           event.currentTarget.open = false;
@@ -52,7 +58,7 @@ export default function CollectionHeroActions({ language, onNewEntry, onInsights
           {onPackages && <button type="button" onClick={() => runMenuAction(onPackages)}><Package size={16} /> {language === "fr" ? "Paquets de domaine" : "Domain packages"}</button>}
           <button type="button" className="collection-hero-menu-danger" onClick={() => runMenuAction(onDelete)}><Trash2 size={16} /> {t(language, "delete")}</button>
         </div>
-      </details>
+      </details>}
     </div>
   );
 }

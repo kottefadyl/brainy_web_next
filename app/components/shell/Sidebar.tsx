@@ -19,14 +19,15 @@ type Props = {
   onTools: () => void;
   onGuide?: () => void;
   onGuideCenter?: () => void;
+  onCollaborators?: () => void;
   onEditProfile: () => void;
   onSignOut: () => void;
 };
 
-export function Sidebar({ brand, collections, selectedId, loading, language, userName, userEmail, userPhoto, onSelect, onTemplate, onManual, onTransfer, onTools, onGuide, onGuideCenter, onEditProfile, onSignOut }: Props) {
+export function Sidebar({ brand, collections, selectedId, loading, language, userName, userEmail, userPhoto, onSelect, onTemplate, onManual, onTransfer, onTools, onGuide, onGuideCenter, onCollaborators, onEditProfile, onSignOut }: Props) {
   return <aside className="sidebar" aria-label={t(language, "collections")}>
     <div className="sidebar-top">{brand}<p>{t(language, "tagline")}</p></div>
-    <CollectionSidebar collections={collections} selectedId={selectedId} loading={loading} language={language} onSelect={onSelect} onTemplate={onTemplate} onManual={onManual} onTransfer={onTransfer} onTools={onTools} onGuide={onGuide} onGuideCenter={onGuideCenter} />
+    <CollectionSidebar collections={collections} selectedId={selectedId} loading={loading} language={language} onSelect={onSelect} onTemplate={onTemplate} onManual={onManual} onTransfer={onTransfer} onTools={onTools} onGuide={onGuide} onGuideCenter={onGuideCenter} onCollaborators={onCollaborators} />
     <div className="sidebar-bottom">
       <div className={`profile-avatar${userPhoto ? " has-photo" : ""}`} aria-hidden="true">
         {/* eslint-disable-next-line @next/next/no-img-element -- local data URL, nothing for next/image to optimise */}

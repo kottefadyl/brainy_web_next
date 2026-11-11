@@ -44,8 +44,8 @@ export default function EntryRowActions({ language, appendOnly, onDetails, onCop
         <summary className="small-action" title={language === "fr" ? "Actions de l’entrée" : "Entry actions"} aria-label={language === "fr" ? "Actions de l’entrée" : "Entry actions"}><MoreHorizontal size={18} aria-hidden="true" /></summary>
         <div className="entry-action-menu">
           <button type="button" onClick={() => runMenuAction(onCopy)}><Copy size={16} /> {t(language, "copyEntry")}</button>
-          <button type="button" onClick={() => runMenuAction(onEdit)}>{appendOnly ? <FileText size={16} /> : <Pencil size={16} />} {appendOnly ? language === "fr" ? "Ouvrir le registre" : "Open register" : t(language, "edit")}</button>
-          {onLinks && <button type="button" onClick={() => runMenuAction(onLinks)}><Link2 size={16} /> {language === "fr" ? "Liens entre entrées" : "Entry links"}</button>}
+          <button type="button" className="entry-write-action" onClick={() => runMenuAction(onEdit)}>{appendOnly ? <FileText size={16} /> : <Pencil size={16} />} {appendOnly ? language === "fr" ? "Ouvrir le registre" : "Open register" : t(language, "edit")}</button>
+          {onLinks && <button type="button" className="entry-write-action" onClick={() => runMenuAction(onLinks)}><Link2 size={16} /> {language === "fr" ? "Liens entre entrées" : "Entry links"}</button>}
           {onReminder && <button type="button" onClick={() => runMenuAction(onReminder)}><Bell size={16} /> {language === "fr" ? "Rappels" : "Reminders"}</button>}
           {!appendOnly && <button type="button" className="entry-action-danger" onClick={() => runMenuAction(onDelete)}><Trash2 size={16} /> {t(language, "delete")}</button>}
         </div>

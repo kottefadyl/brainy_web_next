@@ -30,7 +30,10 @@ import { LanguagePicker } from "./components/shell/LanguagePicker";
 import { TopBar } from "./components/shell/TopBar";
 import { AccountButton } from "./components/shell/AccountButton";
 import { MobileCollectionDrawer } from "./components/shell/MobileCollectionDrawer";
-import { CollectionHeader } from "./components/shell/CollectionHeader";
+import { CollectionHeader, SharedCollectionBanner } from "./components/shell/CollectionHeader";
+import CollaboratorsPage from "./collaborators-page";
+import CollectionShareDialog from "./collection-share-dialog";
+import { PENDING_INVITE_KEY } from "../lib/collaborators";
 import { CollectionTabs, CollectionTabPanel, type CollectionTab } from "./components/shell/CollectionTabs";
 import { ThemeToggle, type ColorMode } from "./components/shell/ThemeToggle";
 import { useThemeMode } from "./components/shell/useThemeMode";
@@ -946,7 +949,8 @@ export default function BrainyApp() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [guideOpen, setGuideOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<"collection" | "insights" | "stock" | "classifications" | "map" | "workflow" | "contributions" | "dataSources" | "ledger" | "sensitivity" | "book" | "guide">("collection");
+  const [activeSection, setActiveSection] = useState<"collection" | "insights" | "stock" | "classifications" | "map" | "workflow" | "contributions" | "dataSources" | "ledger" | "sensitivity" | "book" | "guide" | "collaborators">("collection");
+  const [shareOpen, setShareOpen] = useState(false);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [pageAfter, setPageAfter] = useState<string | null>(null);
@@ -984,6 +988,8 @@ export default function BrainyApp() {
   const [calendarRefresh, setCalendarRefresh] = useState(0);
   const selected = useMemo(() => collections.find((item) => item.id === selectedId) ?? null, [collections, selectedId]);
   const collectionTab = tabSelection.collectionId === selectedId ? tabSelection.tab : "entries";
+  // T52: my access to the selected collection (owner, or role given by the owner).
+  const selectedRole = !selected?.sharedBy ? "OWNER" : selected.members?.find((member) => member.userId === user?.id)?.role ?? "READER";
   function openMenu() {
     if (drawerTimer.current !== null) window.clearTimeout(drawerTimer.current);
     setDrawerMounted(true);
@@ -1023,6 +1029,13 @@ export default function BrainyApp() {
     queueMicrotask(() => { setSharedContent(shared); setQuickCapture(true); });
     for (const field of ["capture", "title", "text", "url"]) url.searchParams.delete(field);
     window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+  }, [user?.profileCompleted]);
+  // T52: back from sign-in or sign-up, reopen the collaboration link that was clicked.
+  useEffect(() => {
+    if (!user?.profileCompleted) return;
+    let pending: string | null = null;
+    try { pending = window.localStorage.getItem(PENDING_INVITE_KEY); window.localStorage.removeItem(PENDING_INVITE_KEY); } catch { /* storage unavailable */ }
+    if (pending) window.location.replace(`/invite/${encodeURIComponent(pending)}`);
   }, [user?.profileCompleted]);
   useEffect(() => { if (!user?.id) return; let unsubscribe: (() => void) | undefined; import("../lib/firebase-client").then(({ listenForForegroundReminders }) => listenForForegroundReminders()).then((stop) => { unsubscribe = stop; }).catch(() => {}); return () => unsubscribe?.(); }, [user?.id]);
   useEffect(() => { const timer = window.setTimeout(() => setSearch(searchText.trim()), 300); return () => window.clearTimeout(timer); }, [searchText]);
@@ -1150,10 +1163,10 @@ export default function BrainyApp() {
 
   return (
     <AppShell>
-      <Sidebar onGuide={() => setGuideOpen(true)} onGuideCenter={() => setActiveSection("guide")} brand={<Brand />} collections={collections} selectedId={selectedId} loading={loadingCollections} language={language} userName={user.name} userEmail={user.email} userPhoto={profilePhoto} onSelect={selectCollection} onTemplate={() => setDialog({ kind: "starter" })} onManual={() => setDialog({ kind: "collection" })} onTransfer={() => setDialog({ kind: "transfer" })} onTools={() => setDialog({ kind: "workspaceTools" })} onEditProfile={() => setProfileEditing(true)} onSignOut={signOut} />
-      <main className="workspace">
+      <Sidebar onGuide={() => setGuideOpen(true)} onGuideCenter={() => setActiveSection("guide")} onCollaborators={() => setActiveSection("collaborators")} brand={<Brand />} collections={collections} selectedId={selectedId} loading={loadingCollections} language={language} userName={user.name} userEmail={user.email} userPhoto={profilePhoto} onSelect={selectCollection} onTemplate={() => setDialog({ kind: "starter" })} onManual={() => setDialog({ kind: "collection" })} onTransfer={() => setDialog({ kind: "transfer" })} onTools={() => setDialog({ kind: "workspaceTools" })} onEditProfile={() => setProfileEditing(true)} onSignOut={signOut} />
+      <main className="workspace" data-access={selectedRole === "READER" ? "reader" : undefined}>
         <TopBar brand={<Brand compact />} selectedName={selected?.name} language={language} themeControl={<ThemeToggle language={language} mode={colorMode} onChange={chooseColorMode} />} languageControl={<LanguagePicker language={language} onChange={setLanguage} />} account={<AccountButton name={user.name} photo={profilePhoto} language={language} onClick={() => setProfileEditing(true)} />} refreshBusy={loadingCollections} menuOpen={menuOpen} menuButtonRef={mobileMenuButtonRef} onCapture={() => { setSharedContent(undefined); setQuickCapture(true); }} onRefresh={() => { void refresh(); }} onToggleMenu={menuOpen ? closeMenu : openMenu} />
-        {drawerMounted && <MobileCollectionDrawer open={menuOpen} collections={collections} selectedId={selectedId} language={language} triggerRef={mobileMenuButtonRef} onClose={closeMenu} onSelect={selectCollection} onTemplate={() => setDialog({ kind: "starter" })} onManual={() => setDialog({ kind: "collection" })} onTools={() => setDialog({ kind: "workspaceTools" })} onGuideCenter={() => setActiveSection("guide")} onEditProfile={() => setProfileEditing(true)} onSignOut={signOut} />}
+        {drawerMounted && <MobileCollectionDrawer open={menuOpen} collections={collections} selectedId={selectedId} language={language} triggerRef={mobileMenuButtonRef} onClose={closeMenu} onSelect={selectCollection} onTemplate={() => setDialog({ kind: "starter" })} onManual={() => setDialog({ kind: "collection" })} onTools={() => setDialog({ kind: "workspaceTools" })} onGuideCenter={() => setActiveSection("guide")} onCollaborators={() => setActiveSection("collaborators")} onEditProfile={() => setProfileEditing(true)} onSignOut={signOut} />}
 
         <div className="workspace-body">
           {activeSection === "collection" && !selected && <div className="workspace-greeting"><span className="eyebrow blue"><Sparkles size={15} /> {t(language, "workspace")}</span><h1>{t(language, "workspace")}<span className="heading-sparkle">✳</span></h1><p>{t(language, "collectionSubtitle")}</p></div>}
@@ -1173,11 +1186,13 @@ export default function BrainyApp() {
           {selected && activeSection === "classifications" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{t(language, "collection")}</button><ClassificationPanel key={selected.id} collection={selected} targets={collections} language={language} onChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} /></section>}
           {selected && activeSection === "map" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{t(language, "collection")}</button><GeoMapView key={selected.id} collection={selected} language={language} initialSearch={search} filters={filterFieldId && filterValue ? [{ fieldId: filterFieldId, operator: filterOperator, value: filterValue }] : undefined} viewId={selectedViewId || undefined} onImported={() => void refresh()} onOpenEntry={async (id) => { try { setDialog({ kind: "entry", entry: await api.entry(selected.id, id) }); } catch (cause) { setDialogError(String(cause)); } }} /></section>}
           {activeSection === "guide" && <GuideCenter language={language} onClose={() => setActiveSection("collection")} />}
-          {!selected && !loadingCollections && activeSection !== "guide" ? <div className="empty-state first-empty"><div className="empty-art"><FolderHeart size={52} strokeWidth={1.4} /></div><h2>{t(language, "noCollections")}</h2><p>{t(language, "noCollectionsDetail")}</p><Button onClick={() => setDialog({ kind: "starter" })}><Plus size={18} /> {t(language, "createCollection")}</Button><OfflineSyncPanel userId={user.id} collections={collections} language={language} onSynced={() => { void refresh(); }} /></div> : selected && activeSection === "collection" && <>
+          {activeSection === "collaborators" && <CollaboratorsPage language={language} onClose={() => setActiveSection("collection")} onChanged={() => { void refresh(); }} />}
+          {!selected && !loadingCollections && activeSection !== "guide" && activeSection !== "collaborators" ? <div className="empty-state first-empty"><div className="empty-art"><FolderHeart size={52} strokeWidth={1.4} /></div><h2>{t(language, "noCollections")}</h2><p>{t(language, "noCollectionsDetail")}</p><Button onClick={() => setDialog({ kind: "starter" })}><Plus size={18} /> {t(language, "createCollection")}</Button><OfflineSyncPanel userId={user.id} collections={collections} language={language} onSynced={() => { void refresh(); }} /></div> : selected && activeSection === "collection" && <>
             <OfflineSyncPanel userId={user.id} collections={collections} language={language} onSynced={() => { void refresh(); }} />
 
 
-            <CollectionHeader collection={selected} entryCount={entries.length} language={language} onNewEntry={() => setDialog({ kind: "entry" })} onInsights={() => setActiveSection("insights")} onRename={() => { setRename(selected.name); setDialogError(""); setDialog({ kind: "rename" }); }} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteCollection" }); }} onPackages={() => setDialog({ kind: "packages" })} />
+            <CollectionHeader collection={selected} entryCount={entries.length} language={language} onNewEntry={() => setDialog({ kind: "entry" })} onInsights={() => setActiveSection("insights")} onRename={() => { setRename(selected.name); setDialogError(""); setDialog({ kind: "rename" }); }} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteCollection" }); }} onPackages={() => setDialog({ kind: "packages" })} role={selectedRole} onShare={() => setShareOpen(true)} />
+            {selectedRole !== "OWNER" && <SharedCollectionBanner collection={selected} role={selectedRole} language={language} />}
             <BookViewLauncher collection={selected} language={language} onOpen={() => setActiveSection("book")} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} />
             {selected.periodTotals && <PeriodTotalsPanel key={selected.id} collection={selected} entries={entries} language={language} onSaved={(entry) => setEntries((current) => [entry, ...current])} />}
             <CollectionTabs language={language} value={collectionTab} onChange={(tab) => setTabSelection({ collectionId: selectedId, tab })} />
@@ -1210,6 +1225,7 @@ export default function BrainyApp() {
       {quickCapture && <QuickCaptureDialog collections={collections} userId={user.id} language={language} incoming={sharedContent} onClose={() => setQuickCapture(false)} onSaved={(collectionId, entry) => { setQuickCapture(false); setSelectedId(collectionId); if (selectedId === collectionId) setEntries((current) => [entry, ...current]); }} onOpen={(collectionId, entry) => { setQuickCapture(false); setSelectedId(collectionId); setDialog({ kind: "entry", entry }); }} />}
       {quickEntry && selected && <QuickEntryDialog collection={selected} userId={user.id} language={language} onClose={() => setQuickEntry(false)} onFullEntry={(formatId) => { setQuickEntry(false); setDialog({ kind: "entry", formatId }); }} onSaved={(entry) => { setEntries((current) => [entry, ...current]); setQuickEntry(false); }} />}
       {dialog?.kind === "starter" && <Modal title={language === "fr" ? "Choisir un modèle" : "Choose a template"} closeLabel={t(language, "close")} onClose={() => setDialog(null)} size="wide"><StarterDialog language={language} onPackages={() => setDialog({ kind: "packages" })} onClose={() => setDialog(null)} onCreated={(collection) => { setCollections((current) => [collection, ...current]); setSelectedId(collection.id); setDialog(null); }} /></Modal>}
+      {shareOpen && selected && selectedRole === "OWNER" && <CollectionShareDialog collection={selected} language={language} onClose={() => setShareOpen(false)} onChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} onOpenCollaborators={() => { setShareOpen(false); setActiveSection("collaborators"); }} />}
       {dialog?.kind === "packages" && <DomainPackagesDialog collections={collections} current={selected} userId={user.id} userName={user.name} language={language} onClose={() => setDialog(null)} onInstalled={(collectionId) => { setDialog(null); void api.collections().then((items) => { setCollections(items); selectCollection(collectionId); }); }} />}
       {dialog?.kind === "entryLinks" && selected && <Modal title={language === "fr" ? "Liens entre entrées" : "Entry links"} closeLabel={t(language, "close")} onClose={() => setDialog(null)} size="wide"><EntryLinksDialog collection={selected} entry={dialog.entry} language={language} onClose={() => setDialog(null)} onOpenEntry={(entry) => setDialog({ kind: "entry", entry })} /></Modal>}
       {dialog?.kind === "collection" && <CollectionEditor language={language} onClose={() => setDialog(null)} onSaved={(collection) => { setCollections((current) => [collection, ...current]); setSelectedId(collection.id); setDialog(null); }} />}

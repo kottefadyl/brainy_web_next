@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, type CSSProperties } from "react";
-import { FolderHeart, Plus, Search, Settings2, SlidersHorizontal, Compass, GraduationCap, Upload } from "lucide-react";
+import { FolderHeart, Plus, Search, Settings2, SlidersHorizontal, Compass, GraduationCap, Upload, Users, FolderInput } from "lucide-react";
 import { t, type Collection, type Language } from "../lib/brainy";
+import "./collaborators.css";
 
 type Props = {
   collections: Collection[];
@@ -16,21 +17,31 @@ type Props = {
   onTools: () => void;
   onGuide?: () => void;
   onGuideCenter?: () => void;
+  onCollaborators?: () => void;
 };
 
-export default function CollectionSidebar({ collections, selectedId, loading, language, onSelect, onTemplate, onManual, onTransfer, onTools, onGuide, onGuideCenter }: Props) {
+export default function CollectionSidebar({ collections, selectedId, loading, language, onSelect, onTemplate, onManual, onTransfer, onTools, onGuide, onGuideCenter, onCollaborators }: Props) {
   const [query, setQuery] = useState("");
-  const visible = collections.filter((item) => item.name.toLocaleLowerCase(language).includes(query.trim().toLocaleLowerCase(language)));
+  const matching = collections.filter((item) => item.name.toLocaleLowerCase(language).includes(query.trim().toLocaleLowerCase(language)));
+  const visible = matching.filter((item) => !item.sharedBy);
+  const shared = matching.filter((item) => item.sharedBy);
   const activeIndex = visible.findIndex((item) => item.id === selectedId);
+  const sharedActiveIndex = shared.findIndex((item) => item.id === selectedId);
   const fr = language === "fr";
-  return <div className="collection-sidebar">
+  return <div className={`collection-sidebar${shared.length ? " has-shared" : ""}`}>
     <div className="sidebar-heading"><span>{t(language, "collections")}</span><span className="sidebar-total">{collections.length}</span></div>
     <label className="sidebar-search"><Search size={17} aria-hidden="true" /><span className="sr-only">{fr ? "Rechercher une collection" : "Search collections"}</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={fr ? "Rechercher…" : "Search…"} /></label>
     <nav className="collection-nav" aria-label={t(language, "collections")} data-active-visible={activeIndex >= 0} style={{ "--active-index": activeIndex } as CSSProperties}>
       {visible.map((collection) => <button type="button" key={collection.id} className={`nav-item ${selectedId === collection.id ? "active" : ""}`} aria-current={selectedId === collection.id ? "page" : undefined} aria-label={collection.name} title={collection.name} onClick={() => onSelect(collection.id)}><FolderHeart size={18} aria-hidden="true" /><span>{collection.name}</span><span className="nav-count" aria-hidden="true">{collection.formats.length}</span></button>)}
       {!loading && collections.length === 0 && <p className="sidebar-empty">{t(language, "noCollectionsDetail")}</p>}
-      {query && visible.length === 0 && collections.length > 0 && <p className="sidebar-empty">{fr ? "Aucune collection trouvée" : "No matching collections"}</p>}
+      {query && matching.length === 0 && collections.length > 0 && <p className="sidebar-empty">{fr ? "Aucune collection trouvée" : "No matching collections"}</p>}
     </nav>
+    {shared.length > 0 && <>
+      <div className="sidebar-subheading" id="shared-collections-heading"><Users size={14} aria-hidden="true" />{fr ? "Partagées avec moi" : "Shared with me"}</div>
+      <nav className="collection-nav" aria-labelledby="shared-collections-heading" data-active-visible={sharedActiveIndex >= 0} style={{ "--active-index": sharedActiveIndex } as CSSProperties}>
+        {shared.map((collection) => <button type="button" key={collection.id} className={`nav-item ${selectedId === collection.id ? "active" : ""}`} aria-current={selectedId === collection.id ? "page" : undefined} aria-label={`${collection.name} · ${fr ? "partagée par" : "shared by"} ${collection.sharedBy!.name}`} title={`${collection.name} · ${collection.sharedBy!.name}`} onClick={() => onSelect(collection.id)}><FolderInput size={18} aria-hidden="true" /><span>{collection.name}</span><span className="nav-owner" aria-hidden="true">{collection.sharedBy!.name.split(" ")[0]}</span></button>)}
+      </nav>
+    </>}
     <div className="sidebar-actions">
       <button type="button" className="sidebar-new-collection" onClick={onTemplate}><Plus size={18} />{t(language, "newCollection")}</button>
       <details className="sidebar-more" onKeyDown={(event) => { if (event.key === "Escape") { event.currentTarget.open = false; event.currentTarget.querySelector("summary")?.focus(); } }}>
@@ -40,6 +51,7 @@ export default function CollectionSidebar({ collections, selectedId, loading, la
           <button type="button" onClick={(event) => { event.currentTarget.closest("details")!.open = false; onTransfer(); }}><Upload size={16} />{t(language, "importData")} / {t(language, "exportData")}</button>
           <button type="button" onClick={(event) => { event.currentTarget.closest("details")!.open = false; onTools(); }}><SlidersHorizontal size={16} />{fr ? "Outils de l’espace" : "Workspace tools"}</button>
           {onGuide && <button type="button" onClick={(event) => { event.currentTarget.closest("details")!.open = false; onGuide(); }}><Compass size={16} />{fr ? "Guide de démarrage" : "Getting started guide"}</button>}
+          {onCollaborators && <button type="button" onClick={(event) => { event.currentTarget.closest("details")!.open = false; onCollaborators(); }}><Users size={16} />{fr ? "Collaborateurs" : "Collaborators"}</button>}
           {onGuideCenter && <button type="button" onClick={(event) => { event.currentTarget.closest("details")!.open = false; onGuideCenter(); }}><GraduationCap size={16} />{fr ? "Guide et formation" : "Guide and training"}</button>}
         </div>
       </details>
