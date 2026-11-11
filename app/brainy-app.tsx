@@ -57,6 +57,7 @@ import QuickEntryDialog from "./quick-entry-dialog";
 import PeriodTotalsPanel from "./period-totals-panel";
 import BookView, { BookViewLauncher } from "./book-view";
 import TaskAgendaView from "./task-agenda-view";
+import { hiddenTaskFields } from "../lib/task-planner";
 import { bookText, downloadTransfer, exportCollection, importCollection, parseTransfer, transferCsv, transferMapping, type TransferBundle } from "../lib/transfer";
 import {
   effectiveFieldSensitivity, entryClipboardText, fieldKindLabel, fieldKinds, formatColors, formatDisplayName, formatFieldValue, formatForEntry, numberUnits,
@@ -455,7 +456,7 @@ function EntryEditor({ collection, entry, initialFormatId, language, userId, onC
         <div className="entry-form-context"><FolderHeart size={18} /> {collection.name}</div>
         {entry || initialFormatId ? <div className="selected-format" style={{ "--format-color": format.color } as CSSProperties}>{formatDisplayName(format, language)}</div> : <label className="input-label">{t(language, "chooseFormat")}<select value={formatId} onChange={(event) => setFormatId(event.target.value)}>{collection.formats.map((item) => <option key={item.id} value={item.id}>{formatDisplayName(item, language)}</option>)}</select></label>}
         <div className="entry-format-fields" style={{ "--format-color": format.color } as CSSProperties}>
-        {format.fields.map((field, index) => field.kind === "ATTACHMENT" ? <AttachmentFieldInput key={field.id} field={field} language={language} collectionId={collection.id} entry={entry} value={values[field.id] ?? ""} smallFile={files[field.id]} largeFileId={largeFiles[field.id]}
+        {format.fields.filter((field) => !hiddenTaskFields(collection.taskPlanner, format.id, values).has(field.id)).map((field, index) => field.kind === "ATTACHMENT" ? <AttachmentFieldInput key={field.id} field={field} language={language} collectionId={collection.id} entry={entry} value={values[field.id] ?? ""} smallFile={files[field.id]} largeFileId={largeFiles[field.id]}
           onSmallFile={(file) => { setFiles((current) => ({ ...current, [field.id]: file })); setLargeFiles((current) => { const next = { ...current }; delete next[field.id]; return next; }); setValues((current) => ({ ...current, [field.id]: file.name })); setError(""); }}
           onLargeFile={(largeFileId, fileName) => { setLargeFiles((current) => ({ ...current, [field.id]: largeFileId })); setFiles((current) => { const next = { ...current }; delete next[field.id]; return next; }); setValues((current) => ({ ...current, [field.id]: fileName })); setError(""); }}
           onClear={() => { setValues((current) => ({ ...current, [field.id]: "" })); setFiles((current) => { const next = { ...current }; delete next[field.id]; return next; }); setLargeFiles((current) => { const next = { ...current }; delete next[field.id]; return next; }); }}

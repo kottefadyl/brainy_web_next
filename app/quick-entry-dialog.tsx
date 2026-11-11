@@ -1,5 +1,6 @@
 "use client";
 
+import { hiddenTaskFields } from "../lib/task-planner";
 import { BooleanCheckbox } from "./components/ui/BooleanCheckbox";
 import { TemporalFieldInput } from "./components/ui/LocalizedDateInput";
 import { useDialogFocus } from "./components/ui/use-dialog-focus";
@@ -21,6 +22,7 @@ export default function QuickEntryDialog({ collection, userId, language, onClose
   const fields = useMemo(() => format?.fields.filter((field) => supported.has(field.kind)) ?? [], [format]);
   const [template, setTemplate] = useState<Template>(() => read(userId, formatId));
   const [values, setValues] = useState<Record<string, string>>(() => ({ ...read(userId, formatId).values }));
+  const taskHidden = hiddenTaskFields(collection.taskPlanner, formatId, values);
   const [recent, setRecent] = useState<Entry[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -62,7 +64,7 @@ export default function QuickEntryDialog({ collection, userId, language, onClose
     <label>{fr ? "Format de données" : "Data format"}<select value={formatId} onChange={(event) => changeFormat(event.target.value)}>{collection.formats.filter((item) => !item.objectModel).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
     {recent.length > 0 && <button type="button" className="quick-subtle" onClick={duplicateLast}>{fr ? "Reprendre la dernière entrée" : "Use last entry"}</button>}
     {format && fields.length === 0 && <div className="quick-entry-fallback"><p>{fr ? "Ce format de données utilise des champs avancés." : "This data format uses advanced fields."}</p><button type="button" onClick={() => onFullEntry(format.id)}>{fr ? "Ouvrir le formulaire complet" : "Open full entry form"}</button></div>}
-    <div className="quick-entry-fields">{fields.filter((field) => !template.hidden.includes(field.id)).map(renderField)}</div>
+    <div className="quick-entry-fields">{fields.filter((field) => !template.hidden.includes(field.id) && !taskHidden.has(field.id)).map(renderField)}</div>
     {fields.some((field) => template.hidden.includes(field.id)) && <details className="quick-optional-fields"><summary>{fr ? "Autres champs" : "More fields"} <span>{fields.filter((field) => template.hidden.includes(field.id)).length}</span></summary><div className="quick-entry-fields">{fields.filter((field) => template.hidden.includes(field.id)).map(renderField)}</div></details>}
     <details className="quick-entry-settings"><summary>{fr ? "Personnaliser la saisie" : "Customize entry form"}</summary><p>{fr ? "Choisissez les champs affichés directement la prochaine fois." : "Choose which fields appear directly next time."}</p><div>{fields.map((field) => <label key={field.id}><input type="checkbox" checked={!template.hidden.includes(field.id)} onChange={(event) => setTemplate((current) => ({ ...current, hidden: event.target.checked ? current.hidden.filter((id) => id !== field.id) : [...current.hidden, field.id] }))} />{field.name}</label>)}</div></details>
     {error && <p role="alert">{error}</p>}

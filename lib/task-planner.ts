@@ -29,3 +29,20 @@ export function dayLabel(day: string, language: Language, style: "long" | "short
 }
 export const monthLabel = (day: string, language: Language) => new Intl.DateTimeFormat(language, { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(time(day)));
 export const weekdayNames = (language: Language) => Array.from({ length: 7 }, (_, index) => new Intl.DateTimeFormat(language, { weekday: "short", timeZone: "UTC" }).format(new Date(Date.UTC(2026, 10, 9 + index))));
+
+const fold = (text: string) => text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+const repeatChoices: Record<string, string[]> = { ONCE: ["Once", "Une seule fois"], EVERY_N_DAYS: ["Every N days", "Tous les N jours"], WEEKDAYS: ["Some weekdays", "Certains jours de la semaine"], DAILY: ["Every day", "Chaque jour"], WEEKLY: ["Every week", "Chaque semaine"], MONTHLY: ["Every month", "Chaque mois"] };
+export function repeatKind(value: string | undefined): string {
+  if (!value) return "ONCE";
+  return Object.entries(repeatChoices).find(([, labels]) => labels.some((label) => fold(label) === fold(value)))?.[0] ?? "ONCE";
+}
+/** T49: in the task form, show only the fields that matter for the chosen Repeat. */
+export function hiddenTaskFields(planner: TaskPlanner | null | undefined, formatId: string | undefined | null, values: Record<string, string>): Set<string> {
+  if (!planner || formatId !== planner.formatId) return new Set();
+  const repeat = repeatKind(values[planner.repeatFieldId]);
+  const hidden = new Set<string>();
+  if (repeat !== "EVERY_N_DAYS") hidden.add(planner.intervalFieldId);
+  if (repeat !== "WEEKDAYS") hidden.add(planner.weekdaysFieldId);
+  if (repeat !== "ONCE") { hidden.add(planner.doneFieldId); if (planner.completedFieldId) hidden.add(planner.completedFieldId); }
+  return hidden;
+}
