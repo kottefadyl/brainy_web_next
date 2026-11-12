@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // A second local build (tests) can use its own folder.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   /* config options here */
   experimental: {
     agentFeedback: true,

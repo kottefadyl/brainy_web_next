@@ -46,3 +46,6 @@ next-env.d.ts
 /.phase-two-b-chrome/
 /.phase-two-b-review-chrome/
 /app/phase-two-b-preview/
+
+# local realtime test build
+/.next-rt/

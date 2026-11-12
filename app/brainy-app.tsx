@@ -1,5 +1,6 @@
 "use client";
 
+import { listenToChanges } from "../lib/realtime";
 import { editableValuesByField, PersonFieldInput } from "./person-field-input";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { BrainyLogo } from "./components/brand/BrainyLogo";
@@ -1077,6 +1078,38 @@ export default function BrainyApp() {
     return () => { cancelled = true; };
   }, [user?.id, user?.profileCompleted, selectedId, selectedViewId, search, filterFormatId, filterFieldId, filterOperator, filterValue]);
   useEffect(() => { if (!notice) return; const timer = window.setTimeout(() => setNotice(""), 3500); return () => window.clearTimeout(timer); }, [notice]);
+
+  // Real-time data synchronisation: when someone else changes a collection I can open, the list and the
+  // open page reload quietly (no spinner); a collection I lost access to disappears.
+  const liveSync = useRef<(collectionIds: Set<string>) => Promise<void>>(async () => {});
+  useEffect(() => { liveSync.current = async (collectionIds) => {
+    if (!user) return;
+    try {
+      const result = await api.collections();
+      setCollections(result);
+      if (selectedId && !result.some((item) => item.id === selectedId)) { await refresh(); return; }
+      if (!selectedId || !collectionIds.has(selectedId) || pageAfter !== null) return;
+      const generation = ++entryGeneration.current;
+      const page = await api.entriesPage(selectedId, pageOptions());
+      if (generation === entryGeneration.current) { setEntries(page.entries); setNextCursor(page.nextCursor ?? null); setCalendarRefresh((current) => current + 1); }
+    } catch { /* the next load shows the change */ }
+  }; });
+  useEffect(() => {
+    if (!user?.id) return;
+    const me = user.id;
+    let stop: (() => void) | undefined;
+    let stopped = false;
+    let timer: number | undefined;
+    const pending = new Set<string>();
+    listenToChanges(me, (signal) => {
+      if (signal.by === me && !signal.removed) return; // my own change is already on screen
+      pending.add(signal.collectionId);
+      window.clearTimeout(timer);
+      // Several quick changes (a pasted range…) make one reload.
+      timer = window.setTimeout(() => { const ids = new Set(pending); pending.clear(); void liveSync.current(ids); }, 600);
+    }).then((unsubscribe) => { if (stopped) unsubscribe(); else stop = unsubscribe; }).catch(() => {});
+    return () => { stopped = true; stop?.(); window.clearTimeout(timer); };
+  }, [user?.id]);
 
   async function refresh() {
     if (!user) return;

@@ -4,13 +4,17 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/
 const firebaseConfig = {
   apiKey: "AIzaSyBqx6YAjxqEBuli7sKDvkOlfo-tI4uVblU",
   authDomain: "brainy-6d65c.firebaseapp.com",
-  projectId: "brainy-6d65c",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "brainy-6d65c",
   appId: "1:828931163138:web:8b284f9f24f3cc8834531b",
 };
 
+/** The shared Firebase web app (sign-in, push, real-time signals). */
+export function firebaseApp() {
+  return getApps().length ? getApp() : initializeApp(firebaseConfig);
+}
+
 function auth() {
-  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-  return getAuth(app);
+  return getAuth(firebaseApp());
 }
 
 export async function browserPushToken(): Promise<string> {
