@@ -248,6 +248,7 @@ function CollectionEditor({ language, collection, editingFormat, onClose, onSave
   const [color, setColor] = useState("");
   const [fields, setFields] = useState<DraftField[]>(editingFormat ? editingFormat.fields.map((field, index) => ({ key: index + 1, id: field.id, name: field.name, kind: field.kind, unit: field.unit ?? "", optionsText: field.options?.join("\n") ?? "", codeListId: field.codeListId ?? "", custom: !!field.unit && !field.unit.startsWith("local:") && !numberUnits.some((unit) => unit.code === field.unit), targetObjectFormatId: field.targetObjectFormatId ?? "", multiple: field.multiple ?? false, variableName: field.variableName ?? "", referenceMode: field.referenceMode ?? "SNAPSHOT" })) : [{ key: 1, name: t(language, "title"), kind: "TITLE", unit: "", optionsText: "" }]);
   const [objectModel, setObjectModel] = useState(editingFormat?.objectModel ?? false);
+  const [singleEntry, setSingleEntry] = useState(editingFormat?.singleEntry ?? false);
   const [nextKey, setNextKey] = useState((editingFormat?.fields.length ?? 1) + 1);
   const [impact, setImpact] = useState<{ entryCount: number; populatedFieldIds: string[] } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -283,7 +284,7 @@ function CollectionEditor({ language, collection, editingFormat, onClose, onSave
     if (fields.some((field) => field.kind === "OBJECT_REF" && !field.targetObjectFormatId)) return setError(language === "fr" ? "Choisissez un modèle d’objets de cette collection." : "Choose an object model in this collection.");
     if (fields.some((field) => field.kind === "CODE" && !field.codeListId)) return setError(language === "fr" ? "Choisissez une liste de codes de cette collection." : "Choose a code list in this collection.");
     setBusy(true);
-    try { onSaved(editingFormat && collection ? await api.updateFormat(collection.id, editingFormat.id, formatName.trim(), editingFormat.version ?? 1, cleanFields) : collection ? await api.addFormat(collection.id, formatName.trim(), color, cleanFields, objectModel) : await api.createCollection(cleanName, cleanFields, formatName.trim(), color, objectModel)); }
+    try { onSaved(editingFormat && collection ? await api.updateFormat(collection.id, editingFormat.id, formatName.trim(), editingFormat.version ?? 1, cleanFields).then((saved) => singleEntry === (editingFormat.singleEntry ?? false) ? saved : api.setFormatEntryRules(collection.id, editingFormat.id, singleEntry, editingFormat.parentFormatIds ?? [])) : collection ? await api.addFormat(collection.id, formatName.trim(), color, cleanFields, objectModel) : await api.createCollection(cleanName, cleanFields, formatName.trim(), color, objectModel)); }
     catch (error) { setError(errorMessage(error, language)); }
     finally { setBusy(false); }
   }
@@ -296,6 +297,7 @@ function CollectionEditor({ language, collection, editingFormat, onClose, onSave
         {!collection && <label className="input-label">{t(language, "collectionName")}<input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder={t(language, "collectionNameHint")} maxLength={80} required /></label>}
         <label className="input-label">{t(language, "formatName")}<input autoFocus={!!collection} value={formatName} onChange={(event) => setFormatName(event.target.value)} maxLength={80} required /></label>
         {!editingFormat && <FormatColorPicker language={language} value={color} unavailable={collection?.formats.map((format) => format.color) ?? []} onChange={setColor} help={t(language, "formatColorHelp")} />}
+        {editingFormat && !editingFormat.appendOnly && <label className="object-choice"><input type="checkbox" checked={singleEntry} onChange={(event) => setSingleEntry(event.target.checked)} />{language === "fr" ? "Une seule entrée pour ce format de données (par exemple une couverture ou une préface)" : "A single entry for this data format (for example a cover or a preface)"}</label>}
         {!editingFormat && <label className="object-choice"><input type="checkbox" checked={objectModel} onChange={(event) => setObjectModel(event.target.checked)} />{language === "fr" ? "Utiliser ce format de données pour des objets" : "Use this data format for objects"}</label>}
         <div className="form-section-title"><div><h3>{t(language, "collectionFormat")}</h3><p>{t(language, "formatHelp")}</p></div><span className="count-chip">{fields.length} {t(language, fields.length === 1 ? "field" : "fields")}</span></div>
         <div className="field-list">

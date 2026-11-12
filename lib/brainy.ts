@@ -694,6 +694,7 @@ export function translateError(error: unknown, language: Language): string {
   if (message.includes("Choose a light data format color") || message.includes("Choose a light format color")) return t(language, "chooseColor");
   if (message.includes("Each data format needs a different color") || message.includes("Each format needs a different color")) return t(language, "colorUsed");
   if (message.includes("Data format changed")) return t(language, "formatConflict");
+  if (message.includes("already has several entries")) return language === "fr" ? "Ce format de données a déjà plusieurs entrées. Gardez-en une seule avant d’activer cette règle." : "This data format already has several entries. Keep one before allowing a single entry.";
   if (message.includes("can only have one entry")) return language === "fr" ? "Ce format de données n’accepte qu’une seule entrée. Modifiez celle qui existe." : "This data format accepts a single entry. Edit the existing one.";
   if (message.includes("can only be placed under")) return language === "fr" ? `Cette partie se place seulement sous : ${message.split(": ").pop()}.` : message;
   if (message.includes("already has several entries")) return language === "fr" ? "Ce format de données a déjà plusieurs entrées. N’en gardez qu’une avant d’activer cette règle." : message;

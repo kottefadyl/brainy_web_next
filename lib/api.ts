@@ -346,6 +346,10 @@ export const api = {
       { collectionId, formatId },
     )).collectionFormatImpact;
   },
+  /** T47/4: at most one entry for this data format; keeps the allowed parents unchanged. */
+  async setFormatEntryRules(collectionId: string, formatId: string, singleEntry: boolean, parentFormatIds: string[]): Promise<Collection> {
+    return (await request<{ setFormatEntryRules: Collection }>(`mutation($collectionId:String!,$formatId:String!,$singleEntry:Boolean!,$parentFormatIds:[String!]!){setFormatEntryRules(collectionId:$collectionId,formatId:$formatId,singleEntry:$singleEntry,parentFormatIds:$parentFormatIds){${collectionFields}}}`, { collectionId, formatId, singleEntry, parentFormatIds })).setFormatEntryRules;
+  },
   async updateFormat(collectionId: string, formatId: string, name: string, expectedVersion: number, fields: { id?: string; name: string; kind: FieldKind; unit?: string; options?: string[]; codeListId?: string }[]): Promise<Collection> {
     return (await request<{ updateCollectionFormat: Collection }>(
       `mutation UpdateFormat($collectionId: String!, $formatId: String!, $input: UpdateCollectionFormatInput!) { updateCollectionFormat(collectionId: $collectionId, formatId: $formatId, input: $input) { ${collectionFields} } }`,
