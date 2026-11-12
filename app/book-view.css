@@ -218,3 +218,10 @@ html[data-theme] .book-view .book-editor :is(textarea, input) { display: block; 
   .book-placeholder { display: none; }
   .book-toc li button { color: #000; }
 }
+
+/* T47/3: data formats placed in the book by the owner. */
+.book-format-roles { margin-top: 12px; }
+.book-format-roles > summary { cursor: pointer; font-weight: 600; min-height: 36px; display: flex; align-items: center; }
+.book-format-role { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 9.5rem); align-items: center; gap: 8px; margin: 6px 0; font-size: 13px; color: var(--ink); }
+.book-format-role span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.book-format-role select { min-height: 36px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); padding: 0 8px; font: inherit; }

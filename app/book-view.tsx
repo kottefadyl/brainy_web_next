@@ -2,6 +2,7 @@
 
 // T47: book view of a collection created from the Book template. Entries stay ordinary entries;
 // this view only arranges them (roles, parent relations, order field) and edits their values.
+import { BookFormatRoles } from "./book-format-roles";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { ArrowDown, ArrowLeft, ArrowUp, BookOpen, ListTree, PenLine, Plus, Printer, SlidersHorizontal, Trash2 } from "lucide-react";
 import { api } from "../lib/api";
@@ -247,7 +248,8 @@ export default function BookView({ collection, language, changeSignal, onClose, 
             <p className="book-outline-note">{fr ? "Chacune de ces pages n’existe qu’une fois dans le livre." : "Each of these pages exists only once in the book."}</p>
             <div className="book-outline-chips">{missingSingles.map((role) => <button key={role} type="button" disabled={busyId === role} onClick={() => void create(role)}><Plus size={14} />{roleLabel(role, language)}</button>)}</div>
           </>}
-          {outline.hiddenFormats.length > 0 && <p className="book-outline-note">{fr ? `Non affichés dans le livre : ${outline.hiddenFormats.map((format) => format.name).join(", ")}.` : `Not shown in the book: ${outline.hiddenFormats.map((format) => format.name).join(", ")}.`}</p>}
+          {!collection.sharedBy && <BookFormatRoles collection={collection} language={language} onCollectionChanged={onCollectionChanged} />}
+          {outline.hiddenFormats.length > 0 && collection.sharedBy && <p className="book-outline-note">{fr ? `Non affichés dans le livre : ${outline.hiddenFormats.map((format) => format.name).join(", ")}.` : `Not shown in the book: ${outline.hiddenFormats.map((format) => format.name).join(", ")}.`}</p>}
         </details>
       </nav>
       <div className={`book-workspace ${settings.chapterOnNewPage ? "" : "flow"}`}>

@@ -17,6 +17,10 @@ export const bookApi = {
     void _roles;
     return (await request<{ setBookView: { bookView: BookViewSettings } }>(`mutation($id:String!,$input:BookViewSettingsInput!){setBookView(collectionId:$id,input:$input){${bookViewFields}}}`, { id: collectionId, input })).setBookView.bookView;
   },
+  /** T47/3: shows a data format in the book with a role, or hides it (null). */
+  async setFormatRole(collectionId: string, formatId: string, role: BookRole | null): Promise<BookViewSettings> {
+    return (await request<{ setBookFormatRole: { bookView: BookViewSettings } }>(`mutation($id:String!,$formatId:String!,$role:String){setBookFormatRole(collectionId:$id,formatId:$formatId,role:$role){${bookViewFields}}}`, { id: collectionId, formatId, role })).setBookFormatRole.bookView;
+  },
   async parentRelations(collectionId: string): Promise<EntryRelation[]> {
     return (await request<{ collectionParentRelations: EntryRelation[] }>("query($id:String!){collectionParentRelations(collectionId:$id){id collectionId fromEntryId toEntryId kind label createdAt}}", { id: collectionId })).collectionParentRelations;
   },
@@ -33,6 +37,8 @@ export const fontStacks: Record<BookFont, string> = {
 
 export const frontRoles: BookRole[] = ["COVER", "TITLE_PAGE", "DEDICATION", "EPIGRAPH", "FOREWORD", "PREFACE", "ACKNOWLEDGEMENTS", "INTRODUCTION"];
 export const backSingles: BookRole[] = ["CONCLUSION", "AFTERWORD"];
+/** T47/3: roles the owner can give to any data format. */
+export const assignableRoles: BookRole[] = ["PART", "CHAPTER", "SECTION", "SUBSECTION", "APPENDIX", "TERM", "SOURCE"];
 export const childRole: Partial<Record<BookRole, BookRole>> = { PART: "CHAPTER", CHAPTER: "SECTION", SECTION: "SUBSECTION" };
 
 export type BookNode = { entry: Entry; format: CollectionFormat; role: BookRole; title: string; text: string; order: number | null; children: BookNode[]; number: number };
