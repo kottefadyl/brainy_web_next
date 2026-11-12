@@ -7,7 +7,7 @@
 .entry-authors.compact { gap: 3px; }
 .entry-authors.compact .author-name, .entry-authors.compact .author-edited { display: none; }
 .entry-authors.compact .author-avatar { width: 20px; height: 20px; }
-.entry-row-content > .entry-authors { margin-bottom: 4px; }
+.entry-row-meta > .entry-authors { order: 99; margin-left: auto; } /* bottom right of the row, after the dates */
 .format-card .entry-authors { margin-bottom: 8px; }
 .task-row .entry-authors, .task-item .entry-authors { flex: none; }
 .calendar-event .entry-authors { margin: 0 2px; }

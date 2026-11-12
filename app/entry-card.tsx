@@ -33,9 +33,9 @@ export default function EntryCard({ entry, collection, language, selected, onDet
           {edited && <span className="entry-edited"><Pencil size={13} aria-hidden="true" /> {t(language, "edited")} {dateTime(entry.updatedAt, language)}</span>}
           {entry.contributionLinkId && entry.contributionReceivedAt && <span className="entry-edited">{language === "fr" ? "Contribution externe reçue le" : "External contribution received"} {dateTime(entry.contributionReceivedAt, language)}</span>}
           {format.appendOnly && <span className="entry-edited">{language === "fr" ? "Écriture" : "Writing"} #{entry.ledgerSequence}{entry.correctionOf ? ` · ${language === "fr" ? "Correction de" : "Correction of"} ${entry.correctionOf}` : ""}</span>}
+          <EntryAuthors entry={entry} collection={collection} language={language} />
         </div>
         <div className="entry-row-content">
-          <EntryAuthors entry={entry} collection={collection} language={language} />
           <h3 className="entry-title"><button type="button" onClick={onDetails} title={title ?? undefined}>{title ?? previewValue ?? formatDisplayName(format, language)}</button></h3>
           {title && previewValue && <span className="entry-preview" title={previewValue}>{previewValue}</span>}
           {secondValue && <span className="entry-preview" title={secondValue}>{secondValue}</span>}
