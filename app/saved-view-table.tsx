@@ -2,11 +2,12 @@
 
 // Table layout of a saved view, with an optional spreadsheet mode (T46): cells edit in place,
 // rows are added at the bottom and columns are added to the data format, with an explicit unit.
-import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import { Plus, Sheet, SquareArrowOutUpRight } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent, type PointerEvent } from "react";
+import { ArrowDown, ArrowUp, Plus, Sheet, SquareArrowOutUpRight } from "lucide-react";
 import { api } from "../lib/api";
 import { fieldKindLabel, formatFieldValue, numberUnits, t, unitCategories, unitLabel, unitSymbol, type Collection, type CollectionFormat, type Entry, type Field, type FieldKind, type Language, type SavedView } from "../lib/brainy";
 import { cellEditor, columnProblem, fieldsWithColumn, spreadsheetColumnKinds, toEditable, toStored, valuesWithCell, type CellEditor } from "../lib/spreadsheet";
+import { inRange, nextSort, parseClipboard, rangeOf, sortEntries, toClipboard, valuesWithCells, type SortOrder } from "../lib/spreadsheet-range";
 import { TemporalFieldInput } from "./components/ui/LocalizedDateInput";
 import { Button } from "./components/ui/Button";
 import Modal from "./components/ui/Modal";
@@ -30,6 +31,10 @@ type Props = {
 const storageKey = (viewId: string) => `brainy.spreadsheet.${viewId}`;
 function readMode(viewId: string): boolean { try { return typeof window !== "undefined" && window.localStorage.getItem(storageKey(viewId)) === "on"; } catch { return false; } }
 function writeMode(viewId: string, on: boolean) { try { window.localStorage.setItem(storageKey(viewId), on ? "on" : "off"); } catch { /* the choice simply is not remembered */ } }
+const widthKey = (viewId: string) => `brainy.spreadsheet.widths.${viewId}`;
+function readWidths(viewId: string): Record<string, number> { try { return JSON.parse(window.localStorage.getItem(widthKey(viewId)) ?? "{}") as Record<string, number>; } catch { return {}; } }
+function writeWidths(viewId: string, widths: Record<string, number>) { try { window.localStorage.setItem(widthKey(viewId), JSON.stringify(widths)); } catch { /* widths are simply not remembered */ } }
+const MAX_PASTED_ROWS = 200;
 const dateTimeText = (value: string, language: Language) => new Intl.DateTimeFormat(language, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 
 export default function SavedViewTable(props: Props) {
@@ -48,7 +53,7 @@ export default function SavedViewTable(props: Props) {
         {fr ? "Mode tableur" : "Spreadsheet mode"}
       </button>
       <span className="spreadsheet-switch-hint">{spreadsheet
-        ? fr ? "Modifiez les cellules directement. Entrée valide, Échap annule, les flèches déplacent la sélection." : "Edit cells in place. Enter saves, Escape cancels, arrow keys move the selection."
+        ? fr ? "Modifiez les cellules directement. Entrée valide, Échap annule. Maj + flèches sélectionne, Ctrl+C / Ctrl+V copie et colle, Ctrl+D recopie vers le bas. Cliquez un titre de colonne pour trier." : "Edit cells in place. Enter saves, Escape cancels. Shift + arrows selects, Ctrl+C / Ctrl+V copy and paste, Ctrl+D fills down. Click a column title to sort."
         : fr ? "Activez-le pour saisir et modifier les données comme dans un tableur." : "Turn it on to enter and change data as in a spreadsheet."}</span>
     </div>
     {spreadsheet ? <SpreadsheetGrid {...props} /> : <ReadOnlyTable {...props} />}
@@ -77,11 +82,16 @@ function SpreadsheetGrid({ collection, view, entries, language, errorText, onOpe
   const [formatId, setFormatId] = useState(() => viewFormats.find((format) => entries.some((entry) => entry.formatId === format.id))?.id ?? viewFormats[0]?.id ?? "");
   const format = collection.formats.find((item) => item.id === formatId) ?? viewFormats[0];
   const [createdIds, setCreatedIds] = useState<string[]>([]);
+  // T46/1: sort by a column (header button), column widths remembered per view, range selection.
+  const [sort, setSort] = useState<SortOrder>(null);
+  const [widths, setWidths] = useState<Record<string, number>>(() => readWidths(view.id));
   const rows = useMemo(() => {
     const own = entries.filter((entry) => entry.formatId === format?.id);
-    return [...own.filter((entry) => !createdIds.includes(entry.id)), ...createdIds.flatMap((id) => own.filter((entry) => entry.id === id))];
-  }, [entries, format?.id, createdIds]);
+    const ordered = [...own.filter((entry) => !createdIds.includes(entry.id)), ...createdIds.flatMap((id) => own.filter((entry) => entry.id === id))];
+    return sortEntries(ordered, format?.fields ?? [], sort, language);
+  }, [entries, format?.id, format?.fields, createdIds, sort, language]);
   const [active, setActive] = useState<Cell>({ row: 0, col: 0 });
+  const [anchor, setAnchor] = useState<Cell | null>(null);
   const [editing, setEditing] = useState<Editing | null>(null);
   const [draftRow, setDraftRow] = useState(false);
   const [saving, setSaving] = useState<string>("");
@@ -104,7 +114,123 @@ function SpreadsheetGrid({ collection, view, entries, language, errorText, onOpe
   const editorFor = (field: Field, entry: Entry | undefined): CellEditor => locked(entry) ? "none" : cellEditor(field, format);
   const storedValue = (entry: Entry | undefined, field: Field) => entry?.values.find((item) => item.fieldId === field.id)?.value ?? "";
 
-  const move = (row: number, col: number) => setActive({ row: Math.max(0, Math.min(rowCount - 1, row)), col: Math.max(0, Math.min(fields.length - 1, col)) });
+  const clampCell = (row: number, col: number): Cell => ({ row: Math.max(0, Math.min(rowCount - 1, row)), col: Math.max(0, Math.min(fields.length - 1, col)) });
+  const move = (row: number, col: number) => { setAnchor(null); setActive(clampCell(row, col)); };
+  const extend = (row: number, col: number) => { setAnchor((current) => current ?? active); setActive(clampCell(row, col)); };
+  const range = rangeOf(anchor, active);
+
+  /** Saves several cells, one request per row; a row index past the last one creates an entry. */
+  async function saveRows(changes: Map<number, { fieldId: string; value: string }[]>, skipped: string[], newRows: { fieldId: string; value: string }[][] = []) {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setSaving("range");
+    const problems = [...skipped];
+    let done = 0;
+    const save = async (entry: Entry | undefined, cells: { fieldId: string; value: string }[], label: string) => {
+      const values = valuesWithCells(entry, cells);
+      if (!values.length || (entry && cells.every((cell) => storedValue(entry, fields.find((field) => field.id === cell.fieldId)!) === cell.value))) return;
+      try {
+        const saved = await api.saveEntry(collection.id, values, entry?.id, format.id, { clientMutationId: crypto.randomUUID(), expectedUpdatedAt: entry?.updatedAt });
+        if (!entry) setCreatedIds((current) => [...current, saved.id]);
+        onEntrySaved(saved);
+        done++;
+      } catch (cause) { problems.push(`${label} : ${errorText(cause)}`); }
+    };
+    try {
+      for (const [row, cells] of [...changes.entries()].sort((a, b) => a[0] - b[0])) await save(entryAt(row), cells, `${fr ? "Ligne" : "Row"} ${row + 1}`);
+      for (const [index, cells] of newRows.entries()) if (cells.length) await save(undefined, cells, `${fr ? "Nouvelle ligne" : "New row"} ${index + 1}`);
+    } finally { inFlight.current = false; setSaving(""); }
+    setProblem(problems.length ? `${fr ? `${done} ligne(s) enregistrée(s).` : `${done} row(s) saved.`} ${problems.slice(0, 3).join(" · ")}${problems.length > 3 ? " …" : ""}` : "");
+  }
+
+  /** Reads one pasted value for a cell, with the same checks as a typed value. */
+  function pastedValue(field: Field, entry: Entry | undefined, raw: string): { value: string } | { problem: string } {
+    if (editorFor(field, entry) === "none") return { problem: `${field.name} : ${fr ? "à remplir dans le formulaire complet" : "fill it in the full form"}` };
+    const text = field.kind === "BOOLEAN" ? (["true", "1", "oui", "yes", "vrai", "✓", "x"].includes(raw.trim().toLowerCase()) ? "true" : raw.trim() ? "false" : "") : raw;
+    const result = toStored(field, text);
+    return result.ok ? { value: result.value } : { problem: `${field.name} : ${t(language, result.error)}` };
+  }
+
+  function onPaste(event: ClipboardEvent<HTMLTableElement>) {
+    if (editing || addingColumn) return;
+    const text = event.clipboardData.getData("text/plain");
+    if (!text) return;
+    event.preventDefault();
+    const grid = parseClipboard(text).slice(0, MAX_PASTED_ROWS);
+    // A single copied value fills the whole selected range, as in a spreadsheet.
+    const single = grid.length === 1 && grid[0].length === 1 && (range.bottom > range.top || range.right > range.left);
+    const top = single ? range.top : active.row, left = single ? range.left : active.col;
+    const height = single ? range.bottom - range.top + 1 : grid.length;
+    const width = single ? range.right - range.left + 1 : Math.max(...grid.map((line) => line.length));
+    const changes = new Map<number, { fieldId: string; value: string }[]>();
+    const newRows: { fieldId: string; value: string }[][] = [];
+    const skipped = new Set<string>();
+    for (let r = 0; r < height; r++) {
+      const row = top + r;
+      const entry = row < rows.length ? entryAt(row) : undefined;
+      const cells: { fieldId: string; value: string }[] = [];
+      for (let c = 0; c < width; c++) {
+        const field = fields[left + c];
+        const raw = single ? grid[0][0] : grid[r][c];
+        if (!field || raw === undefined) continue;
+        const result = pastedValue(field, entry, raw);
+        if ("problem" in result) { skipped.add(result.problem); continue; }
+        cells.push({ fieldId: field.id, value: result.value });
+      }
+      // Rows below the table become new entries, in order.
+      if (row < rows.length) changes.set(row, cells); else newRows.push(cells.filter((cell) => cell.value));
+    }
+    setDraftRow(false);
+    void saveRows(changes, [...skipped], newRows);
+  }
+
+  function onCopy(event: ClipboardEvent<HTMLTableElement>) {
+    if (editing || addingColumn) return;
+    event.preventDefault();
+    const lines: string[][] = [];
+    for (let row = range.top; row <= range.bottom; row++) {
+      const entry = entryAt(row);
+      lines.push(fields.slice(range.left, range.right + 1).map((field) => toEditable(field, storedValue(entry, field), language)));
+    }
+    event.clipboardData.setData("text/plain", toClipboard(lines));
+  }
+
+  /** Ctrl+D: the first row of the selection is copied into the rows below it (the fill handle of a spreadsheet). */
+  function fillDown() {
+    if (range.bottom === range.top) { setProblem(fr ? "Sélectionnez plusieurs lignes (Maj + flèches) avant de recopier vers le bas." : "Select several rows (Shift + arrows) before filling down."); return; }
+    const source = entryAt(range.top);
+    const changes = new Map<number, { fieldId: string; value: string }[]>();
+    const skipped = new Set<string>();
+    for (let row = range.top + 1; row <= Math.min(range.bottom, rows.length - 1); row++) {
+      for (let col = range.left; col <= range.right; col++) {
+        const field = fields[col];
+        if (editorFor(field, entryAt(row)) === "none") { skipped.add(`${field.name} : ${fr ? "à remplir dans le formulaire complet" : "fill it in the full form"}`); continue; }
+        changes.set(row, [...(changes.get(row) ?? []), { fieldId: field.id, value: storedValue(source, field) }]);
+      }
+    }
+    void saveRows(changes, [...skipped]);
+  }
+
+  function resizeStart(event: PointerEvent<HTMLSpanElement>, fieldId: string) {
+    event.preventDefault();
+    const header = event.currentTarget.parentElement!;
+    const startX = event.clientX, startWidth = header.getBoundingClientRect().width;
+    const onMove = (next: globalThis.PointerEvent) => setWidths((current) => ({ ...current, [fieldId]: Math.round(Math.max(64, Math.min(640, startWidth + next.clientX - startX))) }));
+    const onUp = () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); setWidths((current) => { writeWidths(view.id, current); return current; }); };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  }
+  function resizeKey(event: KeyboardEvent<HTMLSpanElement>, fieldId: string) {
+    const step = event.key === "ArrowRight" ? 16 : event.key === "ArrowLeft" ? -16 : 0;
+    if (!step) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const current = widths[fieldId] ?? event.currentTarget.parentElement!.getBoundingClientRect().width;
+    const next = { ...widths, [fieldId]: Math.round(Math.max(64, Math.min(640, current + step))) };
+    setWidths(next);
+    writeWidths(view.id, next);
+  }
+  const sized = (fieldId: string) => widths[fieldId] ? { width: widths[fieldId], minWidth: widths[fieldId], maxWidth: widths[fieldId] } : undefined;
   const openFull = (entry: Entry | undefined) => { if (entry) { if (entry.ledgerHash) onOpenLedger(); else onOpenEntry(entry); } };
 
   function startEditing(cell: Cell, initial?: string) {
@@ -150,6 +276,14 @@ function SpreadsheetGrid({ collection, view, entries, language, errorText, onOpe
   function onGridKey(event: KeyboardEvent<HTMLTableElement>) {
     if (editing || addingColumn) return;
     const { row, col } = active;
+    if (event.shiftKey && event.key.startsWith("Arrow")) {
+      event.preventDefault();
+      const delta = ({ ArrowDown: [1, 0], ArrowUp: [-1, 0], ArrowRight: [0, 1], ArrowLeft: [0, -1] } as Record<string, number[]>)[event.key] ?? [0, 0];
+      extend(row + delta[0], col + delta[1]);
+      return;
+    }
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "d") { event.preventDefault(); fillDown(); return; }
+    if (event.key === "Escape" && anchor) { event.preventDefault(); setAnchor(null); return; }
     const keys: Record<string, () => void> = {
       ArrowDown: () => move(row + 1, col), ArrowUp: () => move(row - 1, col), ArrowRight: () => move(row, col + 1), ArrowLeft: () => move(row, col - 1),
       Home: () => move(row, 0), End: () => move(row, fields.length - 1),
@@ -210,10 +344,13 @@ function SpreadsheetGrid({ collection, view, entries, language, errorText, onOpe
     {viewFormats.length > 1 && <label className="spreadsheet-format">{fr ? "Format de données de la feuille" : "Data format of the sheet"}<select value={format.id} onChange={(event) => { setFormatId(event.target.value); setActive({ row: 0, col: 0 }); setEditing(null); setDraftRow(false); }}>{viewFormats.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>}
     {problem && <p className="spreadsheet-problem" role="alert">{problem}</p>}
     <div className="spreadsheet-scroll" style={{ ["--format-tint" as string]: format.color }}>
-      <table ref={gridRef} role="grid" aria-label={fr ? `Feuille ${format.name}` : `${format.name} sheet`} aria-rowcount={rowCount + 1} aria-colcount={fields.length + 2} className="spreadsheet-grid" onKeyDown={onGridKey}>
+      <table ref={gridRef} role="grid" aria-label={fr ? `Feuille ${format.name}` : `${format.name} sheet`} aria-rowcount={rowCount + 1} aria-colcount={fields.length + 2} className="spreadsheet-grid" onKeyDown={onGridKey} onCopy={onCopy} onPaste={onPaste}>
         <thead><tr>
           <th scope="col" className="spreadsheet-rownum" aria-label={fr ? "Ligne" : "Row"}>#</th>
-          {fields.map((field) => <th key={field.id} scope="col"><span className="spreadsheet-col-name">{field.name}</span><span className="spreadsheet-col-kind">{fieldKindLabel(language, field.kind)}{field.kind === "NUMBER" && field.unit ? ` · ${collection.units.find((item) => `local:${item.id}` === field.unit)?.symbol ?? unitSymbol(field.unit)}` : ""}</span></th>)}
+          {fields.map((field) => <th key={field.id} scope="col" style={sized(field.id)} aria-sort={sort?.fieldId === field.id ? sort.direction === "asc" ? "ascending" : "descending" : undefined}>
+            <button type="button" className="spreadsheet-sort" title={fr ? "Trier par cette colonne" : "Sort by this column"} onClick={() => setSort((current) => nextSort(current, field.id))}><span className="spreadsheet-col-name">{field.name}</span>{sort?.fieldId === field.id && (sort.direction === "asc" ? <ArrowUp size={14} aria-label={fr ? "croissant" : "ascending"} /> : <ArrowDown size={14} aria-label={fr ? "décroissant" : "descending"} />)}</button>
+            <span role="separator" aria-orientation="vertical" tabIndex={0} className="spreadsheet-resize" aria-label={fr ? `Largeur de ${field.name} (flèches gauche et droite)` : `Width of ${field.name} (left and right arrows)`} aria-valuenow={widths[field.id]} onPointerDown={(event) => resizeStart(event, field.id)} onKeyDown={(event) => resizeKey(event, field.id)} onDoubleClick={() => { const next = { ...widths }; delete next[field.id]; setWidths(next); writeWidths(view.id, next); }} />
+            <span className="spreadsheet-col-kind">{fieldKindLabel(language, field.kind)}{field.kind === "NUMBER" && field.unit ? ` · ${collection.units.find((item) => `local:${item.id}` === field.unit)?.symbol ?? unitSymbol(field.unit)}` : ""}</span></th>)}
           <th scope="col" className="spreadsheet-add-col" aria-label={access === "EDITOR" ? fr ? "Ouvrir" : "Open" : undefined}>
             {access !== "EDITOR" && <>
             <button type="button" disabled={!canAddColumn} aria-describedby={canAddColumn ? undefined : "spreadsheet-add-col-why"} onClick={() => setAddingColumn(true)}><Plus size={16} aria-hidden="true" />{fr ? "Colonne" : "Column"}</button>
@@ -230,10 +367,11 @@ function SpreadsheetGrid({ collection, view, entries, language, errorText, onOpe
                 const isActive = active.row === row && active.col === col;
                 const isEditing = editing?.row === row && editing.col === col;
                 const kind = editorFor(field, entry);
-                return <td key={field.id} role="gridcell" data-cell={`${row}:${col}`} tabIndex={isActive && !isEditing ? 0 : -1} aria-selected={isActive}
+                const selected = inRange(range, row, col);
+                return <td key={field.id} role="gridcell" data-cell={`${row}:${col}`} tabIndex={isActive && !isEditing ? 0 : -1} aria-selected={selected} style={sized(field.id)}
                   aria-readonly={kind === "none"} aria-busy={saving === `${row}:${col}`}
-                  className={`${isActive ? "is-active" : ""} ${isEditing ? "is-editing" : ""} ${kind === "none" ? "is-readonly" : ""} ${field.kind === "NUMBER" ? "is-number" : ""}`}
-                  onClick={() => { if (!isEditing) { setActive({ row, col }); if (field.kind === "BOOLEAN" && isActive) startEditing({ row, col }); } }}
+                  className={`${isActive ? "is-active" : ""} ${selected && anchor ? "is-in-range" : ""} ${isEditing ? "is-editing" : ""} ${kind === "none" ? "is-readonly" : ""} ${field.kind === "NUMBER" ? "is-number" : ""}`}
+                  onClick={(event) => { if (!isEditing) { if (event.shiftKey) { extend(row, col); return; } move(row, col); if (field.kind === "BOOLEAN" && isActive) startEditing({ row, col }); } }}
                   onDoubleClick={() => startEditing({ row, col })}>
                   {isEditing ? editor(field, kind) : display(entry, field)}
                 </td>;

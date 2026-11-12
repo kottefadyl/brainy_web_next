@@ -57,3 +57,20 @@
 .spreadsheet-more-kinds { margin-right:auto; min-height:44px; border:0; background:transparent; color:var(--focus); font:inherit; text-decoration:underline; cursor:pointer; text-align:left; }
 @media (prefers-reduced-motion: reduce) { .spreadsheet-switch, .spreadsheet-switch-track, .spreadsheet-switch-track span { transition:none; } }
 @media (max-width: 640px) { .spreadsheet-grid td, .spreadsheet-grid thead th { min-width:120px; } .spreadsheet-switch-hint { flex-basis:100%; } }
+
+/* T46/1: sort, column width and range selection. */
+.spreadsheet-grid thead th { position:sticky; }
+.spreadsheet-sort { display:flex; align-items:center; gap:4px; width:100%; min-height:28px; padding:0; border:0; background:none; color:inherit; font:inherit; font-weight:600; text-align:left; cursor:pointer; }
+.spreadsheet-sort:hover .spreadsheet-col-name { text-decoration:underline; text-underline-offset:3px; }
+.spreadsheet-sort:focus-visible { outline:2px solid var(--focus); outline-offset:2px; border-radius:4px; }
+.spreadsheet-sort .spreadsheet-col-name { overflow:hidden; text-overflow:ellipsis; }
+.spreadsheet-sort svg { flex:none; color:var(--accent, currentColor); }
+.spreadsheet-resize { position:absolute; top:0; right:-4px; width:9px; height:100%; cursor:col-resize; z-index:4; touch-action:none; }
+.spreadsheet-resize::after { content:""; position:absolute; top:20%; bottom:20%; left:4px; width:1px; background:transparent; transition:background-color .12s ease; }
+.spreadsheet-resize:hover::after, .spreadsheet-resize:focus-visible::after { background:var(--focus); width:2px; }
+.spreadsheet-resize:focus-visible { outline:none; }
+.spreadsheet-grid td[style] { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.spreadsheet-grid td.is-in-range { background:color-mix(in srgb, var(--focus) 12%, transparent); }
+@media (prefers-reduced-motion: reduce) { .spreadsheet-resize::after { transition:none; } }
+.spreadsheet-grid tbody td, .spreadsheet-grid tbody th { user-select:none; -webkit-user-select:none; }
+.spreadsheet-grid tbody td.is-editing { user-select:text; -webkit-user-select:text; }
