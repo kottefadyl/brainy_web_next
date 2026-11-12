@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { isMediaFile, mediaRefusedText } from "../lib/media-file";
+import { isFrozen, usePlatform } from "../lib/platform";
 import { api } from "../lib/api";
 import type { Collection, CollectionFormat, Entry, Language } from "../lib/brainy";
 
@@ -10,6 +12,7 @@ const looksLikeUrl = (value: string) => /^https?:\/\/\S+$/i.test(value.trim());
 
 export default function QuickCaptureDialog({ collections, userId, language, incoming, onClose, onSaved, onOpen }: Props) {
   const fr = language === "fr";
+  const mediaOff = isFrozen("mediaFiles", usePlatform());
   const saved = typeof window === "undefined" ? "" : localStorage.getItem(key(userId)) ?? "";
   const [collectionId, setCollectionId] = useState(() => collections.some((item) => item.id === saved) ? saved : collections[0]?.id ?? "");
   const activeCollectionId = collections.some((item) => item.id === collectionId) ? collectionId : collections[0]?.id ?? "";
@@ -74,7 +77,7 @@ export default function QuickCaptureDialog({ collections, userId, language, inco
       <label>{fr ? "Lien ou texte" : "Link or text"}<textarea value={content} onChange={(event) => { setContent(event.target.value); clearDuplicate(); }} rows={3} /></label>
       <button type="button" className="quick-subtle" onClick={paste}>{fr ? "Coller depuis le presse-papiers" : "Paste from clipboard"}</button>
       <label>{fr ? "Note de contexte" : "Context note"}<textarea value={note} onChange={(event) => setNote(event.target.value)} rows={2} /></label>
-      {attachmentField && <label>{fr ? "Image ou fichier" : "Image or file"}<input type="file" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /></label>}
+      {attachmentField && <label>{mediaOff ? (fr ? "Fichier (ni image, ni vidéo, ni PDF)" : "File (no picture, video or PDF)") : (fr ? "Image ou fichier" : "Image or file")}<input type="file" onChange={(event) => { const chosen = event.target.files?.[0] ?? null; if (chosen && mediaOff && isMediaFile(chosen)) { setFile(null); event.target.value = ""; setError(mediaRefusedText(language)); return; } setFile(chosen); }} /></label>}
       {note && !noteField && <p role="alert">{fr ? "Ce format de données n'a pas de champ pour la note. Ajoutez-en un avant de sauvegarder." : "This data format has no note field. Add one before saving."}</p>}
       {duplicate.length > 0 && <div role="alert"><p>{fr ? "Ce lien existe déjà." : "This link already exists."}</p>{duplicate.map((entry) => <button key={entry.id} type="button" onClick={() => onOpen(activeCollectionId, entry)}>{fr ? "Ouvrir l'entrée existante" : "Open existing entry"}</button>)}<button type="button" onClick={() => void save(true)}>{fr ? "Ajouter quand même" : "Add anyway"}</button></div>}
       {error && <p role="alert">{error}</p>}

@@ -702,6 +702,7 @@ export function translateError(error: unknown, language: Language): string {
   if (message.includes("Choice fields need")) return t(language, "choicesRule");
   if (message.includes("needs a duration")) return t(language, "invalidDuration");
   if (message.includes("file is too large") || message.includes("Attachments in one entry") || message.includes("Request too large")) return fileTooLargeText(language);
+  if (message.includes("not stored on this hosting plan")) return language === "fr" ? "Les images, vidéos, sons et fichiers PDF ne sont pas enregistrés sur cet hébergement. Ajoutez plutôt un lien vers le fichier." : "Pictures, videos, sound and PDF files are not stored on this hosting. Add a link to the file instead.";
   if (message.includes("paused on this hosting plan")) return language === "fr" ? "Cette fonction est en pause sur cet hébergement." : "This feature is paused on this hosting.";
   if (message.includes("needs one of its choices") || message.includes("needs valid choices")) return t(language, "invalidChoice");
   if (message.includes("must be yes or no")) return t(language, "invalidBoolean");

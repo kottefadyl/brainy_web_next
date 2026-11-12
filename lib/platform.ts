@@ -6,7 +6,7 @@ import type { Language } from "./brainy";
  * background processing, data sources and large files, and keeps 3 MiB of
  * attachments per entry; the interface hides what is frozen.
  */
-export type FreezableModule = "reminders" | "backgroundJobs" | "dataSources" | "largeFiles";
+export type FreezableModule = "reminders" | "backgroundJobs" | "dataSources" | "largeFiles" | "mediaFiles";
 export type Platform = { frozenModules: FreezableModule[]; maxEntryAttachmentBytes: number };
 
 const FULL: Platform = { frozenModules: [], maxEntryAttachmentBytes: 8 * 1024 * 1024 };

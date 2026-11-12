@@ -2,6 +2,7 @@
 
 // Attachment field of the entry editor. Up to 2 MiB the file travels with the entry;
 // above, it is uploaded as a large file by reference (T44) with progress, pause and resume.
+import { isMediaFile, mediaRefusedText } from "../lib/media-file";
 import { useEffect, useRef, useState } from "react";
 import type { Entry, Field, Language } from "../lib/brainy";
 import { fileTooLargeText, t } from "../lib/brainy";
@@ -40,6 +41,7 @@ export default function AttachmentFieldInput({ field, language, collectionId, en
   };
   const choose = (file: File) => {
     if (!file.size) { onError(fileTooLargeText(language)); return; }
+    if (isFrozen("mediaFiles", platform) && isMediaFile(file)) { onError(mediaRefusedText(language)); return; }
     if (file.size <= LARGE_FILE_THRESHOLD) { setPending(null); setProgress(null); onSmallFile(file); return; }
     // Large files need storage and uploads this hosting does not offer.
     if (isFrozen("largeFiles", platform)) { onError(fileTooLargeText(language)); return; }

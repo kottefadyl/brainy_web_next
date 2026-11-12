@@ -1,5 +1,6 @@
 "use client";
 
+import { isFrozen, usePlatform } from "../lib/platform";
 import { useId, useRef, useState } from "react";
 import { Camera, Trash2 } from "lucide-react";
 import { t, type Language } from "../lib/brainy";
@@ -10,6 +11,7 @@ type Props = { language: Language; name: string; photo: string | null; onChange:
 /** Round profile photo preview with choose/remove actions; large photos are compressed before upload. */
 export function ProfilePhotoPicker({ language, name, photo, onChange, onBusy }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const mediaOff = isFrozen("mediaFiles", usePlatform());
   const statusId = useId();
   const [preparing, setPreparing] = useState(false);
   const [status, setStatus] = useState<{ text: string; error: boolean } | null>(null);
@@ -29,6 +31,8 @@ export function ProfilePhotoPicker({ language, name, photo, onChange, onBusy }: 
     }
   }
   const initial = name.trim().charAt(0).toUpperCase() || "?";
+  // On Vercel's free plan no picture is stored: the initial stands for the person.
+  if (mediaOff && !photo) return null;
   return <div className="profile-photo-picker">
     <div className="profile-photo-preview" aria-hidden="true">
       {/* eslint-disable-next-line @next/next/no-img-element -- local data URL, nothing for next/image to optimise */}
