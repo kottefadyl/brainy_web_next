@@ -4,8 +4,9 @@
 // this view only arranges them (roles, parent relations, order field) and edits their values.
 import { isSharedCollection } from "./entry-authors";
 import { BookFormatRoles } from "./book-format-roles";
+import { useBookPagination } from "./book-pagination";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { ArrowDown, ArrowLeft, ArrowUp, BookOpen, ListTree, PenLine, Plus, Printer, SlidersHorizontal, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, BookOpen, Files, ListTree, PenLine, Plus, Printer, SlidersHorizontal, Trash2 } from "lucide-react";
 import { api } from "../lib/api";
 import { bookApi, buildOutline, childRole, fieldOf, fontStacks, pageHeightMm, pageWidthMm, roleLabel, roman, type BookNode, type BookRole, type BookViewSettings } from "../lib/book";
 import { translateError, type Collection, type Entry, type EntryRelation, type Language } from "../lib/brainy";
@@ -70,6 +71,11 @@ export default function BookView({ collection, language, changeSignal, onClose, 
   useEffect(() => () => window.clearTimeout(saveTimer.current), []);
 
   const outline = useMemo(() => buildOutline({ ...collection, bookView: settings }, entries, relations), [collection, settings, entries, relations]);
+  // T47/2: pages on screen (remembered on this device); the contents and the index then show page numbers.
+  const [paged, setPaged] = useState(() => { try { return window.localStorage.getItem("brainy.book.paged") !== "off"; } catch { return true; } });
+  const togglePaged = () => setPaged((current) => { try { window.localStorage.setItem("brainy.book.paged", current ? "off" : "on"); } catch { /* not remembered */ } return !current; });
+  const printRoot = useRef<HTMLDivElement>(null);
+  useBookPagination(printRoot, paged && !loading, pageWidthMm[settings.pageSize], pageHeightMm[settings.pageSize], language, outline, editing, settings);
 
   function changeSettings(next: BookViewSettings) {
     setSettings(next);
@@ -205,6 +211,7 @@ export default function BookView({ collection, language, changeSignal, onClose, 
       <h2><BookOpen size={20} aria-hidden="true" />{collection.name}</h2>
       <div className="book-toolbar-actions">
         <Button variant={settingsOpen ? "primary" : "secondary"} aria-expanded={settingsOpen} onClick={() => setSettingsOpen((open) => !open)}><SlidersHorizontal size={16} />{fr ? "Mise en page" : "Layout"}</Button>
+        <Button variant={paged ? "primary" : "secondary"} aria-pressed={paged} onClick={togglePaged}><Files size={16} />{fr ? "Pages" : "Pages"}</Button>
         <Button variant="secondary" onClick={() => window.print()}><Printer size={16} />{fr ? "Imprimer ou PDF" : "Print or PDF"}</Button>
         <Button variant="subtle" onClick={() => void turnOff()}>{fr ? "Désactiver la vue livre" : "Turn off book view"}</Button>
       </div>
@@ -258,7 +265,7 @@ export default function BookView({ collection, language, changeSignal, onClose, 
         {loading ? <div className="book-sheet book-skeleton" aria-busy="true"><span /><span /><span /></div>
           : loadError ? <div className="book-sheet book-state"><p role="alert">{loadError}</p><Button onClick={() => void load()}>{fr ? "Réessayer" : "Retry"}</Button></div>
           : empty ? <div className="book-sheet book-state"><BookOpen size={40} aria-hidden="true" /><h3>{fr ? "Votre livre commence ici" : "Your book starts here"}</h3><p>{fr ? "Ajoutez une couverture, une partie ou directement un premier chapitre. Chaque page reste une entrée de la collection." : "Add a cover, a part or straight away a first chapter. Every page stays an entry of the collection."}</p><div className="book-state-actions"><Button variant="primary" onClick={() => void create("CHAPTER", undefined, [])}><Plus size={16} />{fr ? "Premier chapitre" : "First chapter"}</Button>{outline.formatByRole.COVER && <Button onClick={() => void create("COVER")}>{roleLabel("COVER", language)}</Button>}</div></div>
-          : <div className="book-print-root"><BookPages ctx={ctx} outline={outline} bookTitle={collection.name} /></div>}
+          : <div ref={printRoot} className={`book-print-root ${paged ? "is-paged" : ""}`}><BookPages ctx={ctx} outline={outline} bookTitle={collection.name} /></div>}
       </div>
     </div>
     {confirmDelete && <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setConfirmDelete(null); }}>

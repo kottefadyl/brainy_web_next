@@ -10,7 +10,8 @@ import type { Collection, Language } from "../lib/brainy";
 
 export type EditTarget = { entryId: string; fieldId: string };
 export type PageContext = {
-  language: Language; collectionId: string; collection?: Collection; editing: EditTarget | null; saving: boolean; error: string;
+  language: Language; collectionId: string; collection?: Collection;
+  editing: EditTarget | null; saving: boolean; error: string;
   start: (node: BookNode, fieldId: string) => void; cancel: () => void; save: (node: BookNode, fieldId: string, value: string) => void;
 };
 
@@ -169,7 +170,7 @@ export function BookPages({ ctx, outline, bookTitle }: { ctx: PageContext; outli
   const chapters = [...outline.parts.flatMap((part) => part.children), ...outline.looseChapters];
   const cited = outline.sources.filter((item) => /cit/i.test(textValues(item, "SELECT")[0] ?? ""));
   const consulted = outline.sources.filter((item) => !cited.includes(item));
-  const tocLine = (id: string, label: string, title: string, depth = 0) => <li key={id} className={`depth-${depth}`}><button type="button" onClick={() => scrollToSheet(id)}><span>{label}</span><span>{title}</span></button></li>;
+  const tocLine = (id: string, label: string, title: string, depth = 0) => <li key={id} className={`depth-${depth}`}><button type="button" onClick={() => scrollToSheet(id)}><span>{label}</span><span>{title}</span><span className="book-toc-page" data-page-for={id} /></button></li>;
   const hasBody = chapters.length > 0 || outline.parts.length > 0;
   const backCover = cover && textValues(cover, "LONG_TEXT").at(-1);
   const sourceLine = (item: BookNode) => { const [author, year, publisher] = textValues(item, "TEXT"); return <li key={item.entry.id}>{author && <>{author}{year ? ` (${year})` : ""}. </>}<em>{item.title}</em>{publisher ? `. ${publisher}` : ""}.</li>; };
@@ -234,7 +235,7 @@ export function BookPages({ ctx, outline, bookTitle }: { ctx: PageContext; outli
     </Sheet>}
     {outline.indexTerms.length > 0 && <Sheet id="index" className="book-matter" label="Index">
       <h2 className="book-heading book-matter-title">Index</h2>
-      <ul className="book-index">{outline.indexTerms.map((item) => <li key={item.term}><span>{item.term}</span><span>{item.chapters.length ? `${fr ? "chap." : "ch."} ${item.chapters.map((chapter) => chapter.label).join(", ")}` : "—"}</span></li>)}</ul>
+      <ul className="book-index">{outline.indexTerms.map((item) => <li key={item.term}><span>{item.term}</span>{item.chapters.length ? <span data-index-pages={item.chapters.map((chapter) => chapter.id).join(",")} data-chapter-label={`${fr ? "chap." : "ch."} ${item.chapters.map((chapter) => chapter.label).join(", ")}`}>{`${fr ? "chap." : "ch."} ${item.chapters.map((chapter) => chapter.label).join(", ")}`}</span> : <span>—</span>}</li>)}</ul>
     </Sheet>}
     {cover && backCover && <Sheet id="back-cover" className="book-back-cover" label={fr ? "Quatrième de couverture" : "Back cover"}><RichText text={backCover} /></Sheet>}
   </div>;

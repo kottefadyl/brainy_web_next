@@ -229,3 +229,15 @@ html[data-theme] .book-view .book-editor :is(textarea, input) { display: block; 
 /* T53/2: creator and last editor of a part, in a shared collection; not printed. */
 .book-authors { margin: 0 0 6px; font-family: var(--font-inter, Inter), system-ui, sans-serif; }
 @media print { .book-authors { display: none !important; } }
+
+/* T47/2: pages on screen. A paged sheet draws one paper page per stride with a gap between pages. */
+.book-sheet.is-paged { position: relative; box-shadow: none; border-color: transparent; background: repeating-linear-gradient(to bottom, var(--paper) 0, var(--paper) var(--book-page-px), transparent var(--book-page-px), transparent var(--book-stride)); filter: drop-shadow(0 1px 2px color-mix(in srgb, #000 14%, transparent)); }
+.book-page-number { position: absolute; left: 0; right: 0; text-align: center; font-family: var(--book-font); font-size: calc(var(--book-size) * .75); color: var(--paper-muted); transform: translateY(-50%); pointer-events: none; font-variant-numeric: tabular-nums; }
+.book-toc li button .book-toc-page { margin-left: auto; min-width: 2em; text-align: right; color: var(--paper-muted); font-variant-numeric: tabular-nums; }
+.book-toc li button .book-toc-page:empty { display: none; }
+.book-print-root.is-paged .book-workspace.flow .book-chapter + .book-chapter, .book-workspace.flow .book-print-root.is-paged .book-chapter + .book-chapter { margin-top: 0; }
+@media print {
+  .book-sheet.is-paged { background: none; filter: none; min-height: var(--book-page-height) !important; }
+  .book-sheet [data-paged-push] { margin-top: revert !important; }
+  .book-page-number, .book-toc-page { display: none !important; }
+}
