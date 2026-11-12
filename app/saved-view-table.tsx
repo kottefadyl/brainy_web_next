@@ -23,6 +23,8 @@ type Props = {
   onEntrySaved: (entry: Entry) => void;
   onCollectionChanged: (collection: Collection) => void;
   onEditFormat: (formatId: string) => void;
+  /** T52/3: a collaborator never changes the structure; a reader does not edit cells either. */
+  access?: "OWNER" | "EDITOR" | "READER";
 };
 
 const storageKey = (viewId: string) => `brainy.spreadsheet.${viewId}`;
@@ -37,6 +39,7 @@ export default function SavedViewTable(props: Props) {
   const [spreadsheet, setSpreadsheet] = useState(() => readMode(view.id));
   const toggle = () => setSpreadsheet((current) => { writeMode(view.id, !current); return !current; });
 
+  if (props.access === "READER") return <ReadOnlyTable {...props} />;
   return <>
     <div className="spreadsheet-switch-row">
       <button type="button" role="switch" aria-checked={spreadsheet} className="spreadsheet-switch" onClick={toggle}>
@@ -52,21 +55,22 @@ export default function SavedViewTable(props: Props) {
   </>;
 }
 
-function ReadOnlyTable({ collection, view, entries, language, onOpenEntry, onOpenLedger }: Props) {
+function ReadOnlyTable({ collection, view, entries, language, onOpenEntry, onOpenLedger, access }: Props) {
+  const reader = access === "READER";
   const fr = language === "fr";
   const allFields = collection.formats.flatMap((format) => format.fields);
-  return <div className="saved-view-table-wrap"><table className="saved-view-table"><thead><tr><th>{fr ? "Format de données" : "Data format"}</th><th>{fr ? "Créée" : "Created"}</th>{view.columnFieldIds.map((fieldId) => <th key={fieldId}>{allFields.find((field) => field.id === fieldId)?.name ?? fieldId}</th>)}<th>{fr ? "Action" : "Action"}</th></tr></thead>
+  return <div className="saved-view-table-wrap"><table className="saved-view-table"><thead><tr><th>{fr ? "Format de données" : "Data format"}</th><th>{fr ? "Créée" : "Created"}</th>{view.columnFieldIds.map((fieldId) => <th key={fieldId}>{allFields.find((field) => field.id === fieldId)?.name ?? fieldId}</th>)}{!reader && <th>{fr ? "Action" : "Action"}</th>}</tr></thead>
     <tbody>{entries.map((entry) => <tr key={entry.id}><td>{collection.formats.find((format) => format.id === entry.formatId)?.name}</td><td>{dateTimeText(entry.createdAt, language)}</td>{view.columnFieldIds.map((fieldId) => {
       const field = collection.formats.find((item) => item.id === entry.formatId)?.fields.find((item) => item.id === fieldId);
       const value = entry.values.find((item) => item.fieldId === fieldId);
       return <td key={fieldId}>{field && value ? formatFieldValue(field, value.value, language, value.unitSnapshot, collection) : "—"}</td>;
-    })}<td><button type="button" onClick={() => entry.ledgerHash ? onOpenLedger() : onOpenEntry(entry)}>{entry.ledgerHash ? fr ? "Ouvrir le registre" : "Open register" : t(language, "edit")}</button></td></tr>)}</tbody></table></div>;
+    })}{!reader && <td><button type="button" onClick={() => entry.ledgerHash ? onOpenLedger() : onOpenEntry(entry)}>{entry.ledgerHash ? fr ? "Ouvrir le registre" : "Open register" : t(language, "edit")}</button></td>}</tr>)}</tbody></table></div>;
 }
 
 type Cell = { row: number; col: number };
 type Editing = Cell & { draft: string };
 
-function SpreadsheetGrid({ collection, view, entries, language, errorText, onOpenEntry, onOpenLedger, onEntrySaved, onCollectionChanged, onEditFormat }: Props) {
+function SpreadsheetGrid({ collection, view, entries, language, errorText, onOpenEntry, onOpenLedger, onEntrySaved, onCollectionChanged, onEditFormat, access }: Props) {
   const fr = language === "fr";
   // A spreadsheet holds one data format: its rows share the same columns.
   const viewFormats = collection.formats.filter((format) => !view.formatIds.length || view.formatIds.includes(format.id));
@@ -210,9 +214,11 @@ function SpreadsheetGrid({ collection, view, entries, language, errorText, onOpe
         <thead><tr>
           <th scope="col" className="spreadsheet-rownum" aria-label={fr ? "Ligne" : "Row"}>#</th>
           {fields.map((field) => <th key={field.id} scope="col"><span className="spreadsheet-col-name">{field.name}</span><span className="spreadsheet-col-kind">{fieldKindLabel(language, field.kind)}{field.kind === "NUMBER" && field.unit ? ` · ${collection.units.find((item) => `local:${item.id}` === field.unit)?.symbol ?? unitSymbol(field.unit)}` : ""}</span></th>)}
-          <th scope="col" className="spreadsheet-add-col">
+          <th scope="col" className="spreadsheet-add-col" aria-label={access === "EDITOR" ? fr ? "Ouvrir" : "Open" : undefined}>
+            {access !== "EDITOR" && <>
             <button type="button" disabled={!canAddColumn} aria-describedby={canAddColumn ? undefined : "spreadsheet-add-col-why"} onClick={() => setAddingColumn(true)}><Plus size={16} aria-hidden="true" />{fr ? "Colonne" : "Column"}</button>
             {!canAddColumn && <span id="spreadsheet-add-col-why" className="spreadsheet-why">{format.linkedSource ? fr ? "Format lié : modifiez la source." : "Linked format: change the source." : fr ? "30 champs au maximum." : "30 fields at most."}</span>}
+            </>}
           </th>
         </tr></thead>
         <tbody>
