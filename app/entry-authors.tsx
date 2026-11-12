@@ -21,7 +21,7 @@ function photoOf(userId: string): Promise<string | null> {
   return found;
 }
 
-function Avatar({ person }: { person: PersonSummary }) {
+export function Avatar({ person }: { person: PersonSummary }) {
   const [photo, setPhoto] = useState<string | null>(null);
   useEffect(() => {
     if (!person.hasPhoto) return;

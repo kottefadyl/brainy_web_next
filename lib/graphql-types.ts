@@ -134,6 +134,44 @@ export type BackgroundJobLog = {
   row: Scalars['Int']['output'];
 };
 
+export type BookFormatRole = {
+  __typename?: 'BookFormatRole';
+  formatId: Scalars['String']['output'];
+  role: Scalars['String']['output'];
+};
+
+export type BookViewSettings = {
+  __typename?: 'BookViewSettings';
+  bodyFont: Scalars['String']['output'];
+  chapterOnNewPage: Scalars['Boolean']['output'];
+  enabled: Scalars['Boolean']['output'];
+  firstLineIndent: Scalars['Float']['output'];
+  fontSize: Scalars['Float']['output'];
+  headingFont: Scalars['String']['output'];
+  lineHeight: Scalars['Float']['output'];
+  marginMm: Scalars['Float']['output'];
+  pageSize: Scalars['String']['output'];
+  paragraphSpacing: Scalars['Float']['output'];
+  roles: Array<BookFormatRole>;
+  showRuler: Scalars['Boolean']['output'];
+  textAlign: Scalars['String']['output'];
+};
+
+export type BookViewSettingsInput = {
+  bodyFont: Scalars['String']['input'];
+  chapterOnNewPage: Scalars['Boolean']['input'];
+  enabled: Scalars['Boolean']['input'];
+  firstLineIndent: Scalars['Float']['input'];
+  fontSize: Scalars['Float']['input'];
+  headingFont: Scalars['String']['input'];
+  lineHeight: Scalars['Float']['input'];
+  marginMm: Scalars['Float']['input'];
+  pageSize: Scalars['String']['input'];
+  paragraphSpacing: Scalars['Float']['input'];
+  showRuler: Scalars['Boolean']['input'];
+  textAlign: Scalars['String']['input'];
+};
+
 export type CalendarOccurrence = {
   __typename?: 'CalendarOccurrence';
   endAt: Scalars['String']['output'];
@@ -213,9 +251,26 @@ export type ClassificationMergePreview = {
   allowed: Scalars['Boolean']['output'];
 };
 
+export type CollaborationInvitePreview = {
+  __typename?: 'CollaborationInvitePreview';
+  alreadyCollaborator: Scalars['Boolean']['output'];
+  inviterName: Scalars['String']['output'];
+  isSelf: Scalars['Boolean']['output'];
+};
+
+export type Collaborator = {
+  __typename?: 'Collaborator';
+  email: Scalars['String']['output'];
+  hasPhoto: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  since: Scalars['DateTime']['output'];
+  userId: Scalars['ID']['output'];
+};
+
 export type Collection = {
   __typename?: 'Collection';
   allowNegativeStock: Scalars['Boolean']['output'];
+  bookView?: Maybe<BookViewSettings>;
   codeLists: Array<ClassificationList>;
   exchangeRates: Array<CollectionExchangeRate>;
   fields: Array<CollectionField>;
@@ -228,8 +283,12 @@ export type Collection = {
   ownerId: Scalars['String']['output'];
   periodTotals?: Maybe<CollectionPeriodTotals>;
   savedViews: Array<SavedCollectionView>;
+  /** Owner of a collection shared with me; null for my own collections. */
+  sharedBy?: Maybe<CollectionOwnerSummary>;
   sharedObjects: Array<SharedObjectGrant>;
   stockRules: Array<StockRule>;
+  taskPlanner?: Maybe<TaskPlanner>;
+  templateId?: Maybe<Scalars['String']['output']>;
   units: Array<CollectionUnit>;
 };
 
@@ -288,7 +347,9 @@ export type CollectionFormat = {
   linkedSource?: Maybe<LinkedFormatSource>;
   name: Scalars['String']['output'];
   objectModel: Scalars['Boolean']['output'];
+  parentFormatIds?: Maybe<Array<Scalars['String']['output']>>;
   sensitivity?: Maybe<SensitivityLevel>;
+  singleEntry?: Maybe<Scalars['Boolean']['output']>;
   version?: Maybe<Scalars['Float']['output']>;
   workflow?: Maybe<WorkflowDefinition>;
 };
@@ -326,6 +387,12 @@ export type CollectionMember = {
   sensitiveFieldIds?: Maybe<Array<Scalars['String']['output']>>;
   sharedFieldIds?: Maybe<Array<Scalars['String']['output']>>;
   userId: Scalars['String']['output'];
+};
+
+export type CollectionOwnerSummary = {
+  __typename?: 'CollectionOwnerSummary';
+  name: Scalars['String']['output'];
+  userId: Scalars['ID']['output'];
 };
 
 export type CollectionPeriodTotals = {
@@ -627,6 +694,8 @@ export type Entry = {
   copiedFromEntryId?: Maybe<Scalars['String']['output']>;
   correctionOf?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
+  /** Person who created the entry (the owner for older entries). */
+  createdBy?: Maybe<PersonSummary>;
   dataSourceId?: Maybe<Scalars['String']['output']>;
   formatId?: Maybe<Scalars['String']['output']>;
   formatVersion?: Maybe<Scalars['Float']['output']>;
@@ -640,7 +709,10 @@ export type Entry = {
   sourceObservedAt?: Maybe<Scalars['DateTime']['output']>;
   sourceReceivedAt?: Maybe<Scalars['DateTime']['output']>;
   sourceRunId?: Maybe<Scalars['String']['output']>;
+  taskCompletions?: Maybe<Array<Scalars['String']['output']>>;
   updatedAt: Scalars['DateTime']['output'];
+  /** Last person who changed the entry. */
+  updatedBy?: Maybe<PersonSummary>;
   values: Array<EntryValue>;
   workflow?: Maybe<EntryWorkflow>;
 };
@@ -803,6 +875,8 @@ export type EntryValue = {
   numberValue?: Maybe<Scalars['String']['output']>;
   objectIds?: Maybe<Array<Scalars['String']['output']>>;
   objectSnapshots?: Maybe<Array<ObjectReferenceSnapshot>>;
+  personIds?: Maybe<Array<Scalars['String']['output']>>;
+  personNames?: Maybe<Array<Scalars['String']['output']>>;
   selectedValues?: Maybe<Array<Scalars['String']['output']>>;
   unitSnapshot?: Maybe<UnitSnapshot>;
   value: Scalars['String']['output'];
@@ -831,6 +905,7 @@ export enum FieldKind {
   Boolean = 'BOOLEAN',
   Character = 'CHARACTER',
   Code = 'CODE',
+  Collaborator = 'COLLABORATOR',
   Date = 'DATE',
   Datetime = 'DATETIME',
   Duration = 'DURATION',
@@ -1080,6 +1155,17 @@ export type LedgerIntegrity = {
   valid: Scalars['Boolean']['output'];
 };
 
+export type LinkPreview = {
+  __typename?: 'LinkPreview';
+  available: Scalars['Boolean']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  image?: Maybe<Scalars['String']['output']>;
+  siteName?: Maybe<Scalars['String']['output']>;
+  title?: Maybe<Scalars['String']['output']>;
+  url: Scalars['String']['output'];
+  video: Scalars['Boolean']['output'];
+};
+
 export type LinkedFormatSource = {
   __typename?: 'LinkedFormatSource';
   acceptedVersion: Scalars['Float']['output'];
@@ -1118,6 +1204,7 @@ export type MoveOperationStatus = {
 export type Mutation = {
   __typename?: 'Mutation';
   abortLargeFileUpload: Scalars['Boolean']['output'];
+  acceptCollaboration: Collaborator;
   acceptLinkedDataFormatVersion: Collection;
   addCollectionFormat: Collection;
   addCollectionMember: Collection;
@@ -1156,6 +1243,9 @@ export type Mutation = {
   detachLinkedDataFormat: Collection;
   duplicateCollectionObject: Entry;
   enableLedger: Collection;
+  enableTaskPlanner: Collection;
+  /** Ends the collaboration and removes every share between both people. */
+  endCollaboration: Scalars['Boolean']['output'];
   eraseContribution: Scalars['Boolean']['output'];
   eraseContributionByReceipt: Scalars['Boolean']['output'];
   importCollectionRelations: Scalars['Boolean']['output'];
@@ -1175,6 +1265,8 @@ export type Mutation = {
   recordCollectionExchangeRate: Collection;
   recoverCollectionMove: MoveOperationStatus;
   redactLedgerFields: LedgerIntegrity;
+  /** New collaboration link token; the previous link stops working. */
+  regenerateCollaborationInvite: Scalars['String']['output'];
   register: AuthPayload;
   registerPushDevice: PushDevice;
   removeCollectionMember: Collection;
@@ -1196,6 +1288,7 @@ export type Mutation = {
   saveEntryReminder: EntryReminder;
   saveStockRule: Collection;
   sealStockHistory: LedgerIntegrity;
+  setBookView: Collection;
   setCollectionEntryLinkActive: EntryLink;
   setCollectionEntryRecurrence: Entry;
   setCollectionFormatColor: Collection;
@@ -1203,9 +1296,12 @@ export type Mutation = {
   setCollectionFormatWorkflow: Collection;
   setCollectionTaskCompleted: Entry;
   setFieldSensitivity: Collection;
+  setFormatEntryRules: Collection;
   setFormatSensitivity: Collection;
   setMinimumAggregateSize: Collection;
+  setOnboardingCompleted: User;
   setStockNegativePolicy: Collection;
+  setTaskDayDone: Entry;
   shareCollectionObject: SharedObjectGrant;
   startBackgroundJob: BackgroundJob;
   startLargeFileUpload: LargeFileUpload;
@@ -1230,6 +1326,11 @@ export type MutationAbortLargeFileUploadArgs = {
 };
 
 
+export type MutationAcceptCollaborationArgs = {
+  token: Scalars['String']['input'];
+};
+
+
 export type MutationAcceptLinkedDataFormatVersionArgs = {
   expectedSourceVersion: Scalars['Int']['input'];
   targetCollectionId: Scalars['String']['input'];
@@ -1245,7 +1346,8 @@ export type MutationAddCollectionFormatArgs = {
 
 export type MutationAddCollectionMemberArgs = {
   collectionId: Scalars['String']['input'];
-  email: Scalars['String']['input'];
+  email?: InputMaybe<Scalars['String']['input']>;
+  memberUserId?: InputMaybe<Scalars['String']['input']>;
   role: CollectionRole;
   sensitiveFieldIds?: InputMaybe<Array<Scalars['String']['input']>>;
   sharedFieldIds?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1467,6 +1569,17 @@ export type MutationDuplicateCollectionObjectArgs = {
 export type MutationEnableLedgerArgs = {
   collectionId: Scalars['String']['input'];
   formatId: Scalars['String']['input'];
+};
+
+
+export type MutationEnableTaskPlannerArgs = {
+  collectionId: Scalars['String']['input'];
+  language?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationEndCollaborationArgs = {
+  userId: Scalars['String']['input'];
 };
 
 
@@ -1729,6 +1842,12 @@ export type MutationSealStockHistoryArgs = {
 };
 
 
+export type MutationSetBookViewArgs = {
+  collectionId: Scalars['String']['input'];
+  input: BookViewSettingsInput;
+};
+
+
 export type MutationSetCollectionEntryLinkActiveArgs = {
   active: Scalars['Boolean']['input'];
   collectionId: Scalars['String']['input'];
@@ -1784,6 +1903,14 @@ export type MutationSetFieldSensitivityArgs = {
 };
 
 
+export type MutationSetFormatEntryRulesArgs = {
+  collectionId: Scalars['String']['input'];
+  formatId: Scalars['String']['input'];
+  parentFormatIds: Array<Scalars['String']['input']>;
+  singleEntry: Scalars['Boolean']['input'];
+};
+
+
 export type MutationSetFormatSensitivityArgs = {
   collectionId: Scalars['String']['input'];
   expectedVersion: Scalars['Int']['input'];
@@ -1798,9 +1925,23 @@ export type MutationSetMinimumAggregateSizeArgs = {
 };
 
 
+export type MutationSetOnboardingCompletedArgs = {
+  completed: Scalars['Boolean']['input'];
+};
+
+
 export type MutationSetStockNegativePolicyArgs = {
   allowNegative: Scalars['Boolean']['input'];
   collectionId: Scalars['String']['input'];
+};
+
+
+export type MutationSetTaskDayDoneArgs = {
+  collectionId: Scalars['String']['input'];
+  date: Scalars['String']['input'];
+  done: Scalars['Boolean']['input'];
+  entryId: Scalars['String']['input'];
+  timeZone: Scalars['String']['input'];
 };
 
 
@@ -1939,6 +2080,13 @@ export type ObjectReferenceSnapshot = {
   properties: Array<ObjectPropertySnapshot>;
 };
 
+export type PersonSummary = {
+  __typename?: 'PersonSummary';
+  hasPhoto: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  userId: Scalars['ID']['output'];
+};
+
 export type PlatformCapabilities = {
   __typename?: 'PlatformCapabilities';
   frozenModules: Array<Scalars['String']['output']>;
@@ -2002,6 +2150,12 @@ export type Query = {
   classificationCodesByValue: Array<ClassificationCode>;
   classificationCopyPreview: ClassificationCopyPreview;
   classificationMergePreview: ClassificationMergePreview;
+  /** Readable without signing in: shows only the inviter name. */
+  collaborationInvite: CollaborationInvitePreview;
+  /** Token of my personal collaboration link. */
+  collaborationInviteToken: Scalars['String']['output'];
+  collaboratorPhoto?: Maybe<Scalars['String']['output']>;
+  collaborators: Array<Collaborator>;
   collectionAuditLogs: Array<AuditLog>;
   collectionAvailableUnits: Array<CollectionUnit>;
   collectionCalendarOccurrences: Array<CalendarOccurrence>;
@@ -2018,6 +2172,9 @@ export type Query = {
   collectionMoveStatus: MoveOperationStatus;
   collectionObject: Entry;
   collectionObjectsPage: EntryPage;
+  collectionParentRelations: Array<EntryRelation>;
+  /** People a collaborator field of this collection can name: the owner, then the owner's collaborators. */
+  collectionPeople: Array<PersonSummary>;
   collectionQuantityConversion: QuantityConversion;
   collectionRelationImpact: RelationImpact;
   collectionRelationTotal: RelationTotal;
@@ -2045,6 +2202,7 @@ export type Query = {
   largeFileUpload: LargeFileUpload;
   ledgerBalance: Scalars['String']['output'];
   ledgerProof: Scalars['String']['output'];
+  linkPreview: LinkPreview;
   linkedDataFormatUpdatePreview: LinkedFormatUpdatePreview;
   me: User;
   note?: Maybe<Note>;
@@ -2053,6 +2211,7 @@ export type Query = {
   objectModelTemplates: Array<ObjectModelTemplate>;
   objectMovePreview: TransferPreview;
   objectVariableProperty: ResolvedObjectVariable;
+  personPhoto?: Maybe<Scalars['String']['output']>;
   platformCapabilities: PlatformCapabilities;
   previewClassificationCsv: ClassificationCsvPreview;
   previewCollectionFormula?: Maybe<FormulaPreview>;
@@ -2071,6 +2230,7 @@ export type Query = {
   stockLedgerProof: Scalars['String']['output'];
   stockMovements: Array<StockMovement>;
   stockPositions: Array<StockPosition>;
+  taskAgenda: TaskAgenda;
   verifyLedger: LedgerIntegrity;
   verifyStockLedger: LedgerIntegrity;
   workflowNotifications: Array<WorkflowNotification>;
@@ -2127,6 +2287,16 @@ export type QueryClassificationMergePreviewArgs = {
   fromCode: Scalars['String']['input'];
   listId: Scalars['String']['input'];
   toCode: Scalars['String']['input'];
+};
+
+
+export type QueryCollaborationInviteArgs = {
+  token: Scalars['String']['input'];
+};
+
+
+export type QueryCollaboratorPhotoArgs = {
+  userId: Scalars['String']['input'];
 };
 
 
@@ -2248,6 +2418,16 @@ export type QueryCollectionObjectsPageArgs = {
   first?: Scalars['Int']['input'];
   formatId: Scalars['String']['input'];
   search?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type QueryCollectionParentRelationsArgs = {
+  collectionId: Scalars['String']['input'];
+};
+
+
+export type QueryCollectionPeopleArgs = {
+  collectionId: Scalars['ID']['input'];
 };
 
 
@@ -2402,6 +2582,11 @@ export type QueryLedgerProofArgs = {
 };
 
 
+export type QueryLinkPreviewArgs = {
+  url: Scalars['String']['input'];
+};
+
+
 export type QueryLinkedDataFormatUpdatePreviewArgs = {
   targetCollectionId: Scalars['String']['input'];
   targetFormatId: Scalars['String']['input'];
@@ -2435,6 +2620,11 @@ export type QueryObjectVariablePropertyArgs = {
   objectId?: InputMaybe<Scalars['String']['input']>;
   propertyFieldId: Scalars['String']['input'];
   variableName: Scalars['String']['input'];
+};
+
+
+export type QueryPersonPhotoArgs = {
+  userId: Scalars['String']['input'];
 };
 
 
@@ -2533,6 +2723,15 @@ export type QueryStockMovementsArgs = {
 
 export type QueryStockPositionsArgs = {
   collectionId: Scalars['String']['input'];
+};
+
+
+export type QueryTaskAgendaArgs = {
+  collectionId: Scalars['String']['input'];
+  from: Scalars['String']['input'];
+  timeZone: Scalars['String']['input'];
+  to: Scalars['String']['input'];
+  today: Scalars['String']['input'];
 };
 
 
@@ -2843,6 +3042,33 @@ export type SubmitContributionInput = {
   website?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type TaskAgenda = {
+  __typename?: 'TaskAgenda';
+  entries: Array<Entry>;
+  occurrences: Array<TaskOccurrence>;
+};
+
+export type TaskOccurrence = {
+  __typename?: 'TaskOccurrence';
+  date: Scalars['String']['output'];
+  done: Scalars['Boolean']['output'];
+  entryId: Scalars['String']['output'];
+  overdue: Scalars['Boolean']['output'];
+  repeating: Scalars['Boolean']['output'];
+};
+
+export type TaskPlanner = {
+  __typename?: 'TaskPlanner';
+  completedFieldId?: Maybe<Scalars['String']['output']>;
+  doneFieldId: Scalars['String']['output'];
+  endFieldId: Scalars['String']['output'];
+  formatId: Scalars['String']['output'];
+  intervalFieldId: Scalars['String']['output'];
+  repeatFieldId: Scalars['String']['output'];
+  startFieldId: Scalars['String']['output'];
+  weekdaysFieldId: Scalars['String']['output'];
+};
+
 export type TransferPreview = {
   __typename?: 'TransferPreview';
   activeShares?: Maybe<Scalars['Float']['output']>;
@@ -2928,6 +3154,7 @@ export type User = {
   interests: Array<Scalars['String']['output']>;
   job?: Maybe<Scalars['String']['output']>;
   name: Scalars['String']['output'];
+  onboardingCompleted: Scalars['Boolean']['output'];
   profession?: Maybe<Scalars['String']['output']>;
   profileCompleted: Scalars['Boolean']['output'];
 };

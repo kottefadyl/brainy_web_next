@@ -1,0 +1,16 @@
+/* T54: collaborator field in the entry editor. */
+.person-field { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 8px; }
+.person-field > legend { padding: 0; margin-bottom: 6px; width: 100%; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.person-field-choices { display: flex; flex-wrap: wrap; gap: 8px; max-height: 12rem; overflow: auto; }
+button.person-chip { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px 4px 6px; border-radius: 999px; border: 1px solid var(--c-line); background: var(--c-surface); color: var(--c-ink); box-shadow: none; font: inherit; cursor: pointer; transition: background-color .12s ease, border-color .12s ease, transform .12s ease; }
+button.person-chip:hover { background: var(--c-hover); }
+.person-chip:active { transform: scale(.98); }
+.person-chip:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+button.person-chip.selected { border-color: var(--c-accent); background: var(--c-accent-soft); }
+.person-chip .entry-authors .author-avatar { width: 28px; height: 28px; font-size: .75rem; }
+.person-chip-name { font-weight: 600; font-size: .875rem; max-width: 18ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.person-chip-name small { font-weight: 500; color: var(--c-muted); }
+.person-chip-check { color: var(--c-accent); font-weight: 700; }
+.person-field-note { font-size: .8125rem; color: var(--c-muted); }
+.person-field-note button { min-height: 32px; margin-left: 6px; }
+@media (prefers-reduced-motion: reduce) { .person-chip { transition: none; } .person-chip:active { transform: none; } }

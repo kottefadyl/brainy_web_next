@@ -2,7 +2,7 @@ import { entryAttachmentLimit } from "./platform";
 import type { BookViewSettings } from "./book";
 import type { TaskPlanner } from "./task-planner";
 export type Language = "en" | "fr";
-export type FieldKind = "TITLE" | "DATE" | "NUMBER" | "TIME" | "LINK" | "CHARACTER" | "TEXT" | "BOOLEAN" | "SELECT" | "MULTI_SELECT" | "DATETIME" | "DURATION" | "LONG_TEXT" | "ATTACHMENT" | "OBJECT_REF" | "MEASURE" | "CODE" | "POSITION" | "ZONE";
+export type FieldKind = "TITLE" | "DATE" | "NUMBER" | "TIME" | "LINK" | "CHARACTER" | "TEXT" | "BOOLEAN" | "SELECT" | "MULTI_SELECT" | "DATETIME" | "DURATION" | "LONG_TEXT" | "ATTACHMENT" | "OBJECT_REF" | "MEASURE" | "CODE" | "POSITION" | "ZONE" | "COLLABORATOR";
 export type SensitivityLevel = "ORDINARY" | "PERSONAL" | "SENSITIVE";
 
 export type User = { id: string; name: string; email: string; profession?: string | null; job?: string | null; fieldOfStudy?: string | null; interests: string[]; hobbies: string[]; profileCompleted: boolean; hasProfilePhoto?: boolean; onboardingCompleted?: boolean };
@@ -55,7 +55,7 @@ export type Entry = {
   correctionOf?: string | null;
   ledgerHash?: string | null;
   ledgerSequence?: number | null;
-  values: { fieldId: string; value: string; attachmentSize?: number | null; attachmentMimeType?: string | null; largeFileId?: string | null; largeFileSha256?: string | null; unitSnapshot?: UnitSnapshot | null; objectIds?: string[] | null; objectSnapshots?: { objectId: string; capturedAt: string; properties: { fieldId: string; name: string; kind: FieldKind; value: string; unitSnapshot?: UnitSnapshot | null }[] }[] | null; measureValue?: { status?: string; uncertainty?: string; uncertaintyType?: string; quality?: string; instrument?: string; observedAt?: string; recordedAt?: string; revisedAt?: string; revisionNote?: string } | null }[];
+  values: { fieldId: string; value: string; attachmentSize?: number | null; attachmentMimeType?: string | null; largeFileId?: string | null; largeFileSha256?: string | null; unitSnapshot?: UnitSnapshot | null; objectIds?: string[] | null; personIds?: string[] | null; personNames?: string[] | null; objectSnapshots?: { objectId: string; capturedAt: string; properties: { fieldId: string; name: string; kind: FieldKind; value: string; unitSnapshot?: UnitSnapshot | null }[] }[] | null; measureValue?: { status?: string; uncertainty?: string; uncertaintyType?: string; quality?: string; instrument?: string; observedAt?: string; recordedAt?: string; revisedAt?: string; revisionNote?: string } | null }[];
   createdAt: string;
   updatedAt: string;
   /** T53: creator and last editor (shown in shared collections). */
@@ -72,7 +72,7 @@ export type Entry = {
 export type EntryPage = { entries: Entry[]; nextCursor?: string | null; hasMore: boolean };
 export type EntryFilter = { fieldId: string; operator: "EQ" | "CONTAINS" | "GT" | "GTE" | "LT" | "LTE"; value: string };
 
-export const fieldKinds: FieldKind[] = ["TITLE", "DATE", "NUMBER", "TIME", "LINK", "CHARACTER", "TEXT", "LONG_TEXT", "BOOLEAN", "SELECT", "MULTI_SELECT", "DATETIME", "DURATION", "ATTACHMENT", "OBJECT_REF", "MEASURE", "CODE", "POSITION", "ZONE"];
+export const fieldKinds: FieldKind[] = ["TITLE", "DATE", "NUMBER", "TIME", "LINK", "CHARACTER", "TEXT", "LONG_TEXT", "BOOLEAN", "SELECT", "MULTI_SELECT", "DATETIME", "DURATION", "ATTACHMENT", "OBJECT_REF", "MEASURE", "CODE", "POSITION", "ZONE", "COLLABORATOR"];
 
 const messages = {
   en: {
@@ -148,6 +148,7 @@ const messages = {
     invalidDateTime: "Choose a date and time.",
     attachment: "Attachment",
     objectReference: "Object reference",
+    collaboratorField: "Collaborator",
     chooseFile: "Choose a file",
     downloadFile: "Download file",
     removeFile: "Remove file",
@@ -394,6 +395,7 @@ const messages = {
     invalidDateTime: "Choisissez une date et une heure.",
     attachment: "Pièce jointe",
     objectReference: "Référence d’objet",
+    collaboratorField: "Collaborateur",
     chooseFile: "Choisir un fichier",
     downloadFile: "Télécharger le fichier",
     removeFile: "Retirer le fichier",
@@ -579,7 +581,7 @@ export function formatDisplayName(format: CollectionFormat, language: Language):
 }
 
 const kindLabels: Record<FieldKind, MessageKey> = {
-  TITLE: "title", DATE: "date", NUMBER: "number", TIME: "time", LINK: "link", CHARACTER: "character", TEXT: "text", LONG_TEXT: "longText", BOOLEAN: "boolean", SELECT: "select", MULTI_SELECT: "multiSelect", DATETIME: "dateTime", DURATION: "duration", ATTACHMENT: "attachment", OBJECT_REF: "objectReference", MEASURE: "measure", CODE: "code", POSITION: "position", ZONE: "zone",
+  TITLE: "title", DATE: "date", NUMBER: "number", TIME: "time", LINK: "link", CHARACTER: "character", TEXT: "text", LONG_TEXT: "longText", BOOLEAN: "boolean", SELECT: "select", MULTI_SELECT: "multiSelect", DATETIME: "dateTime", DURATION: "duration", ATTACHMENT: "attachment", OBJECT_REF: "objectReference", MEASURE: "measure", CODE: "code", POSITION: "position", ZONE: "zone", COLLABORATOR: "collaboratorField",
 };
 export const fieldKindLabel = (language: Language, kind: FieldKind): string => t(language, kindLabels[kind]);
 
