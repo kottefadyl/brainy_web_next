@@ -1,0 +1,76 @@
+/* T52: "My collections | Shared with me" switch at the top of the sidebar and the mobile drawer.
+   Uses the navigation tokens, so it follows the blue light sidebar and the charcoal dark one. */
+.collection-scope {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin: 10px 0 8px;
+  padding: 3px;
+  border: 1px solid var(--c-line-strong, rgba(255, 255, 255, .42));
+  border-radius: 12px;
+  background: var(--navigation-field, rgba(255, 255, 255, .12));
+}
+.collection-scope-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--c-ink);
+  font: inherit;
+  font-size: .8125rem;
+  font-weight: 600;
+  line-height: 1.15;
+  cursor: pointer;
+  transition: background-color .14s ease, color .14s ease;
+}
+.collection-scope-tab svg { flex: none; }
+.collection-scope-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.collection-scope-count {
+  flex: none;
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--navigation-hover, rgba(255, 255, 255, .16));
+  font-size: .75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.collection-scope-tab:not([aria-selected="true"]):hover { background: var(--navigation-hover, rgba(255, 255, 255, .14)); }
+.collection-scope-tab[aria-selected="true"] {
+  background: var(--nav-active, #FFFFFF);
+  color: var(--on-nav-active, #084BC4);
+  box-shadow: 0 1px 3px rgba(10, 25, 90, .25);
+}
+.collection-scope-tab[aria-selected="true"] .collection-scope-count { background: color-mix(in srgb, var(--on-nav-active, #084BC4) 14%, transparent); }
+.collection-scope-tab:focus-visible { outline: 2px solid var(--c-focus, #FFFFFF); outline-offset: 2px; }
+
+/* The desktop sidebar is narrow: the icon goes, the label and count stay readable. */
+.sidebar .collection-scope-tab svg { display: none; }
+
+/* Mobile drawer: secondary actions fold under "More actions" so the list keeps its room. */
+.mobile-drawer-more { display: grid; gap: 4px; }
+.mobile-drawer-more > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  color: var(--c-ink);
+  font-weight: 500;
+  list-style: none;
+  cursor: pointer;
+}
+.mobile-drawer-more > summary::-webkit-details-marker { display: none; }
+.mobile-drawer-more > summary:hover { background: var(--navigation-hover, rgba(255, 255, 255, .14)); }
+.mobile-drawer-more-options { display: grid; gap: 4px; padding-left: 8px; }
+@media (prefers-reduced-motion: reduce) {
+  .collection-scope-tab { transition: none; }
+}

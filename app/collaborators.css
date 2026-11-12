@@ -81,5 +81,4 @@ html[data-theme="dark"] .shared-banner .shared-role { background: rgba(45, 212, 
 .workspace[data-access="reader"] .entry-action-danger { display: none !important; }
 
 /* Two lists (mine, shared with me): each keeps its natural height; actions stay at the bottom. */
-html[data-theme] .app-shell .collection-sidebar.has-shared .collection-nav { flex: 0 1 auto; }
-html[data-theme] .app-shell .collection-sidebar.has-shared .sidebar-actions { margin-top: auto; }
+.sidebar-empty-switch { display: block; margin-top: 6px; padding: 0; border: 0; background: none; color: var(--c-ink); font: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
