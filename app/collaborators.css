@@ -77,6 +77,8 @@ html[data-theme="dark"] .shared-banner .shared-role { background: rgba(45, 212, 
 .workspace[data-access="reader"] .quick-mobile-action,
 .workspace[data-access="reader"] .entries-heading .button,
 .workspace[data-access="reader"] .saved-view-bar .button,
+/* T52/2: saved views are managed by the owner; collaborators choose and use them. */
+.workspace[data-access="writer"] .saved-view-bar .button,
 .workspace[data-access="reader"] .entry-write-action,
 .workspace[data-access="reader"] .entry-action-danger { display: none !important; }
 
