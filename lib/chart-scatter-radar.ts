@@ -63,7 +63,7 @@ export function radarPoint(index: number, count: number, ratio: number, cx: numb
 
 /** A radar needs 3 to 12 categories, none negative, and something above zero. */
 export function canRadar(values: number[], groupBy: string | undefined): boolean {
-  return (groupBy === "CATEGORY" || groupBy === "OBJECT") && values.length >= 3 && values.length <= 12 && values.every((value) => Number.isFinite(value) && value >= 0) && values.some((value) => value > 0);
+  return (groupBy === "CATEGORY" || groupBy === "OBJECT" || groupBy === "PERSON") && values.length >= 3 && values.length <= 12 && values.every((value) => Number.isFinite(value) && value >= 0) && values.some((value) => value > 0);
 }
 
 /** CSV of the plotted points, with the same protection against formulas as the other exports. */

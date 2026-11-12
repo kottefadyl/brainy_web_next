@@ -188,7 +188,7 @@ export function entryCount(count: number, language: Language): string {
 
 export const MAX_SERIES = 4;
 const PERIOD_GROUPS = new Set(["DAY", "MONTH"]);
-const SERIES_GROUPS = new Set(["CATEGORY", "OBJECT"]);
+const SERIES_GROUPS = new Set(["CATEGORY", "OBJECT", "PERSON"]);
 export type MultiSeries = {
   periods: string[];
   series: { key: string; label: string; total: number; points: (SeriesPoint | undefined)[] }[];
