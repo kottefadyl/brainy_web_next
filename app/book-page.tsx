@@ -1,15 +1,16 @@
 "use client";
 
 // T47: printable book pages with in-place editing of titles and texts (light Markdown kept as plain text).
+import { EntryAuthors } from "./entry-authors";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { Bold, Check, Heading, Italic, Minus, Quote, X } from "lucide-react";
 import { api } from "../lib/api";
 import { inlineRuns, prefixParagraph, roleLabel, roman, textBlocks, textValues, wrapSelection, type BookNode, type BookOutline, type BookRole } from "../lib/book";
-import type { Language } from "../lib/brainy";
+import type { Collection, Language } from "../lib/brainy";
 
 export type EditTarget = { entryId: string; fieldId: string };
 export type PageContext = {
-  language: Language; collectionId: string; editing: EditTarget | null; saving: boolean; error: string;
+  language: Language; collectionId: string; collection?: Collection; editing: EditTarget | null; saving: boolean; error: string;
   start: (node: BookNode, fieldId: string) => void; cancel: () => void; save: (node: BookNode, fieldId: string, value: string) => void;
 };
 
@@ -116,18 +117,26 @@ export function scrollToSheet(id: string) {
   document.getElementById(sheetId(id))?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
 }
 
+/** T53/2: who wrote and last changed this part, in a shared collection only (never printed). */
+function Authors({ ctx, node }: { ctx: PageContext; node: BookNode }) {
+  return ctx.collection ? <div className="book-authors"><EntryAuthors entry={node.entry} collection={ctx.collection} language={ctx.language} /></div> : null;
+}
+
 function Chapter({ ctx, chapter }: { ctx: PageContext; chapter: BookNode }) {
   const fr = ctx.language === "fr";
   return <>
     <header className="book-chapter-head">
+      <Authors ctx={ctx} node={chapter} />
       <p className="book-kicker">{roleLabel("CHAPTER", ctx.language)} {chapter.number}</p>
       <Editable ctx={ctx} node={chapter} kind="TITLE" placeholder={fr ? "Titre du chapitre" : "Chapter title"} render={(value) => <h2 className="book-heading"><Inline text={value} /></h2>} />
     </header>
     <Editable ctx={ctx} node={chapter} kind="LONG_TEXT" placeholder={fr ? "Écrivez le chapitre…" : "Write the chapter…"} render={(value) => <RichText text={value} />} />
     {chapter.children.map((section) => <div key={section.entry.id} id={sheetId(section.entry.id)} className="book-section">
+      <Authors ctx={ctx} node={section} />
       <Editable ctx={ctx} node={section} kind="TITLE" placeholder={fr ? "Titre de la section" : "Section title"} render={(value) => <h3 className="book-heading"><span className="book-number">{chapter.number}.{section.number}</span> <Inline text={value} /></h3>} />
       <Editable ctx={ctx} node={section} kind="LONG_TEXT" placeholder={fr ? "Texte de la section…" : "Section text…"} render={(value) => <RichText text={value} />} />
       {section.children.map((sub) => <div key={sub.entry.id} id={sheetId(sub.entry.id)} className="book-subsection">
+        <Authors ctx={ctx} node={sub} />
         <Editable ctx={ctx} node={sub} kind="TITLE" placeholder={fr ? "Titre de la sous-section" : "Subsection title"} render={(value) => <h4 className="book-heading"><span className="book-number">{chapter.number}.{section.number}.{sub.number}</span> <Inline text={value} /></h4>} />
         <Editable ctx={ctx} node={sub} kind="LONG_TEXT" placeholder={fr ? "Texte…" : "Text…"} render={(value) => <RichText text={value} />} />
       </div>)}
@@ -144,6 +153,7 @@ function Matter({ ctx, node }: { ctx: PageContext; node: BookNode }) {
     <Editable ctx={ctx} node={node} kind="TEXT" placeholder={fr ? "Auteur de la citation" : "Quoted author"} render={(value) => <p className="book-epigraph-author">— {value}</p>} />
   </div>;
   return <>
+    <Authors ctx={ctx} node={node} />
     <Editable ctx={ctx} node={node} kind="TITLE" placeholder={roleLabel(role, ctx.language)} render={(value) => <h2 className="book-heading book-matter-title"><Inline text={value} /></h2>} />
     <Editable ctx={ctx} node={node} kind="LONG_TEXT" placeholder={fr ? "Écrivez ici…" : "Write here…"} render={(value) => <RichText text={value} />} />
     {role === "FOREWORD" && <Editable ctx={ctx} node={node} kind="TEXT" placeholder={fr ? "Signé par" : "Signed by"} render={(value) => <p className="book-signature">{value}</p>} />}

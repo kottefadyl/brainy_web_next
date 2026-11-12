@@ -225,3 +225,7 @@ html[data-theme] .book-view .book-editor :is(textarea, input) { display: block; 
 .book-format-role { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 9.5rem); align-items: center; gap: 8px; margin: 6px 0; font-size: 13px; color: var(--ink); }
 .book-format-role span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .book-format-role select { min-height: 36px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); padding: 0 8px; font: inherit; }
+
+/* T53/2: creator and last editor of a part, in a shared collection; not printed. */
+.book-authors { margin: 0 0 6px; font-family: var(--font-inter, Inter), system-ui, sans-serif; }
+@media print { .book-authors { display: none !important; } }

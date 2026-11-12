@@ -2,6 +2,7 @@
 
 // T47: book view of a collection created from the Book template. Entries stay ordinary entries;
 // this view only arranges them (roles, parent relations, order field) and edits their values.
+import { isSharedCollection } from "./entry-authors";
 import { BookFormatRoles } from "./book-format-roles";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { ArrowDown, ArrowLeft, ArrowUp, BookOpen, ListTree, PenLine, Plus, Printer, SlidersHorizontal, Trash2 } from "lucide-react";
@@ -92,7 +93,7 @@ export default function BookView({ collection, language, changeSignal, onClose, 
   const replace = (saved: Entry) => setEntries((current) => current.some((item) => item.id === saved.id) ? current.map((item) => item.id === saved.id ? saved : item) : [saved, ...current]);
 
   const ctx: PageContext = {
-    language, collectionId: collection.id, editing, saving, error: editError,
+    language, collectionId: collection.id, collection: isSharedCollection(collection) ? collection : undefined, editing, saving, error: editError,
     start: (node, fieldId) => { setEditError(""); setEditing({ entryId: node.entry.id, fieldId }); },
     cancel: () => { setEditing(null); setEditError(""); },
     save: async (node, fieldId, value) => {
