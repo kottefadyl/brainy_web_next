@@ -37,3 +37,12 @@
   html[data-theme] .app-shell .topbar .mobile-brand .brand > span { display: none; }
   html[data-theme] .app-shell .topbar .account-button { flex: 0 0 auto; padding: 3px; }
 }
+
+/* Theme, language and refresh are icon buttons (name in the tooltip and the accessible label). */
+html[data-theme] .topbar :is(.theme-toggle, .language-picker summary, .refresh-button) { width: 44px; min-width: 44px; height: 44px; padding: 0; justify-content: center; gap: 0; }
+.language-picker summary .language-flag { display: block; border-radius: 3px; box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 22%, transparent); }
+.language-picker-menu button .language-flag { flex: none; border-radius: 2px; box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent); }
+.language-picker-menu button { gap: 10px; }
+/* The flag is the whole language button: no chevron, never hidden by the older svg rules. */
+html[data-theme] .language-picker summary::after { display: none !important; }
+html[data-theme] .language-picker summary > svg.language-flag { display: block !important; width: 22px; height: auto; }

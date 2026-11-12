@@ -2,6 +2,7 @@
 
 // T52: "Collaborators" page: personal link to send, list of collaborators, end of a collaboration.
 import { useEffect, useState } from "react";
+import { CollaboratorSearch, filterCollaborators, MAX_SHOWN_COLLABORATORS } from "./collaborator-search";
 import { ArrowLeft, Check, Copy, MessageCircle, RefreshCw, Share2, ShieldCheck, UserMinus, Users } from "lucide-react";
 import { translateError, type Language } from "../lib/brainy";
 import { collaboratorsApi, inviteUrl, type Collaborator } from "../lib/collaborators";
@@ -37,6 +38,7 @@ export default function CollaboratorsPage({ language, onClose, onChanged }: { la
   const [confirmRegenerate, setConfirmRegenerate] = useState(false);
   const [ending, setEnding] = useState<Collaborator | null>(null);
   const [notice, setNotice] = useState("");
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     Promise.all([collaboratorsApi.inviteToken(), collaboratorsApi.list()])
@@ -94,8 +96,9 @@ export default function CollaboratorsPage({ language, onClose, onChanged }: { la
       <h2 id="collab-list-title">{L("Your collaborators", "Vos collaborateurs")}{people && <span className="collab-count">{people.length}</span>}</h2>
       {people === null && !error && <p className="collab-help" role="status">{L("Loading…", "Chargement…")}</p>}
       {people?.length === 0 && <div className="collab-empty"><Users size={32} strokeWidth={1.5} aria-hidden="true" /><p>{L("No collaborator yet. Send your link to a colleague to get started.", "Aucun collaborateur pour l’instant. Envoyez votre lien à un collègue pour commencer.")}</p></div>}
+      {!!people?.length && <CollaboratorSearch value={query} onChange={setQuery} total={filterCollaborators(people, query).length} shown={Math.min(MAX_SHOWN_COLLABORATORS, filterCollaborators(people, query).length)} fr={language === "fr"} />}
       {!!people?.length && <ul className="collab-list">
-        {people.map((person) => <li key={person.userId}>
+        {filterCollaborators(people, query).slice(0, MAX_SHOWN_COLLABORATORS).map((person) => <li key={person.userId}>
           <Avatar person={person} />
           <div className="collab-person"><strong>{person.name}</strong><span>{person.email}</span><small>{L("Since", "Depuis le")} {new Date(person.since).toLocaleDateString(fr ? "fr-FR" : "en-GB", { day: "numeric", month: "long", year: "numeric" })}</small></div>
           {ending?.userId === person.userId

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Check, ChevronDown, Globe2 } from "lucide-react";
+import { Check } from "lucide-react";
+import { LanguageFlag } from "./LanguageFlag";
 import { t, type Language } from "../../../lib/brainy";
 
 export function LanguagePicker({ language, onChange }: { language: Language; onChange: (language: Language) => void }) {
@@ -28,10 +29,10 @@ export function LanguagePicker({ language, onChange }: { language: Language; onC
         event.currentTarget.querySelector("summary")?.focus();
       }
     }}>
-      <summary aria-label={`${t(language, "language")}: ${language === "fr" ? "Français" : "English"}`}><Globe2 size={17} aria-hidden="true" /><span className="language-picker-full">{language === "fr" ? "Français" : "English"}</span><span className="language-picker-short">{language === "fr" ? "FR" : "EN"}</span><ChevronDown size={14} aria-hidden="true" /></summary>
+      <summary aria-label={`${t(language, "language")}: ${language === "fr" ? "Français" : "English"}`} title={`${t(language, "language")}: ${language === "fr" ? "Français" : "English"}`}><LanguageFlag language={language} /></summary>
       <div className="language-picker-menu">
-        <button type="button" lang="en" aria-pressed={language === "en"} onClick={() => choose("en")}>English{language === "en" && <Check size={15} aria-hidden="true" />}</button>
-        <button type="button" lang="fr" aria-pressed={language === "fr"} onClick={() => choose("fr")}>Français{language === "fr" && <Check size={15} aria-hidden="true" />}</button>
+        <button type="button" lang="en" aria-pressed={language === "en"} onClick={() => choose("en")}><LanguageFlag language="en" />English{language === "en" && <Check size={15} aria-hidden="true" />}</button>
+        <button type="button" lang="fr" aria-pressed={language === "fr"} onClick={() => choose("fr")}><LanguageFlag language="fr" />Français{language === "fr" && <Check size={15} aria-hidden="true" />}</button>
       </div>
     </details>
   );

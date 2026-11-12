@@ -84,3 +84,11 @@ html[data-theme="dark"] .shared-banner .shared-role { background: rgba(45, 212, 
 
 /* Two lists (mine, shared with me): each keeps its natural height; actions stay at the bottom. */
 .sidebar-empty-switch { display: block; margin-top: 6px; padding: 0; border: 0; background: none; color: var(--c-ink); font: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+/* Search among collaborators: the input keeps the app's field style, with the icon inside. */
+.collab-search { display: grid; gap: 4px; margin: 4px 0 2px; }
+html[data-theme] .collab-search .collab-search-field { position: relative; display: block; margin: 0; padding: 0; border: 0; background: none; }
+.collab-search-field svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--c-muted); pointer-events: none; z-index: 1; }
+html[data-theme] .collab-search .collab-search-field input[type="search"] { width: 100%; min-height: 44px; padding-left: 38px !important; }
+.collab-search-status { margin: 0; font-size: .8125rem; color: var(--c-muted); }
+.collab-search-status:empty { display: none; }

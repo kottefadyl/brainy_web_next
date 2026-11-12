@@ -31,7 +31,7 @@ export function TopBar({ brand, selectedName, language, themeControl, languageCo
       <button type="button" className="quick-topbar" onClick={onCapture}>{language === "fr" ? "Capturer" : "Capture"}</button>
       {themeControl}{languageControl}
       <button type="button" className="icon-button refresh-button" onClick={onRefresh} disabled={refreshBusy} aria-label={refreshBusy ? refreshing : t(language, "refresh")} title={refreshBusy ? refreshing : t(language, "refresh")} aria-busy={refreshBusy}>
-        {refreshBusy ? <LoaderCircle size={18} aria-hidden="true" /> : <RefreshCw size={18} aria-hidden="true" />}<span>{refreshBusy ? refreshing : t(language, "refresh")}</span>
+        {refreshBusy ? <LoaderCircle size={18} aria-hidden="true" /> : <RefreshCw size={18} aria-hidden="true" />}
       </button>
       {account}
       <button type="button" ref={menuButtonRef} className="mobile-menu-button" onClick={onToggleMenu} aria-label={menuOpen ? language === "fr" ? "Fermer les collections" : "Close collections" : language === "fr" ? "Ouvrir les collections" : "Open collections"} aria-expanded={menuOpen} aria-haspopup="dialog" aria-controls="mobile-collection-menu"><Menu size={22} aria-hidden="true" /></button>

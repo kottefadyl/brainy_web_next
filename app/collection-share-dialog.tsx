@@ -8,6 +8,7 @@ import { translateError, type Collection, type CollectionRole, type Language } f
 import { collaboratorsApi, type Collaborator } from "../lib/collaborators";
 import { Button } from "./components/ui/Button";
 import Modal from "./components/ui/Modal";
+import { CollaboratorSearch, filterCollaborators, MAX_SHOWN_COLLABORATORS } from "./collaborator-search";
 import "./collaborators.css";
 
 type Access = "NONE" | "READER" | "EDITOR";
@@ -21,8 +22,11 @@ export default function CollectionShareDialog({ collection, language, onClose, o
   const [savingId, setSavingId] = useState("");
   const [error, setError] = useState("");
   const [saved, setSaved] = useState("");
+  const [query, setQuery] = useState("");
+  // People who already have access come first, in the order of the opening (rows never jump when access changes).
+  const [firstMembers] = useState(() => new Set((collection.members ?? []).map((member) => member.userId)));
 
-  useEffect(() => { collaboratorsApi.list().then(setPeople).catch((cause) => setError(translateError(cause, language))); }, [language]);
+  useEffect(() => { collaboratorsApi.list().then((list) => setPeople([...list].sort((x, y) => Number(firstMembers.has(y.userId)) - Number(firstMembers.has(x.userId))))).catch((cause) => setError(translateError(cause, language))); }, [language, firstMembers]);
 
   const accessOf = (userId: string): Access => (current.members?.find((member) => member.userId === userId)?.role as Access | undefined) ?? "NONE";
   async function change(person: Collaborator, access: Access) {
@@ -48,8 +52,9 @@ export default function CollectionShareDialog({ collection, language, onClose, o
       {error && <p className="form-error" role="alert">{error}</p>}
       {people === null && !error && <p className="collab-help" role="status">{L("Loading…", "Chargement…")}</p>}
       {people?.length === 0 && <div className="collab-empty"><Users size={32} strokeWidth={1.5} aria-hidden="true" /><p>{L("You have no collaborator yet. Send your collaboration link to a colleague first.", "Vous n’avez pas encore de collaborateur. Envoyez d’abord votre lien de collaboration à un collègue.")}</p><Button variant="primary" onClick={onOpenCollaborators}>{L("Get my link", "Obtenir mon lien")}</Button></div>}
+      {!!people?.length && <CollaboratorSearch value={query} onChange={setQuery} total={filterCollaborators(people, query).length} shown={Math.min(MAX_SHOWN_COLLABORATORS, filterCollaborators(people, query).length)} fr={language === "fr"} />}
       {!!people?.length && <ul className="collab-list">
-        {people.map((person) => <li key={person.userId}>
+        {filterCollaborators(people, query).slice(0, MAX_SHOWN_COLLABORATORS).map((person) => <li key={person.userId}>
           <span className="collab-avatar" aria-hidden="true">{person.name.charAt(0).toUpperCase()}</span>
           <div className="collab-person"><strong>{person.name}</strong><span>{person.email}</span>{saved === person.userId && <small role="status">{L("Saved", "Enregistré")}</small>}</div>
           <label className="collab-access"><span className="sr-only">{L(`Access for ${person.name}`, `Accès de ${person.name}`)}</span>
