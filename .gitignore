@@ -49,3 +49,4 @@ next-env.d.ts
 
 # local realtime test build
 /.next-rt/
+/.next-prod/
