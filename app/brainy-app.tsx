@@ -171,7 +171,7 @@ function AuthScreen({ language, onLanguage, colorMode, onColorMode, onAuthentica
   // Browsers only allow the Google window when it opens right in the click: the Firebase code is
   // loaded as soon as this screen shows, so nothing has to download between the click and the window.
   const firebaseClient = useRef<typeof import("../lib/firebase-client") | null>(null);
-  useEffect(() => { void import("../lib/firebase-client").then((client) => { firebaseClient.current = client; }); }, []);
+  useEffect(() => { void import("../lib/firebase-client").then((client) => { firebaseClient.current = client; return client.prepareGoogleSignIn(); }).catch(() => {}); }, []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 

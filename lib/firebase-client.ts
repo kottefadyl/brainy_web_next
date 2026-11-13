@@ -45,6 +45,20 @@ export async function listenForForegroundReminders(): Promise<() => void> {
   });
 }
 
+type PopupResolver = { _initialize?: (auth: unknown) => Promise<unknown> };
+
+/**
+ * Loads Firebase's Google sign-in helpers (Google's script loader and the sign-in frame) before the click.
+ * Firebase otherwise downloads them after the click, which can take seconds: the browser then no longer
+ * links the Google window to the click and blocks it as an unwanted pop-up.
+ */
+export async function prepareGoogleSignIn(): Promise<void> {
+  const current = auth();
+  await current.authStateReady();
+  const resolver = (current as unknown as { _popupRedirectResolver?: PopupResolver })._popupRedirectResolver;
+  await resolver?._initialize?.(current);
+}
+
 export async function googleIdToken(): Promise<string> {
   const result = await signInWithPopup(auth(), new GoogleAuthProvider());
   return result.user.getIdToken();
