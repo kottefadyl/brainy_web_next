@@ -168,6 +168,10 @@ function AuthScreen({ language, onLanguage, colorMode, onColorMode, onAuthentica
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  // Browsers only allow the Google window when it opens right in the click: the Firebase code is
+  // loaded as soon as this screen shows, so nothing has to download between the click and the window.
+  const firebaseClient = useRef<typeof import("../lib/firebase-client") | null>(null);
+  useEffect(() => { void import("../lib/firebase-client").then((client) => { firebaseClient.current = client; }); }, []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -191,11 +195,12 @@ function AuthScreen({ language, onLanguage, colorMode, onColorMode, onAuthentica
     setError("");
     setBusy(true);
     try {
-      const { googleIdToken } = await import("../lib/firebase-client");
-      onAuthenticated(await api.google(await googleIdToken()));
+      const pendingToken = (firebaseClient.current ?? await import("../lib/firebase-client")).googleIdToken();
+      onAuthenticated(await api.google(await pendingToken));
     } catch (error) {
       const code = (error as { code?: string })?.code;
-      if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") setError(errorMessage(error, language));
+      if (code === "auth/popup-blocked") setError(language === "fr" ? "Votre navigateur a bloqué la fenêtre de connexion Google. Autorisez les fenêtres surgissantes pour ce site, puis réessayez." : "Your browser blocked the Google sign-in window. Allow pop-ups for this site, then try again.");
+      else if (code !== "auth/popup-closed-by-user" && code !== "auth/cancelled-popup-request") setError(errorMessage(error, language));
     } finally { setBusy(false); }
   }
 
