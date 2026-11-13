@@ -1,0 +1,34 @@
+/*
+ * Phone widths (320–430 px): nothing may stick out of the screen.
+ * Grid and flex children default to "min-width: auto", so one wide child (a table, a long word,
+ * a row of buttons) widens the whole column. Containers here may shrink; wide content scrolls
+ * inside its own box instead of pushing the page.
+ * The generic rules use :where() (no specificity), so a component's own sizes still win.
+ */
+@media (max-width: 760px) {
+  :where(.workspace-body, .modal, [role="dialog"], .profile-card) :where(section, article, form, fieldset, details, div, label, p, ul, ol, li, header, footer, nav) {
+    min-width: 0;
+  }
+
+  :where(fieldset) { min-width: 0; }
+
+  :is(.insights-layout, .starter-dialog, .entry-links-dialog) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Long words and addresses wrap instead of widening the page (table cells keep whole words: their box scrolls). */
+  :where(.workspace-body, .modal, [role="dialog"]) :where(p, h1, h2, h3, h4, li, dd, label, strong, small) {
+    overflow-wrap: anywhere;
+  }
+
+  :where(.workspace-body, .modal, [role="dialog"]) :where(pre, code) { white-space: pre-wrap; overflow-wrap: anywhere; }
+  :where(.workspace-body, .modal, [role="dialog"]) :where(img, video, canvas) { max-width: 100%; }
+  :where(.workspace-body, .modal, [role="dialog"]) :where(input, select, textarea) { max-width: 100%; box-sizing: border-box; }
+
+  /* Buttons never wrap on a wide screen; on a phone a long label (often in French) wraps instead of widening its form. */
+  html[data-theme] .button { max-width: 100%; height: auto; white-space: normal; line-height: 1.3; padding-block: 8px; text-align: center; }
+  :where(.modal, [role="dialog"], .workspace-body) :where(button) { max-width: 100%; }
+
+  /* A file picker has a fixed natural width (about 316 px): it takes its column's width instead. */
+  html[data-theme] input[type="file"] { width: 100%; min-width: 0; box-sizing: border-box; }
+}

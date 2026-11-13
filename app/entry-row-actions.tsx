@@ -33,7 +33,7 @@ export default function EntryRowActions({ language, appendOnly, onDetails, onCop
   };
   return (
     <div className="entry-actions">
-      <button type="button" className="small-action entry-details-action" onClick={onDetails}><Eye size={16} /><span>{language === "fr" ? "Détails" : "Details"}</span></button>
+      <button type="button" className="small-action entry-details-action" aria-label={language === "fr" ? "Détails" : "Details"} onClick={onDetails}><Eye size={16} /><span>{language === "fr" ? "Détails" : "Details"}</span></button>
       <details ref={menuRef} className="entry-more" onKeyDown={(event) => {
         if (event.key === "Escape") {
           event.preventDefault();

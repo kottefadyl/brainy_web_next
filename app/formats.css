@@ -357,7 +357,7 @@
 .object-detail-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
 .object-reference-picker { display: grid; gap: .5rem; }
 .object-reference-results { display: flex; flex-wrap: wrap; gap: .4rem; max-height: 10rem; overflow: auto; }
-.object-reference-results button { border: 1px solid var(--line, #d9e2eb); border-radius: 999px; background: rgba(255,255,255,.72); color: inherit; padding: .35rem .65rem; cursor: pointer; }
+.object-reference-results button { border: 1px solid var(--line, #d9e2eb); border-radius: 999px; background: rgba(255,255,255,.72); color: inherit; padding: .35rem .65rem; cursor: pointer; max-width: 100%; min-width: 0; white-space: normal; overflow-wrap: anywhere; text-align: start; }
 .object-reference-results button.selected { border-color: #587eb9; background: #e6efff; }
 .entry-reference-details summary { cursor: pointer; font-weight: 600; }
 .entry-reference-details ul { margin: .4rem 0; padding-left: 1.2rem; }

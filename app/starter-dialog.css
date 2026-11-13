@@ -1,0 +1,6 @@
+/* "Choose a template": loading and error states of the template list; the long package button wraps. */
+.starter-status { margin: 0 0 10px; color: var(--muted, #5a6f8d); font-size: 14px; line-height: 1.5; }
+.starter-status.form-error { color: var(--danger, #c62828); }
+html[data-theme] .starter-status .starter-retry { min-height: 44px; margin-inline-start: 6px; padding: 0 14px; border: 1px solid var(--control-border, #bdcbe0); border-radius: 10px; background: var(--surface, #fff); color: var(--ink, #1d3150); font: inherit; font-weight: 600; cursor: pointer; }
+html[data-theme] .starter-dialog .starter-packages { width: 100%; max-width: 100%; height: auto; padding-block: 10px; justify-content: flex-start; text-align: start; white-space: normal; line-height: 1.35; }
+html[data-theme] .starter-dialog .starter-packages svg { flex: none; }
