@@ -2,12 +2,12 @@
 
 // T51: "Guide and training" page. Content is generated from scripts/guide/content.mjs (lib/guide-content.ts).
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArrowLeft, ArrowRight, Boxes, ChartNoAxesCombined, Compass, Database, FolderOpen, GraduationCap, LayoutGrid, LayoutTemplate, PencilLine, Search, Shapes, ShieldCheck, Users, Warehouse, X, type LucideIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, Boxes, BriefcaseBusiness, Rocket, ChartNoAxesCombined, Compass, Database, FolderOpen, GraduationCap, LayoutGrid, LayoutTemplate, PencilLine, Search, Shapes, ShieldCheck, Users, Warehouse, X, type LucideIcon } from "lucide-react";
 import { guideChapters, type GuideChapter, type GuideText } from "../lib/guide-content";
 import type { Language } from "../lib/brainy";
 import "./guide-center.css";
 
-const icons: Record<string, LucideIcon> = { compass: Compass, folder: FolderOpen, shapes: Shapes, pencil: PencilLine, layout: LayoutGrid, template: LayoutTemplate, chart: ChartNoAxesCombined, boxes: Boxes, warehouse: Warehouse, users: Users, shield: ShieldCheck, database: Database };
+const icons: Record<string, LucideIcon> = { compass: Compass, folder: FolderOpen, shapes: Shapes, pencil: PencilLine, layout: LayoutGrid, template: LayoutTemplate, chart: ChartNoAxesCombined, boxes: Boxes, warehouse: Warehouse, users: Users, shield: ShieldCheck, database: Database, rocket: Rocket, briefcase: BriefcaseBusiness };
 
 function inline(text: string): ReactNode[] {
   return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => part.startsWith("**") && part.endsWith("**") ? <strong key={index}>{part.slice(2, -2)}</strong> : <Fragment key={index}>{part}</Fragment>);
