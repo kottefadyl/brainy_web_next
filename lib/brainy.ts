@@ -5,10 +5,12 @@ export type Language = "en" | "fr";
 export type FieldKind = "TITLE" | "DATE" | "NUMBER" | "TIME" | "LINK" | "CHARACTER" | "TEXT" | "BOOLEAN" | "SELECT" | "MULTI_SELECT" | "DATETIME" | "DURATION" | "LONG_TEXT" | "ATTACHMENT" | "OBJECT_REF" | "MEASURE" | "CODE" | "POSITION" | "ZONE" | "COLLABORATOR";
 export type SensitivityLevel = "ORDINARY" | "PERSONAL" | "SENSITIVE";
 
-export type User = { id: string; name: string; email: string; profession?: string | null; job?: string | null; fieldOfStudy?: string | null; interests: string[]; hobbies: string[]; profileCompleted: boolean; hasProfilePhoto?: boolean; onboardingCompleted?: boolean };
+export type User = { id: string; name: string; email: string; profession?: string | null; job?: string | null; fieldOfStudy?: string | null; interests: string[]; hobbies: string[]; profileCompleted: boolean; hasProfilePhoto?: boolean; onboardingCompleted?: boolean; viewPreferences?: ViewPreferences | null };
+/** Where the person left Brainy, kept on the account so every device reopens the same way. */
+export type ViewPreferences = { lastCollectionId?: string | null; pageSize?: number | null; views: { collectionId: string; viewId: string }[] };
 export type ProfileInput = { name: string; profession: string; job: string; fieldOfStudy: string; interests: string[]; hobbies: string[] };
 export const formatColors = ["#EEF5FF", "#EDF9F3", "#FFF5EB", "#F4F0FF", "#FFF0F4", "#EAF8FA", "#FBF7E9", "#F1F8ED", "#F8F0FA", "#F1F5FA", "#FFF7F1", "#EFF8FF", "#FDEFF7", "#EDF7FF", "#F7FBEA", "#FFF0E8", "#EFEFFD", "#E9F8F4", "#FBF1E8", "#F0F8F9", "#FFF2EF", "#F4F8E8", "#F1F2FF", "#EFFAF0"] as const;
-export type Field = { id: string; name: string; kind: FieldKind; sensitivity?: SensitivityLevel; unit?: string | null; options?: string[] | null; codeListId?: string | null; targetObjectFormatId?: string | null; multiple?: boolean | null; variableName?: string | null; referenceMode?: "CURRENT" | "SNAPSHOT" | null; sourceFieldId?: string | null };
+export type Field = { id: string; name: string; kind: FieldKind; sensitivity?: SensitivityLevel; unit?: string | null; options?: string[] | null; codeListId?: string | null; targetObjectFormatId?: string | null; multiple?: boolean | null; variableName?: string | null; referenceMode?: "CURRENT" | "SNAPSHOT" | null; sourceFieldId?: string | null; required?: boolean | null; showInList?: boolean | null };
 export type ClassificationCode = { code: string; labelEn: string; labelFr: string; parentCode?: string | null; active: boolean; mergedInto?: string | null };
 export type ClassificationList = { id: string; name: string; version: number; codes: ClassificationCode[]; /** More than 5,000 codes: searched on the server (T39/3). */ external?: boolean | null; codeCount?: number | null; levels?: number | null };
 export type GeoPoint = { entryId: string; name: string; latitude: number; longitude: number; accuracy?: number | null };
@@ -18,7 +20,7 @@ export type ExchangeRate = { id: string; from: string; to: string; rate: string;
 export type UnitSnapshot = { id: string; version: number; symbol: string; dimension: string; factor: string; root: string; objectFormatId?: string | null };
 export type WorkflowDefinition = { stateFieldId: string; initialState: string; transitions: { from: string; to: string; minimumRole: CollectionRole }[]; requirements: { state: string; fieldIds: string[] }[] };
 export type EntryWorkflow = { assigneeUserId?: string | null; dueAt?: string | null; reminderMinutesBefore?: number | null; history: { kind: string; from: string; to: string; actorUserId: string; at: string; assigneeUserId?: string | null; dueAt?: string | null }[] };
-export type CollectionFormat = { id: string; name: string; color: string; version?: number | null; objectModel?: boolean; appendOnly?: boolean; sensitivity?: SensitivityLevel; copiedFromFormatId?: string | null; linkedSource?: { sourceCollectionId: string; sourceFormatId: string; acceptedVersion: number; targetVersion: number } | null; workflow?: WorkflowDefinition | null; singleEntry?: boolean | null; parentFormatIds?: string[] | null; fields: Field[] };
+export type CollectionFormat = { id: string; name: string; color: string; version?: number | null; objectModel?: boolean; appendOnly?: boolean; sensitivity?: SensitivityLevel; copiedFromFormatId?: string | null; linkedSource?: { sourceCollectionId: string; sourceFormatId: string; acceptedVersion: number; targetVersion: number } | null; workflow?: WorkflowDefinition | null; singleEntry?: boolean | null; maxEntries?: number | null; parentFormatIds?: string[] | null; fields: Field[] };
 const sensitivityRank: Record<SensitivityLevel, number> = { ORDINARY: 0, PERSONAL: 1, SENSITIVE: 2 };
 export const defaultFieldSensitivity = (field: Field): SensitivityLevel =>
   field.sensitivity ?? (field.kind === "POSITION" || field.kind === "ZONE" ? "SENSITIVE" : "ORDINARY");
@@ -69,7 +71,7 @@ export type Entry = {
   workflow?: EntryWorkflow | null;
   revisions?: { at: string; formatVersion: number; values: { fieldId: string; value: string; unitSnapshot?: UnitSnapshot | null }[] }[];
 };
-export type EntryPage = { entries: Entry[]; nextCursor?: string | null; hasMore: boolean };
+export type EntryPage = { entries: Entry[]; nextCursor?: string | null; hasMore: boolean; totalCount?: number | null; offset?: number | null };
 export type EntryFilter = { fieldId: string; operator: "EQ" | "CONTAINS" | "GT" | "GTE" | "LT" | "LTE"; value: string };
 
 export const fieldKinds: FieldKind[] = ["TITLE", "DATE", "NUMBER", "TIME", "LINK", "CHARACTER", "TEXT", "LONG_TEXT", "BOOLEAN", "SELECT", "MULTI_SELECT", "DATETIME", "DURATION", "ATTACHMENT", "OBJECT_REF", "MEASURE", "CODE", "POSITION", "ZONE", "COLLABORATOR"];
@@ -695,6 +697,11 @@ export function translateError(error: unknown, language: Language): string {
   if (message.includes("Each data format needs a different color") || message.includes("Each format needs a different color")) return t(language, "colorUsed");
   if (message.includes("Data format changed")) return t(language, "formatConflict");
   if (message.includes("already has several entries")) return language === "fr" ? "Ce format de données a déjà plusieurs entrées. Gardez-en une seule avant d’activer cette règle." : "This data format already has several entries. Keep one before allowing a single entry.";
+  if (message.includes("This account is blocked")) return language === "fr" ? "Ce compte est bloqué. Contactez l’administrateur de Brainy." : "This account is blocked. Contact the Brainy administrator.";
+  if (message.startsWith("Required fields are empty: ")) { const names = message.slice("Required fields are empty: ".length); return language === "fr" ? `Champs obligatoires à remplir : ${names}.` : `Fill in the required fields: ${names}.`; }
+  if (/can only have \d+ entries/.test(message)) { const limit = message.match(/can only have (\d+) entries/)![1]; return language === "fr" ? `Ce format de données accepte au plus ${limit} entrées.` : `This data format accepts at most ${limit} entries.`; }
+  if (/already has more than \d+ entries/.test(message)) { const limit = message.match(/more than (\d+) entries/)![1]; return language === "fr" ? `Ce format de données a déjà plus de ${limit} entrées. Choisissez une limite plus haute ou supprimez des entrées.` : `This data format already has more than ${limit} entries. Choose a higher limit or delete entries.`; }
+  if (message.includes("number of entries must be a whole number")) return language === "fr" ? "Le nombre d’entrées doit être un nombre entier à partir de 1, ou rester vide." : message;
   if (message.includes("can only have one entry")) return language === "fr" ? "Ce format de données n’accepte qu’une seule entrée. Modifiez celle qui existe." : "This data format accepts a single entry. Edit the existing one.";
   if (message.includes("can only be placed under")) return language === "fr" ? `Cette partie se place seulement sous : ${message.split(": ").pop()}.` : message;
   if (message.includes("already has several entries")) return language === "fr" ? "Ce format de données a déjà plusieurs entrées. N’en gardez qu’une avant d’activer cette règle." : message;

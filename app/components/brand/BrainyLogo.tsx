@@ -1,45 +1,10 @@
-import { useId } from "react";
+import Image from "next/image";
 
 /**
- * Brainy mark: half brain (memory) joined to half circuit (structure).
- * Brain and traces follow `currentColor` (black in light, white in dark);
- * the chip is brand blue, the terminal nodes alternate brand red and blue.
- * Gyri are cut out with a mask so the mark sits on any surface.
+ * Brainy mark: the white "b" on its blue rounded tile (public/brainy-mark.png, 96 px for sharp
+ * rendering up to 48 px). It carries its own tile, so it sits on any surface in both themes.
+ * `unoptimized` serves the file as is: no image-optimisation quota on Vercel's free plan.
  */
 export function BrainyLogo({ size = 40, className = "" }: { size?: number; className?: string }) {
-  const maskId = `brainy-gyri-${useId().replace(/:/g, "")}`;
-  return (
-    <svg className={`brainy-logo ${className}`} width={size} height={size} viewBox="0 0 64 64" role="img" aria-hidden="true" focusable="false">
-      <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
-        <rect width="64" height="64" fill="#fff" />
-        <g fill="none" stroke="#000" strokeWidth="2.2" strokeLinecap="round">
-          <path d="M25 12.5c-3.2 1-4.6 3.8-3.6 6.6" />
-          <path d="M12.5 19.5c3.2-.3 5.6 1.8 5.8 5" />
-          <path d="M27 24c-3.4 0-5.6 2.2-5.6 5.4" />
-          <path d="M9.5 32.5c3.2-1.2 6.4-.2 7.8 2.4" />
-          <path d="M26.5 36c-2.6 1.2-3.6 4-2.6 6.6" />
-          <path d="M14.5 45c2.2-2.2 5.6-2.4 7.8-.2" />
-        </g>
-      </mask>
-      <path
-        fill="currentColor"
-        mask={`url(#${maskId})`}
-        d="M31 7.5C26 5.6 20 6.6 16.8 10.8 11.8 10.8 7.6 14.8 8.2 20 4.8 22.8 4.2 28 6.4 31.2 4.2 35 5 40.4 8.8 43 8.8 47.6 12.4 51.6 17 51.6 19.6 55.8 25.2 57.8 31 56.2Z"
-      />
-      <rect x="33" y="19" width="9.5" height="26" rx="2.2" fill="var(--brand-blue, #2463CE)" />
-      <rect x="35.6" y="22.5" width="4.3" height="19" rx="1" fill="none" stroke="var(--brand-chip-line, #fff)" strokeOpacity=".55" strokeWidth="1.2" />
-      <g fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M37.7 19V12.8" />
-        <path d="M42.5 24H46.5L51.4 19.1" />
-        <path d="M42.5 32H50" />
-        <path d="M42.5 40H46.5L51.4 44.9" />
-        <path d="M37.7 45V51.2" />
-      </g>
-      <circle cx="37.7" cy="10.4" r="2.6" fill="var(--logo-red, #E0303D)" />
-      <circle cx="53.6" cy="16.9" r="3.3" fill="var(--brand-blue, #2463CE)" />
-      <circle cx="52.8" cy="32" r="2.6" fill="var(--logo-red, #E0303D)" />
-      <circle cx="53.6" cy="47.1" r="3.3" fill="var(--brand-blue, #2463CE)" />
-      <circle cx="37.7" cy="53.6" r="2.6" fill="var(--logo-red, #E0303D)" />
-    </svg>
-  );
+  return <Image className={`brainy-logo ${className}`} src="/brainy-mark.png" width={size} height={size} alt="" aria-hidden="true" unoptimized priority />;
 }

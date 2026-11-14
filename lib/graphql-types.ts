@@ -11,6 +11,41 @@ export type Scalars = {
   DateTime: { input: string; output: string; }
 };
 
+export type AdminErasure = {
+  __typename?: 'AdminErasure';
+  accountDeleted: Scalars['Boolean']['output'];
+  collections: Scalars['Int']['output'];
+  documents: Scalars['Int']['output'];
+  files: Scalars['Int']['output'];
+};
+
+export type AdminOverview = {
+  __typename?: 'AdminOverview';
+  blockedCount: Scalars['Int']['output'];
+  generatedAt: Scalars['DateTime']['output'];
+  totalBytes: Scalars['Float']['output'];
+  userCount: Scalars['Int']['output'];
+  users: Array<AdminUser>;
+};
+
+export type AdminUser = {
+  __typename?: 'AdminUser';
+  admin: Scalars['Boolean']['output'];
+  blocked: Scalars['Boolean']['output'];
+  blockedAt?: Maybe<Scalars['DateTime']['output']>;
+  collections: Scalars['Int']['output'];
+  createdAt?: Maybe<Scalars['DateTime']['output']>;
+  databaseBytes: Scalars['Float']['output'];
+  email: Scalars['String']['output'];
+  entries: Scalars['Int']['output'];
+  fileBytes: Scalars['Float']['output'];
+  googleSignIn: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  lastActiveAt?: Maybe<Scalars['DateTime']['output']>;
+  name: Scalars['String']['output'];
+  totalBytes: Scalars['Float']['output'];
+};
+
 export type AnalysisInput = {
   comparisonFrom?: InputMaybe<Scalars['String']['input']>;
   comparisonTo?: InputMaybe<Scalars['String']['input']>;
@@ -317,7 +352,9 @@ export type CollectionField = {
   name: Scalars['String']['output'];
   options?: Maybe<Array<Scalars['String']['output']>>;
   referenceMode?: Maybe<Scalars['String']['output']>;
+  required?: Maybe<Scalars['Boolean']['output']>;
   sensitivity?: Maybe<SensitivityLevel>;
+  showInList?: Maybe<Scalars['Boolean']['output']>;
   sourceFieldId?: Maybe<Scalars['String']['output']>;
   targetObjectFormatId?: Maybe<Scalars['String']['output']>;
   unit?: Maybe<Scalars['String']['output']>;
@@ -331,7 +368,9 @@ export type CollectionFieldInput = {
   name: Scalars['String']['input'];
   options?: InputMaybe<Array<Scalars['String']['input']>>;
   referenceMode?: InputMaybe<Scalars['String']['input']>;
+  required?: InputMaybe<Scalars['Boolean']['input']>;
   sensitivity?: InputMaybe<SensitivityLevel>;
+  showInList?: InputMaybe<Scalars['Boolean']['input']>;
   targetObjectFormatId?: InputMaybe<Scalars['String']['input']>;
   unit?: InputMaybe<Scalars['String']['input']>;
   variableName?: InputMaybe<Scalars['String']['input']>;
@@ -345,6 +384,7 @@ export type CollectionFormat = {
   fields: Array<CollectionField>;
   id: Scalars['String']['output'];
   linkedSource?: Maybe<LinkedFormatSource>;
+  maxEntries?: Maybe<Scalars['Int']['output']>;
   name: Scalars['String']['output'];
   objectModel: Scalars['Boolean']['output'];
   parentFormatIds?: Maybe<Array<Scalars['String']['output']>>;
@@ -363,6 +403,7 @@ export type CollectionFormatImpact = {
 export type CollectionFormatInput = {
   color: Scalars['String']['input'];
   fields: Array<CollectionFieldInput>;
+  maxEntries?: InputMaybe<Scalars['Int']['input']>;
   name: Scalars['String']['input'];
   objectModel?: InputMaybe<Scalars['Boolean']['input']>;
   sensitivity?: InputMaybe<SensitivityLevel>;
@@ -430,6 +471,17 @@ export type CollectionUnitInput = {
   name: Scalars['String']['input'];
   objectFormatId?: InputMaybe<Scalars['String']['input']>;
   symbol: Scalars['String']['input'];
+};
+
+export type CollectionViewChoice = {
+  __typename?: 'CollectionViewChoice';
+  collectionId: Scalars['String']['output'];
+  viewId: Scalars['String']['output'];
+};
+
+export type CollectionViewChoiceInput = {
+  collectionId: Scalars['String']['input'];
+  viewId: Scalars['String']['input'];
 };
 
 export type ContributionEvent = {
@@ -782,6 +834,8 @@ export type EntryPage = {
   entries: Array<Entry>;
   hasMore: Scalars['Boolean']['output'];
   nextCursor?: Maybe<Scalars['String']['output']>;
+  offset?: Maybe<Scalars['Int']['output']>;
+  totalCount?: Maybe<Scalars['Int']['output']>;
 };
 
 export type EntryRecurrence = {
@@ -960,6 +1014,12 @@ export type ForecastResult = {
   uncertainty: Scalars['String']['output'];
   unit?: Maybe<Scalars['String']['output']>;
   validation: Array<ForecastPoint>;
+};
+
+export type FormatEntryCount = {
+  __typename?: 'FormatEntryCount';
+  count: Scalars['Int']['output'];
+  formatId: Scalars['String']['output'];
 };
 
 export type FormulaInput = {
@@ -1210,6 +1270,9 @@ export type Mutation = {
   addCollectionMember: Collection;
   addCollectionWorkflowTemplate: Collection;
   addObjectModelFromTemplate: Collection;
+  /** Removes everything the account owns; with deleteAccount the account goes too */
+  adminEraseUser: AdminErasure;
+  adminSetUserBlocked: Scalars['Boolean']['output'];
   assignWorkflowEntry: Entry;
   cancelBackgroundJob: BackgroundJob;
   cancelDataSourceRun: DataSourceRun;
@@ -1287,7 +1350,9 @@ export type Mutation = {
   saveCollectionView: Collection;
   saveEntryReminder: EntryReminder;
   saveStockRule: Collection;
+  saveViewPreferences: User;
   sealStockHistory: LedgerIntegrity;
+  setBookFormatRole: Collection;
   setBookView: Collection;
   setCollectionEntryLinkActive: EntryLink;
   setCollectionEntryRecurrence: Entry;
@@ -1368,6 +1433,19 @@ export type MutationAddObjectModelFromTemplateArgs = {
   language?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
   templateId: Scalars['String']['input'];
+};
+
+
+export type MutationAdminEraseUserArgs = {
+  confirmEmail: Scalars['String']['input'];
+  deleteAccount: Scalars['Boolean']['input'];
+  userId: Scalars['String']['input'];
+};
+
+
+export type MutationAdminSetUserBlockedArgs = {
+  blocked: Scalars['Boolean']['input'];
+  userId: Scalars['String']['input'];
 };
 
 
@@ -1836,9 +1914,21 @@ export type MutationSaveStockRuleArgs = {
 };
 
 
+export type MutationSaveViewPreferencesArgs = {
+  input: ViewPreferencesInput;
+};
+
+
 export type MutationSealStockHistoryArgs = {
   collectionId: Scalars['String']['input'];
   productId: Scalars['String']['input'];
+};
+
+
+export type MutationSetBookFormatRoleArgs = {
+  collectionId: Scalars['String']['input'];
+  formatId: Scalars['String']['input'];
+  role?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1906,6 +1996,7 @@ export type MutationSetFieldSensitivityArgs = {
 export type MutationSetFormatEntryRulesArgs = {
   collectionId: Scalars['String']['input'];
   formatId: Scalars['String']['input'];
+  maxEntries?: InputMaybe<Scalars['Int']['input']>;
   parentFormatIds: Array<Scalars['String']['input']>;
   singleEntry: Scalars['Boolean']['input'];
 };
@@ -2140,6 +2231,9 @@ export type QuantityConversion = {
 
 export type Query = {
   __typename?: 'Query';
+  /** True when the signed-in account may open the administration */
+  adminAccess: Scalars['Boolean']['output'];
+  adminOverview: AdminOverview;
   analyseCollection: AnalysisResult;
   analysisOperations: Array<AnalysisOperationSpec>;
   backgroundJob: BackgroundJob;
@@ -2179,6 +2273,7 @@ export type Query = {
   collectionRelationImpact: RelationImpact;
   collectionRelationTotal: RelationTotal;
   collectionRelations: Array<EntryRelation>;
+  /** My collections; with ids, only those (a live update reloads just what changed) */
   collectionsList: Array<Collection>;
   contributionByReceipt: RespondentContribution;
   contributionLinks: Array<ContributionLink>;
@@ -2196,6 +2291,8 @@ export type Query = {
   exportDomainPackage: DomainPackageExport;
   exportGeoPoints: Scalars['String']['output'];
   forecastCollection: ForecastResult;
+  /** Entries per data format, counted over all pages */
+  formatEntryCounts: Array<FormatEntryCount>;
   health: Scalars['String']['output'];
   inferCollectionFormula: FormulaStaticType;
   largeFileDownloadLink: LargeFileLink;
@@ -2223,6 +2320,8 @@ export type Query = {
   profilePhoto?: Maybe<Scalars['String']['output']>;
   publicContributionForm: PublicContributionForm;
   pushDevices: Array<PushDevice>;
+  /** Firebase custom token to listen to the change signals of my collections; null when real-time sync is off. */
+  realtimeToken?: Maybe<Scalars['String']['output']>;
   reminderCapabilities: ReminderCapabilities;
   searchClassificationCodes: Array<FoundClassificationCode>;
   starterTemplates: Array<StarterTemplate>;
@@ -2334,11 +2433,14 @@ export type QueryCollectionEntriesArgs = {
 
 export type QueryCollectionEntriesPageArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
+  atDate?: InputMaybe<Scalars['String']['input']>;
   collectionId: Scalars['String']['input'];
   filters?: InputMaybe<Array<EntryFieldFilterInput>>;
   first?: Scalars['Int']['input'];
   formatId?: InputMaybe<Scalars['String']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
+  timeZone?: InputMaybe<Scalars['String']['input']>;
   viewId?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -2461,6 +2563,11 @@ export type QueryCollectionRelationsArgs = {
 };
 
 
+export type QueryCollectionsListArgs = {
+  ids?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
 export type QueryContributionByReceiptArgs = {
   receipt: Scalars['String']['input'];
 };
@@ -2548,6 +2655,11 @@ export type QueryExportGeoPointsArgs = {
 export type QueryForecastCollectionArgs = {
   collectionId: Scalars['String']['input'];
   input: ForecastInput;
+};
+
+
+export type QueryFormatEntryCountsArgs = {
+  collectionId: Scalars['String']['input'];
 };
 
 
@@ -3127,7 +3239,9 @@ export type UpdateCollectionFieldInput = {
   name: Scalars['String']['input'];
   options?: InputMaybe<Array<Scalars['String']['input']>>;
   referenceMode?: InputMaybe<Scalars['String']['input']>;
+  required?: InputMaybe<Scalars['Boolean']['input']>;
   sensitivity?: InputMaybe<SensitivityLevel>;
+  showInList?: InputMaybe<Scalars['Boolean']['input']>;
   targetObjectFormatId?: InputMaybe<Scalars['String']['input']>;
   unit?: InputMaybe<Scalars['String']['input']>;
   variableName?: InputMaybe<Scalars['String']['input']>;
@@ -3157,6 +3271,20 @@ export type User = {
   onboardingCompleted: Scalars['Boolean']['output'];
   profession?: Maybe<Scalars['String']['output']>;
   profileCompleted: Scalars['Boolean']['output'];
+  viewPreferences?: Maybe<ViewPreferences>;
+};
+
+export type ViewPreferences = {
+  __typename?: 'ViewPreferences';
+  lastCollectionId?: Maybe<Scalars['String']['output']>;
+  pageSize?: Maybe<Scalars['Int']['output']>;
+  views: Array<CollectionViewChoice>;
+};
+
+export type ViewPreferencesInput = {
+  lastCollectionId?: InputMaybe<Scalars['String']['input']>;
+  pageSize?: InputMaybe<Scalars['Int']['input']>;
+  views: Array<CollectionViewChoiceInput>;
 };
 
 export type WorkflowAssignmentInput = {

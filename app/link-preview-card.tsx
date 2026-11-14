@@ -7,7 +7,8 @@ import { hostOf, loadLinkPreview, type LinkPreview } from "../lib/link-preview";
 import type { Language } from "../lib/brainy";
 import "./link-preview.css";
 
-export default function LinkPreviewCard({ url, language }: { url: string; language: Language }) {
+/** `compact`: one slim line inside an entry row (small thumbnail, title, site); the full card elsewhere. */
+export default function LinkPreviewCard({ url, language, compact = false }: { url: string; language: Language; compact?: boolean }) {
   const fr = language === "fr";
   const box = useRef<HTMLAnchorElement>(null);
   const [preview, setPreview] = useState<LinkPreview | null>(null);
@@ -25,7 +26,7 @@ export default function LinkPreviewCard({ url, language }: { url: string; langua
   const site = preview?.siteName || hostOf(url);
   const rich = state === "done" && !!preview?.available;
   const label = `${fr ? "Ouvrir le lien" : "Open link"} : ${preview?.title || site}${fr ? " (nouvel onglet)" : " (new tab)"}`;
-  return <a ref={box} className={`link-preview ${rich ? "is-rich" : state === "waiting" ? "is-loading" : "is-plain"}`} href={url} target="_blank" rel="noopener noreferrer nofollow" aria-label={label} aria-busy={state === "waiting" || undefined}>
+  return <a ref={box} className={`link-preview ${compact ? "compact " : ""}${rich ? "is-rich" : state === "waiting" ? "is-loading" : "is-plain"}`} href={url} target="_blank" rel="noopener noreferrer nofollow" aria-label={label} aria-busy={state === "waiting" || undefined}>
     {state === "waiting" ? <>
       <span className="link-preview-thumb link-preview-skeleton" aria-hidden="true" />
       <span className="link-preview-text"><span className="link-preview-line link-preview-skeleton" /><span className="link-preview-line short link-preview-skeleton" /></span>
@@ -33,11 +34,11 @@ export default function LinkPreviewCard({ url, language }: { url: string; langua
       {preview!.image ? <span className="link-preview-thumb">
         {/* eslint-disable-next-line @next/next/no-img-element -- image copied by the API as a data URL */}
         <img src={preview!.image} alt="" loading="lazy" />
-        {preview!.video && <span className="link-preview-play" aria-hidden="true"><Play size={18} fill="currentColor" /></span>}
+        {preview!.video && <span className="link-preview-play" aria-hidden="true"><Play size={compact ? 10 : 18} fill="currentColor" /></span>}
       </span> : <span className="link-preview-thumb link-preview-icon" aria-hidden="true"><Link2 size={22} /></span>}
       <span className="link-preview-text">
         {preview!.title && <strong>{preview!.title}</strong>}
-        {preview!.description && <span className="link-preview-description">{preview!.description}</span>}
+        {preview!.description && !compact && <span className="link-preview-description">{preview!.description}</span>}
         <span className="link-preview-site">{site}<ExternalLink size={12} aria-hidden="true" /></span>
       </span>
     </> : <>

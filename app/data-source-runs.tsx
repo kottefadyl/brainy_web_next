@@ -35,7 +35,7 @@ export default function DataSourceRuns({ sourceId, language, refreshKey, onEntri
   const running = runs?.some(active) ?? false;
   useEffect(() => {
     if (!running) return;
-    const timer = setInterval(() => { void load(); }, 2000);
+    const timer = setInterval(() => { if (!document.hidden) void load(); }, 2000);
     return () => clearInterval(timer);
   }, [running, load]);
   // Entries changed when a delivery finishes: refresh the collection once.

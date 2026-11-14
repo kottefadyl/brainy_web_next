@@ -22,3 +22,23 @@ html[data-theme="dark"] .link-preview { background: color-mix(in srgb, var(--sur
 @media (max-width: 480px) { .link-preview-thumb:not(.link-preview-icon) { width: 84px; } .link-preview-text strong { font-size: 14px; } }
 html[data-theme] .app-shell .link-preview, html[data-theme] .app-shell .link-preview strong { color: var(--ink); text-decoration: none; }
 html[data-theme] .app-shell .link-preview :is(.link-preview-site, .link-preview-description, .link-preview-note) { color: var(--muted); }
+
+/* Compact preview inside a slim entry row: one line, small thumbnail, never wider than its share. */
+html[data-theme] .app-shell .link-preview.compact {
+  flex: 0 1 auto; min-width: 0; max-width: 340px; margin: 0; height: 36px; padding: 2px 10px 2px 2px; gap: 8px;
+  align-items: center; border-radius: 9px;
+}
+html[data-theme] .app-shell .link-preview.compact:hover { transform: none; box-shadow: none; }
+.link-preview.compact .link-preview-thumb { width: 54px; height: 30px; aspect-ratio: auto; border-radius: 6px; }
+.link-preview.compact .link-preview-icon, .link-preview.compact .link-preview-icon.small { width: 30px; height: 30px; }
+.link-preview.compact .link-preview-play { width: 18px; height: 18px; }
+.link-preview.compact .link-preview-text { flex-direction: row; align-items: baseline; gap: 8px; min-width: 0; overflow: hidden; }
+.link-preview.compact .link-preview-text strong { display: block; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.link-preview.compact .link-preview-site { flex: none; font-size: 12px; white-space: nowrap; }
+.link-preview.compact .link-preview-note { display: none; }
+.link-preview.compact .link-preview-line { width: 140px; height: 10px; }
+.link-preview.compact .link-preview-line.short { display: none; }
+.entry-item.has-link .entry-item-main { align-items: center; }
+@media (max-width: 640px) {
+  html[data-theme] .app-shell .link-preview.compact { flex: none; max-width: 100%; width: 100%; }
+}

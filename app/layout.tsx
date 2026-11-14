@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   title: "Brainy — Your space to remember",
   description: "Create collections with your own data formats and keep your ideas close.",
   applicationName: "Brainy",
-  icons: { icon: [{ url: "/brainy-app-icon.svg", type: "image/svg+xml" }, { url: "/brainy-mark.png", type: "image/png" }], apple: "/brainy-icon-192.png" },
+  icons: { icon: [{ url: "/favicon.ico", sizes: "48x48" }, { url: "/brainy-icon-192.png", type: "image/png", sizes: "192x192" }], apple: "/apple-touch-icon.png" },
   manifest: "/manifest.webmanifest",
 };
 

@@ -1,12 +1,12 @@
 "use client";
 
-import { listenToChanges } from "../lib/realtime";
+import { listenToChanges, mergeChangedCollections } from "../lib/realtime";
 import { editableValuesByField, PersonFieldInput } from "./person-field-input";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { BrainyLogo } from "./components/brand/BrainyLogo";
 import {
   ArrowLeft, ArrowRight, Bell, BookOpen, ChartNoAxesCombined, Check, ChevronDown,
-  FolderHeart, Pencil, Plus, Sparkles, X,
+  FolderHeart, Pencil, Plus, Search, Sparkles, X,
 } from "lucide-react";
 import { api, ApiError } from "../lib/api";
 import { FormatColorPicker } from "./format-color-picker";
@@ -41,6 +41,10 @@ import { ThemeToggle, type ColorMode } from "./components/shell/ThemeToggle";
 import { useThemeMode } from "./components/shell/useThemeMode";
 import CollectionFormatsSection from "./collection-formats-section";
 import EntryCard from "./entry-card";
+import EntriesPager from "./entries-pager";
+import { useSlashSearch } from "../lib/use-slash-search";
+import { adoptAccountPreferences, rememberCollection, rememberedCollectionId, rememberedPageSize, rememberedViewId, rememberPageSize, rememberView, type PageSize } from "../lib/view-memory";
+import { FieldListToggle, FieldRequiredToggle, MaxEntriesInput, maxEntriesError, missingRequiredMessage, parseMaxEntries, RequiredFieldsNote, withRequiredMark } from "./format-entry-rules-inputs";
 import { EntryAuthors } from "./entry-authors";
 import EntryDetailsContent from "./entry-details-content";
 import { EntriesEmptyState, EntriesLoadingSkeleton } from "./entries-list-states";
@@ -246,15 +250,16 @@ function AuthScreen({ language, onLanguage, colorMode, onColorMode, onAuthentica
   );
 }
 
-type DraftField = { key: number; id?: string; name: string; kind: FieldKind; unit: string; optionsText: string; codeListId?: string; custom?: boolean; targetObjectFormatId?: string; multiple?: boolean; variableName?: string; referenceMode?: "CURRENT" | "SNAPSHOT" };
+type DraftField = { key: number; id?: string; name: string; kind: FieldKind; unit: string; optionsText: string; codeListId?: string; custom?: boolean; targetObjectFormatId?: string; multiple?: boolean; variableName?: string; referenceMode?: "CURRENT" | "SNAPSHOT"; required?: boolean; showInList?: boolean };
 
 function CollectionEditor({ language, collection, editingFormat, onClose, onSaved }: { language: Language; collection?: Collection; editingFormat?: Collection["formats"][number]; onClose: () => void; onSaved: (collection: Collection) => void }) {
   const [name, setName] = useState("");
   const [formatName, setFormatName] = useState(editingFormat?.name ?? `${t(language, "format")} ${collection ? collection.formats.length + 1 : 1}`);
   const [color, setColor] = useState("");
-  const [fields, setFields] = useState<DraftField[]>(editingFormat ? editingFormat.fields.map((field, index) => ({ key: index + 1, id: field.id, name: field.name, kind: field.kind, unit: field.unit ?? "", optionsText: field.options?.join("\n") ?? "", codeListId: field.codeListId ?? "", custom: !!field.unit && !field.unit.startsWith("local:") && !numberUnits.some((unit) => unit.code === field.unit), targetObjectFormatId: field.targetObjectFormatId ?? "", multiple: field.multiple ?? false, variableName: field.variableName ?? "", referenceMode: field.referenceMode ?? "SNAPSHOT" })) : [{ key: 1, name: t(language, "title"), kind: "TITLE", unit: "", optionsText: "" }]);
+  const [fields, setFields] = useState<DraftField[]>(editingFormat ? editingFormat.fields.map((field, index) => ({ key: index + 1, id: field.id, name: field.name, kind: field.kind, unit: field.unit ?? "", optionsText: field.options?.join("\n") ?? "", codeListId: field.codeListId ?? "", custom: !!field.unit && !field.unit.startsWith("local:") && !numberUnits.some((unit) => unit.code === field.unit), targetObjectFormatId: field.targetObjectFormatId ?? "", multiple: field.multiple ?? false, variableName: field.variableName ?? "", referenceMode: field.referenceMode ?? "SNAPSHOT", required: field.required ?? false, showInList: field.showInList ?? false })) : [{ key: 1, name: t(language, "title"), kind: "TITLE", unit: "", optionsText: "" }]);
   const [objectModel, setObjectModel] = useState(editingFormat?.objectModel ?? false);
-  const [singleEntry, setSingleEntry] = useState(editingFormat?.singleEntry ?? false);
+  const savedLimit = editingFormat?.maxEntries ?? (editingFormat?.singleEntry ? 1 : null);
+  const [maxEntriesText, setMaxEntriesText] = useState(savedLimit ? String(savedLimit) : "");
   const [nextKey, setNextKey] = useState((editingFormat?.fields.length ?? 1) + 1);
   const [impact, setImpact] = useState<{ entryCount: number; populatedFieldIds: string[] } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -276,9 +281,11 @@ function CollectionEditor({ language, collection, editingFormat, onClose, onSave
     event.preventDefault();
     setError("");
     const cleanName = name.trim();
-    const cleanFields = fields.map((field) => ({ ...(field.id ? { id: field.id } : {}), name: field.name.trim(), kind: field.kind, ...(field.kind === "NUMBER" && field.unit.trim() ? { unit: field.unit.trim() } : {}), ...(["SELECT", "MULTI_SELECT"].includes(field.kind) ? { options: field.optionsText.split("\n").map((value) => value.trim()).filter(Boolean) } : {}), ...(field.kind === "CODE" ? { codeListId: field.codeListId } : {}), ...(field.kind === "OBJECT_REF" ? { targetObjectFormatId: field.targetObjectFormatId, multiple: field.multiple ?? false, variableName: field.variableName?.trim() || undefined, referenceMode: field.referenceMode ?? "SNAPSHOT" } : {}) }));
+    const cleanFields = fields.map((field) => ({ ...(field.id ? { id: field.id } : {}), name: field.name.trim(), kind: field.kind, ...(field.kind === "NUMBER" && field.unit.trim() ? { unit: field.unit.trim() } : {}), ...(["SELECT", "MULTI_SELECT"].includes(field.kind) ? { options: field.optionsText.split("\n").map((value) => value.trim()).filter(Boolean) } : {}), ...(field.kind === "CODE" ? { codeListId: field.codeListId } : {}), ...(field.kind === "OBJECT_REF" ? { targetObjectFormatId: field.targetObjectFormatId, multiple: field.multiple ?? false, variableName: field.variableName?.trim() || undefined, referenceMode: field.referenceMode ?? "SNAPSHOT" } : {}), ...(field.required ? { required: true } : {}), ...(field.showInList ? { showInList: true } : {}) }));
     if ((!collection && (!cleanName || cleanName.length > 80)) || cleanFields.some((field) => !field.name || field.name.length > 80)) return setError(t(language, "invalidCollection"));
     if (!formatName.trim()) return setError(t(language, "nameFormat"));
+    const maxEntries = parseMaxEntries(maxEntriesText);
+    if (maxEntries === "invalid") return setError(maxEntriesError(language));
     if (objectModel && !cleanFields.some((field) => field.kind === "TITLE")) return setError(language === "fr" ? "Un modèle d’objet a besoin d’un champ titre." : "An object model needs a title field.");
     if (!editingFormat && !color) return setError(t(language, "chooseColor"));
     if (!editingFormat && collection?.formats.some((format) => format.color === color)) return setError(t(language, "colorUsed"));
@@ -290,7 +297,7 @@ function CollectionEditor({ language, collection, editingFormat, onClose, onSave
     if (fields.some((field) => field.kind === "OBJECT_REF" && !field.targetObjectFormatId)) return setError(language === "fr" ? "Choisissez un modèle d’objets de cette collection." : "Choose an object model in this collection.");
     if (fields.some((field) => field.kind === "CODE" && !field.codeListId)) return setError(language === "fr" ? "Choisissez une liste de codes de cette collection." : "Choose a code list in this collection.");
     setBusy(true);
-    try { onSaved(editingFormat && collection ? await api.updateFormat(collection.id, editingFormat.id, formatName.trim(), editingFormat.version ?? 1, cleanFields).then((saved) => singleEntry === (editingFormat.singleEntry ?? false) ? saved : api.setFormatEntryRules(collection.id, editingFormat.id, singleEntry, editingFormat.parentFormatIds ?? [])) : collection ? await api.addFormat(collection.id, formatName.trim(), color, cleanFields, objectModel) : await api.createCollection(cleanName, cleanFields, formatName.trim(), color, objectModel)); }
+    try { onSaved(editingFormat && collection ? await api.updateFormat(collection.id, editingFormat.id, formatName.trim(), editingFormat.version ?? 1, cleanFields).then((saved) => maxEntries === savedLimit || editingFormat.appendOnly ? saved : api.setFormatEntryRules(collection.id, editingFormat.id, maxEntries, editingFormat.parentFormatIds ?? [])) : collection ? await api.addFormat(collection.id, formatName.trim(), color, cleanFields, objectModel, maxEntries ?? undefined) : await api.createCollection(cleanName, cleanFields, formatName.trim(), color, objectModel, maxEntries ?? undefined)); }
     catch (error) { setError(errorMessage(error, language)); }
     finally { setBusy(false); }
   }
@@ -303,7 +310,7 @@ function CollectionEditor({ language, collection, editingFormat, onClose, onSave
         {!collection && <label className="input-label">{t(language, "collectionName")}<input autoFocus value={name} onChange={(event) => setName(event.target.value)} placeholder={t(language, "collectionNameHint")} maxLength={80} required /></label>}
         <label className="input-label">{t(language, "formatName")}<input autoFocus={!!collection} value={formatName} onChange={(event) => setFormatName(event.target.value)} maxLength={80} required /></label>
         {!editingFormat && <FormatColorPicker language={language} value={color} unavailable={collection?.formats.map((format) => format.color) ?? []} onChange={setColor} help={t(language, "formatColorHelp")} />}
-        {editingFormat && !editingFormat.appendOnly && <label className="object-choice"><input type="checkbox" checked={singleEntry} onChange={(event) => setSingleEntry(event.target.checked)} />{language === "fr" ? "Une seule entrée pour ce format de données (par exemple une couverture ou une préface)" : "A single entry for this data format (for example a cover or a preface)"}</label>}
+        {!editingFormat?.appendOnly && <MaxEntriesInput language={language} value={maxEntriesText} onChange={setMaxEntriesText} />}
         {!editingFormat && <label className="object-choice"><input type="checkbox" checked={objectModel} onChange={(event) => setObjectModel(event.target.checked)} />{language === "fr" ? "Utiliser ce format de données pour des objets" : "Use this data format for objects"}</label>}
         <div className="form-section-title"><div><h3>{t(language, "collectionFormat")}</h3><p>{t(language, "formatHelp")}</p></div><span className="count-chip">{fields.length} {t(language, fields.length === 1 ? "field" : "fields")}</span></div>
         <div className="field-list">
@@ -313,6 +320,10 @@ function CollectionEditor({ language, collection, editingFormat, onClose, onSave
               <label className="input-label field-name">{t(language, "fieldName")}<input value={field.name} onChange={(event) => update(field.key, { name: event.target.value })} placeholder={t(language, "fieldName")} maxLength={80} required /></label>
               <label className="input-label field-type">{t(language, "type")}<select value={field.kind} disabled={!!field.id && !!impact?.populatedFieldIds.includes(field.id)} onChange={(event) => update(field.key, { kind: event.target.value as FieldKind, unit: "", optionsText: "", codeListId: "", custom: false })}>{fieldKinds.filter((kind) => (kind !== "OBJECT_REF" || collection?.formats.some((item) => item.objectModel)) && (kind !== "CODE" || !!collection?.codeLists?.length)).map((kind) => <option key={kind} value={kind}>{fieldKindLabel(language, kind)}</option>)}</select></label>
               <div className="field-actions"><button type="button" className="icon-button" aria-label={t(language, "moveUp")} title={t(language, "moveUp")} disabled={index === 0} onClick={() => moveField(field.key, -1)}>↑</button><button type="button" className="icon-button" aria-label={t(language, "moveDown")} title={t(language, "moveDown")} disabled={index === fields.length - 1} onClick={() => moveField(field.key, 1)}>↓</button>{fields.length > 1 && <button type="button" className="icon-button field-remove" aria-label={t(language, "removeField")} title={t(language, "removeField")} disabled={!!field.id && !!impact?.populatedFieldIds.includes(field.id)} onClick={() => setFields((current) => current.filter((item) => item.key !== field.key))}><X size={18} /></button>}</div>
+              <div className="field-toggles">
+                <FieldRequiredToggle language={language} checked={!!field.required} onChange={(required) => update(field.key, { required })} />
+                <FieldListToggle language={language} checked={!!field.showInList} disabled={!field.showInList && fields.filter((item) => item.showInList).length >= 3} onChange={(showInList) => update(field.key, { showInList })} />
+              </div>
               {field.kind === "NUMBER" && <label className="input-label field-unit">{t(language, "unit")}
                 <select value={field.custom ? "custom" : field.unit} disabled={!!field.id && !!impact?.populatedFieldIds.includes(field.id)} onChange={(event) => update(field.key, { custom: event.target.value === "custom", unit: event.target.value === "custom" ? "" : event.target.value })}>
                   <option value="">{t(language, "noUnit")}</option>
@@ -409,6 +420,8 @@ function EntryEditor({ collection, entry, initialFormatId, language, userId, use
       return { fieldId: field.id, value: normalizedMeasure(value), ...(measureValue ? { measureValue } : {}) };
     }).filter((item) => (item.value && item.value !== "[]") || isAbsentMeasure(measures[item.fieldId]));
     if (!clean.length) return setError(t(language, "emptyEntry"));
+    const missingRequired = missingRequiredMessage(format.fields.filter((field) => !hiddenTaskFields(collection.taskPlanner, format.id, values).has(field.id)), new Set(clean.map((item) => item.fieldId)), language);
+    if (missingRequired) return setError(missingRequired);
     if (uploadingFiles) return setError(language === "fr" ? "Attendez la fin de l’envoi du fichier." : "Wait for the file upload to finish.");
     const chosenFiles = Object.values(files);
     if (chosenFiles.some((file) => file.size === 0 || file.size > 2_097_152) || chosenFiles.reduce((total, file) => total + file.size, 0) > currentPlatform().maxEntryAttachmentBytes) return setError(fileTooLargeText(language));
@@ -470,8 +483,9 @@ function EntryEditor({ collection, entry, initialFormatId, language, userId, use
       <form onSubmit={submit} className="modal-form entry-form">
         <div className="entry-form-context"><FolderHeart size={18} /> {collection.name}</div>
         {entry || initialFormatId ? <div className="selected-format" style={{ "--format-color": format.color } as CSSProperties}>{formatDisplayName(format, language)}</div> : <label className="input-label">{t(language, "chooseFormat")}<select value={formatId} onChange={(event) => setFormatId(event.target.value)}>{collection.formats.map((item) => <option key={item.id} value={item.id}>{formatDisplayName(item, language)}</option>)}</select></label>}
+        {format.fields.some((field) => field.required) && <RequiredFieldsNote language={language} />}
         <div className="entry-format-fields" style={{ "--format-color": format.color } as CSSProperties}>
-        {format.fields.filter((field) => !hiddenTaskFields(collection.taskPlanner, format.id, values).has(field.id)).map((field, index) => field.kind === "ATTACHMENT" ? <AttachmentFieldInput key={field.id} field={field} language={language} collectionId={collection.id} entry={entry} value={values[field.id] ?? ""} smallFile={files[field.id]} largeFileId={largeFiles[field.id]}
+        {format.fields.filter((field) => !hiddenTaskFields(collection.taskPlanner, format.id, values).has(field.id)).map(withRequiredMark).map((field, index) => field.kind === "ATTACHMENT" ? <AttachmentFieldInput key={field.id} field={field} language={language} collectionId={collection.id} entry={entry} value={values[field.id] ?? ""} smallFile={files[field.id]} largeFileId={largeFiles[field.id]}
           onSmallFile={(file) => { setFiles((current) => ({ ...current, [field.id]: file })); setLargeFiles((current) => { const next = { ...current }; delete next[field.id]; return next; }); setValues((current) => ({ ...current, [field.id]: file.name })); setError(""); }}
           onLargeFile={(largeFileId, fileName) => { setLargeFiles((current) => ({ ...current, [field.id]: largeFileId })); setFiles((current) => { const next = { ...current }; delete next[field.id]; return next; }); setValues((current) => ({ ...current, [field.id]: fileName })); setError(""); }}
           onClear={() => { setValues((current) => ({ ...current, [field.id]: "" })); setFiles((current) => { const next = { ...current }; delete next[field.id]; return next; }); setLargeFiles((current) => { const next = { ...current }; delete next[field.id]; return next; }); }}
@@ -963,8 +977,10 @@ export default function BrainyApp() {
   const [shareOpen, setShareOpen] = useState(false);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [pageAfter, setPageAfter] = useState<string | null>(null);
-  const [previousPages, setPreviousPages] = useState<(string | null)[]>([]);
+  // Large lists: pages are asked by position, so any page (or date) is one step away.
+  const [pageOffset, setPageOffset] = useState(0);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
+  const [pageSize, setPageSize] = useState<PageSize>(30);
   const [loadingMore, setLoadingMore] = useState(false);
   const entriesCollectionId = useRef<string | null>(null);
   const [searchText, setSearchText] = useState("");
@@ -1058,11 +1074,21 @@ export default function BrainyApp() {
     queueMicrotask(() => {
       if (cancelled) return;
       setLoadingCollections(true);
-      api.collections().then((result) => { if (!cancelled) { setCollections(result); setSelectedId((current) => result.some((item) => item.id === current) ? current : result[0]?.id ?? null); setLoadError(null); } })
+      api.collections().then((result) => { if (!cancelled) {
+        setCollections(result);
+        // Reopen where the person left: last collection, the view chosen there, the page size (account first).
+        adoptAccountPreferences(user.id, user.viewPreferences);
+        const remembered = result.find((item) => item.id === rememberedCollectionId(user.id)) ?? result[0];
+        setPageSize(rememberedPageSize(user.id));
+        setSelectedId((current) => result.some((item) => item.id === current) ? current : remembered?.id ?? null);
+        setSelectedViewId((current) => current || rememberedViewId(user.id, remembered));
+        setLoadError(null);
+      } })
         .catch((error) => { if (!cancelled) { if (error instanceof ApiError && error.unauthenticated) setUser(null); else setLoadError(error); } })
         .finally(() => { if (!cancelled) setLoadingCollections(false); });
     });
     return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- the account preferences are read once, when the workspace opens
   }, [user?.id, user?.profileCompleted]);
   useEffect(() => {
     if (!user?.profileCompleted || !selectedId) return;
@@ -1073,15 +1099,16 @@ export default function BrainyApp() {
       setLoadingEntries(true);
       if (entriesCollectionId.current !== selectedId) { setEntries([]); entriesCollectionId.current = selectedId; }
       setNextCursor(null);
-      setPageAfter(null);
-      setPreviousPages([]);
-      api.entriesPage(selectedId, selectedViewId ? { viewId: selectedViewId } : { search: search || undefined, formatId: filterFormatId || undefined, filters: filterFieldId && filterValue ? [{ fieldId: filterFieldId, operator: filterOperator, value: filterValue }] : undefined })
-        .then((result) => { if (!cancelled && generation === entryGeneration.current) { setEntries(result.entries); setNextCursor(result.nextCursor ?? null); setLoadError(null); } })
+      setPageOffset(0);
+      api.entriesPage(selectedId, { ...(selectedViewId ? { viewId: selectedViewId } : { search: search || undefined, formatId: filterFormatId || undefined, filters: filterFieldId && filterValue ? [{ fieldId: filterFieldId, operator: filterOperator, value: filterValue }] : undefined }), first: pageSize, offset: 0 })
+        .then((result) => { if (!cancelled && generation === entryGeneration.current) { setEntries(result.entries); setNextCursor(result.nextCursor ?? null); setTotalCount(result.totalCount ?? null); setPageOffset(result.offset ?? 0); setLoadError(null); } })
         .catch((error) => { if (!cancelled) { if (error instanceof ApiError && error.unauthenticated) setUser(null); else setLoadError(error); } })
         .finally(() => { if (!cancelled) setLoadingEntries(false); });
     });
     return () => { cancelled = true; };
-  }, [user?.id, user?.profileCompleted, selectedId, selectedViewId, search, filterFormatId, filterFieldId, filterOperator, filterValue]);
+  }, [user?.id, user?.profileCompleted, selectedId, selectedViewId, search, filterFormatId, filterFieldId, filterOperator, filterValue, pageSize]);
+  // The chosen collection and view survive closing Brainy (this device, this account).
+  useEffect(() => { if (user?.id && selectedId) { rememberCollection(user.id, selectedId); rememberView(user.id, selectedId, selectedViewId); } }, [user?.id, selectedId, selectedViewId]);
   useEffect(() => { if (!notice) return; const timer = window.setTimeout(() => setNotice(""), 3500); return () => window.clearTimeout(timer); }, [notice]);
 
   // Real-time data synchronisation: when someone else changes a collection I can open, the list and the
@@ -1090,13 +1117,14 @@ export default function BrainyApp() {
   useEffect(() => { liveSync.current = async (collectionIds) => {
     if (!user) return;
     try {
-      const result = await api.collections();
-      setCollections(result);
-      if (selectedId && !result.some((item) => item.id === selectedId)) { await refresh(); return; }
-      if (!selectedId || !collectionIds.has(selectedId) || pageAfter !== null) return;
+      // Only the collections that changed travel: the full list carries every format, field and code.
+      const fresh = await api.collectionsById([...collectionIds]);
+      setCollections((current) => mergeChangedCollections(current, collectionIds, fresh));
+      if (selectedId && collectionIds.has(selectedId) && !fresh.some((item) => item.id === selectedId)) { await refresh(); return; }
+      if (!selectedId || !collectionIds.has(selectedId)) return;
       const generation = ++entryGeneration.current;
-      const page = await api.entriesPage(selectedId, pageOptions());
-      if (generation === entryGeneration.current) { setEntries(page.entries); setNextCursor(page.nextCursor ?? null); setCalendarRefresh((current) => current + 1); }
+      const page = await api.entriesPage(selectedId, { ...pageOptions(), first: pageSize, offset: pageOffset });
+      if (generation === entryGeneration.current) { setEntries(page.entries); setNextCursor(page.nextCursor ?? null); setTotalCount(page.totalCount ?? null); setCalendarRefresh((current) => current + 1); }
     } catch { /* the next load shows the change */ }
   }; });
   useEffect(() => {
@@ -1124,47 +1152,49 @@ export default function BrainyApp() {
       setCollections(result);
       const id = result.some((item) => item.id === selectedId) ? selectedId : result[0]?.id;
       setSelectedId(id ?? null);
-      if (id) { const generation = ++entryGeneration.current; setLoadingEntries(true); const page = await api.entriesPage(id, pageOptions()); if (generation === entryGeneration.current) { setEntries(page.entries); setNextCursor(page.nextCursor ?? null); setPageAfter(null); setPreviousPages([]); setCalendarRefresh((current) => current + 1); } }
+      if (id) { const generation = ++entryGeneration.current; setLoadingEntries(true); const page = await api.entriesPage(id, { ...pageOptions(), first: pageSize, offset: 0 }); if (generation === entryGeneration.current) { setEntries(page.entries); setNextCursor(page.nextCursor ?? null); setPageOffset(page.offset ?? 0); setTotalCount(page.totalCount ?? null); setCalendarRefresh((current) => current + 1); } }
     } catch (error) { setLoadError(error); }
     finally { setLoadingCollections(false); setLoadingEntries(false); }
   }
-  async function loadMoreEntries() {
-    if (!selectedId || !nextCursor || loadingMore) return;
-    const generation = entryGeneration.current;
+  /** Opens a page by position, or the page holding a given day; the list scrolls back to its top. */
+  async function goToEntries(target: { offset: number } | { atDate: string }) {
+    if (!selectedId || loadingMore) return;
+    const generation = ++entryGeneration.current;
     setLoadingMore(true);
     try {
-      const page = await api.entriesPage(selectedId, { ...pageOptions(), after: nextCursor });
+      const page = await api.entriesPage(selectedId, { ...pageOptions(), first: pageSize, ...target, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone });
       if (generation === entryGeneration.current) {
-        setPreviousPages((current) => [...current, pageAfter]);
-        setPageAfter(nextCursor);
         setEntries(page.entries);
         setNextCursor(page.nextCursor ?? null);
+        setPageOffset(page.offset ?? 0);
+        setTotalCount(page.totalCount ?? null);
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        document.getElementById("collection-entries")?.scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" });
       }
     } catch (error) { setLoadError(error); }
     finally { setLoadingMore(false); }
   }
-  async function loadPreviousEntries() {
-    if (!selectedId || previousPages.length === 0 || loadingMore) return;
-    const generation = entryGeneration.current;
-    const after = previousPages[previousPages.length - 1];
-    setLoadingMore(true);
-    try {
-      const page = await api.entriesPage(selectedId, { ...pageOptions(), after: after ?? undefined });
-      if (generation === entryGeneration.current) {
-        setPreviousPages((current) => current.slice(0, -1));
-        setPageAfter(after);
-        setEntries(page.entries);
-        setNextCursor(page.nextCursor ?? null);
-      }
-    } catch (error) { setLoadError(error); }
-    finally { setLoadingMore(false); }
+  function choosePageSize(size: PageSize) {
+    if (user) rememberPageSize(user.id, size);
+    setPageSize(size);
   }
+  useSlashSearch("entry-search");
+  // Data format cards count over all pages (server), refreshed when the tab opens or the entries change.
+  const [formatCounts, setFormatCounts] = useState<{ collectionId: string; counts: Record<string, number> } | null>(null);
+  useEffect(() => {
+    if (!selectedId || collectionTab !== "formats") return;
+    let active = true;
+    api.formatEntryCounts(selectedId).then((counts) => { if (active) setFormatCounts({ collectionId: selectedId, counts }); }).catch(() => undefined);
+    return () => { active = false; };
+  }, [selectedId, collectionTab, totalCount, entries]);
+  const pager = (placement: "top" | "bottom") => <EntriesPager placement={placement} language={language} offset={pageOffset} pageSize={pageSize} total={totalCount} shown={entries.length} hasMore={!!nextCursor} busy={loadingMore || loadingEntries} dateJump={selectedView?.sort !== "MANUAL"} onGo={(offset) => void goToEntries({ offset })} onDate={(atDate) => void goToEntries({ atDate })} onPageSize={choosePageSize} />;
   function selectCollection(id: string) {
     setActiveSection("collection");
     if (window.location.hash.startsWith("#collection-")) window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
     if (id === selectedId) return;
     ++entryGeneration.current;
-    setSearchText(""); setSearch(""); setFilterFormatId(""); setFilterFieldId(""); setFilterValueText(""); setFilterValue(""); setSelectedViewId("");
+    setSearchText(""); setSearch(""); setFilterFormatId(""); setFilterFieldId(""); setFilterValueText(""); setFilterValue("");
+    setSelectedViewId(user ? rememberedViewId(user.id, collections.find((item) => item.id === id)) : "");
     setSelectedId(id);
   }
   async function signOut() {
@@ -1241,26 +1271,27 @@ export default function BrainyApp() {
             {selected.periodTotals && <PeriodTotalsPanel key={selected.id} collection={selected} entries={entries} language={language} onSaved={(entry) => setEntries((current) => [entry, ...current])} />}
             <CollectionTabs language={language} showFormats={selectedRole === "OWNER"} value={collectionTab} onChange={(tab) => setTabSelection({ collectionId: selectedId, tab })} />
             <CollectionTabPanel tab="entries" active={collectionTab === "entries"}>
-            <div id="collection-entries" className="entries-heading"><div><span className="section-overline">{t(language, "savedEntries")}</span><h2>{t(language, "entries")} <span>{entries.length} {language === "fr" ? entries.length === 1 ? "entrée" : "entrées" : entries.length === 1 ? "entry" : "entries"}</span></h2></div><Button variant="secondary" onClick={() => setQuickEntry(true)}>{language === "fr" ? "Saisie rapide" : "Quick entry"}</Button></div>
+            <div id="collection-entries" className="entries-heading"><div><span className="section-overline">{t(language, "savedEntries")}</span><h2>{t(language, "entries")} <span>{new Intl.NumberFormat(language).format(totalCount ?? entries.length)} {language === "fr" ? (totalCount ?? entries.length) === 1 ? "entrée" : "entrées" : (totalCount ?? entries.length) === 1 ? "entry" : "entries"}</span></h2></div><Button variant="secondary" onClick={() => setQuickEntry(true)}>{language === "fr" ? "Saisie rapide" : "Quick entry"}</Button></div>
             <div className="saved-view-bar">
               <label>{language === "fr" ? "Vue" : "View"}<select value={selectedViewId} onChange={(event) => setSelectedViewId(event.target.value)}><option value="">{language === "fr" ? "Liste par défaut" : "Default list"}</option>{selected.savedViews?.map((view) => <option key={view.id} value={view.id}>{view.name}</option>)}</select></label>
               <Button variant="secondary" onClick={() => setDialog({ kind: "view" })}><Plus size={16} />{language === "fr" ? "Enregistrer une vue" : "Save a view"}</Button>
               {selectedView && <><Button variant="secondary" onClick={() => setDialog({ kind: "view", viewId: selectedView.id })}>{language === "fr" ? "Modifier la vue" : "Edit view"}</Button><Button variant="subtle" onClick={async () => { try { const updated = await api.deleteView(selected.id, selectedView.id); setCollections((current) => current.map((item) => item.id === updated.id ? updated : item)); setSelectedViewId(""); } catch (cause) { setLoadError(cause); } }}>{language === "fr" ? "Supprimer la vue" : "Delete view"}</Button></>}
             </div>
             {!selectedView && <div className="entry-tools">
-              <label>{t(language, "searchEntries")}<input type="search" value={searchText} onChange={(event) => setSearchText(event.target.value)} /></label>
+              <label className="entry-search">{t(language, "searchEntries")}<span className="entry-search-box"><Search size={16} aria-hidden="true" /><input id="entry-search" type="search" value={searchText} onChange={(event) => setSearchText(event.target.value)} placeholder={language === "fr" ? "Titre, valeur, mot… (touche /)" : "Title, value, word… (press /)"} aria-keyshortcuts="/" /></span></label>
               <AccessibleListbox label={t(language, "chooseFormat")} value={filterFormatId} options={[{ id: "", label: t(language, "allFormats") }, ...selected.formats.map((format) => ({ id: format.id, label: formatDisplayName(format, language), swatch: format.color }))]} onChange={(value) => { setFilterFormatId(value); setFilterFieldId(""); setFilterValueText(""); setFilterValue(""); }} />
               {filterFormat && <label>{t(language, "filterField")}<select value={filterFieldId} onChange={(event) => { setFilterFieldId(event.target.value); setFilterOperator("EQ"); setFilterValueText(""); setFilterValue(""); }}><option value="">{t(language, "noFilter")}</option>{filterFormat.fields.map((field) => <option key={field.id} value={field.id}>{field.name}</option>)}</select></label>}
               {filterField && <><label>{t(language, "filterField")}<select value={filterOperator} onChange={(event) => setFilterOperator(event.target.value as EntryFilter["operator"])}><option value="EQ">{t(language, "equals")}</option>{["TITLE", "TEXT", "LONG_TEXT", "LINK", "CHARACTER", "ATTACHMENT"].includes(filterField.kind) && <option value="CONTAINS">{t(language, "contains")}</option>}{["NUMBER", "DURATION", "DATE", "DATETIME", "TIME"].includes(filterField.kind) && <><option value="GT">{t(language, "greaterThan")}</option><option value="LT">{t(language, "lessThan")}</option></>}</select></label><label>{t(language, "filterValue")}{filterField.kind === "BOOLEAN" || ["SELECT", "MULTI_SELECT"].includes(filterField.kind) ? <select value={filterValueText} onChange={(event) => setFilterValueText(event.target.value)}><option value="">—</option>{(filterField.kind === "BOOLEAN" ? ["true", "false"] : filterField.options ?? []).map((option) => <option key={option} value={option}>{option === "true" ? t(language, "yes") : option === "false" ? t(language, "no") : option}</option>)}</select> : filterField.kind === "DATE" ? <LocalizedDateInput language={language} value={filterValueText} onChange={setFilterValueText} /> : <input value={filterValueText} onChange={(event) => setFilterValueText(event.target.value)} type={filterField.kind === "NUMBER" ? "number" : "text"} />}</label></>}
               {filtersActive && <Button variant="secondary" className="clear-filters" onClick={clearFilters}>{language === "fr" ? "Effacer les filtres" : "Clear filters"}</Button>}
             </div>}
+            {entries.length > 0 && !(selectedView && ["TASK_DAY", "TASK_CALENDAR", "CALENDAR"].includes(selectedView.layout)) && pager("top")}
             {loadingEntries && entries.length > 0 && <p className="entries-updating" role="status">{language === "fr" ? "Mise à jour des entrées…" : "Updating entries..."}</p>}
             {selectedView && (selectedView.layout === "TASK_DAY" || selectedView.layout === "TASK_CALENDAR") && selected.taskPlanner ? <TaskAgendaView key={selectedView.id} collection={selected} mode={selectedView.layout} language={language} changeSignal={entries} onEdit={(entry) => setDialog({ kind: "entry", entry })} onNewTask={() => setDialog({ kind: "entry" })} /> : selectedView?.layout === "CALENDAR" ? <CalendarView collection={selected} view={selectedView} language={language} refreshToken={calendarRefresh} onEdit={(entry) => entry.ledgerHash ? setActiveSection("ledger") : setDialog({ kind: "entry", entry })} onReminder={remindersOn ? (entry) => setDialog({ kind: "reminder", entry }) : undefined} /> : loadingEntries && !entries.length ? <EntriesLoadingSkeleton language={language} /> : entries.length ? <>
               {selectedView?.layout === "TASKS" ? <div className="task-list">{entries.map((entry) => { const titleField = selected.formats.find((item) => item.id === entry.formatId)?.fields.find((field) => field.kind === "TITLE"); const done = entry.values.find((item) => item.fieldId === selectedView.taskDoneFieldId)?.value === "true"; const due = entry.values.find((item) => item.fieldId === selectedView.taskDueFieldId)?.value; const priority = entry.values.find((item) => item.fieldId === selectedView.taskPriorityFieldId)?.value; return <div key={entry.id} className="task-row"><EntryAuthors entry={entry} collection={selected} language={language} compact /><label><input type="checkbox" checked={done} onChange={async (event) => { try { const updated = await api.setTaskCompleted(selected.id, selectedView.id, entry.id, event.target.checked); setEntries((current) => current.map((item) => item.id === updated.id ? updated : item)); } catch (cause) { setLoadError(cause); } }} /><span className={done ? "done" : ""}>{entry.values.find((item) => item.fieldId === titleField?.id)?.value ?? selected.formats.find((item) => item.id === entry.formatId)?.name}</span></label>{priority && <small>{priority}</small>}{due && <time>{due.slice(0, 16).replace("T", " ")}</time>}<button type="button" onClick={() => setDialog({ kind: "reminder", entry })}><Bell size={15} /> {language === "fr" ? "Rappel" : "Reminder"}</button><button type="button" className="entry-write-action" onClick={() => entry.ledgerHash ? setActiveSection("ledger") : setDialog({ kind: "entry", entry })}>{entry.ledgerHash ? language === "fr" ? "Ouvrir le registre" : "Open register" : t(language, "edit")}</button></div>; })}</div> : selectedView?.layout === "TABLE" ? <SavedViewTable key={selectedView.id} collection={selected} view={selectedView} entries={entries} language={language} errorText={(cause) => errorMessage(cause, language)} onOpenEntry={(entry) => setDialog({ kind: "entry", entry })} onOpenLedger={() => setActiveSection("ledger")} onEntrySaved={(saved) => setEntries((current) => current.some((item) => item.id === saved.id) ? current.map((item) => item.id === saved.id ? saved : item) : [...current, saved])} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} onEditFormat={(formatId) => setDialog({ kind: "editFormat", formatId })} access={selectedRole} /> : selectedView?.groupByFormat ? selected.formats.filter((format) => entries.some((entry) => entry.formatId === format.id)).map((format) => <section key={format.id} className="saved-view-group"><h3>{format.name}</h3><div className={selectedView.layout === "LIST" ? "entry-grid saved-view-list" : "entry-grid"}>{entries.filter((entry) => entry.formatId === format.id).map((entry) => <EntryCard key={entry.id} entry={entry} selected={dialog?.kind === "entryDetails" && dialog.entry.id === entry.id} collection={selected} language={language} onDetails={() => setDialog({ kind: "entryDetails", entry })} onEdit={() => entry.ledgerHash ? setActiveSection("ledger") : setDialog({ kind: "entry", entry })} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteEntry", entry }); }} onCopy={() => copy(entry)} onLinks={() => setDialog({ kind: "entryLinks", entry })} onReminder={remindersOn && selected.formats.find((item) => item.id === entry.formatId)?.fields.some((field) => ["DATE", "DATETIME"].includes(field.kind) && entry.values.some((value) => value.fieldId === field.id)) ? () => setDialog({ kind: "reminder", entry }) : undefined} />)}</div></section>) : <div className={!selectedView || selectedView.layout === "LIST" ? "entry-grid saved-view-list" : "entry-grid"}>{entries.map((entry) => <EntryCard key={entry.id} entry={entry} selected={dialog?.kind === "entryDetails" && dialog.entry.id === entry.id} collection={selected} language={language} onDetails={() => setDialog({ kind: "entryDetails", entry })} onEdit={() => entry.ledgerHash ? setActiveSection("ledger") : setDialog({ kind: "entry", entry })} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteEntry", entry }); }} onCopy={() => copy(entry)} onLinks={() => setDialog({ kind: "entryLinks", entry })} onReminder={remindersOn && selected.formats.find((item) => item.id === entry.formatId)?.fields.some((field) => ["DATE", "DATETIME"].includes(field.kind) && entry.values.some((value) => value.fieldId === field.id)) ? () => setDialog({ kind: "reminder", entry }) : undefined} />)}</div>}
-              {(nextCursor || previousPages.length > 0) && <div className="more-entries">{previousPages.length > 0 && <Button variant="secondary" onClick={loadPreviousEntries} disabled={loadingMore}>{language === "fr" ? "Page précédente" : "Previous page"}</Button>}{nextCursor && <Button variant="secondary" onClick={loadMoreEntries} disabled={loadingMore}>{loadingMore ? t(language, "loading") : language === "fr" ? "Page suivante" : "Next page"}</Button>}</div>}
+              {entries.length >= 10 && pager("bottom")}
             </> : loadError ? null : <EntriesEmptyState language={language} filtered={filtersActive} onClear={clearFilters} onWrite={() => setDialog({ kind: "entry" })} />}
             </CollectionTabPanel>
-            <CollectionTabPanel tab="formats" active={collectionTab === "formats"}><CollectionFormatsSection collection={selected} language={language} entryCounts={Object.fromEntries(selected.formats.map((format) => [format.id, entries.filter((entry) => entry.formatId === format.id).length]))} countPartial={filtersActive || !!nextCursor || previousPages.length > 0 || loadingEntries} onAdd={() => setDialog({ kind: "addFormat" })} onAddEntry={(formatId) => setDialog({ kind: "entry", formatId })} onEdit={(formatId) => setDialog({ kind: "editFormat", formatId })} onColor={(formatId) => setDialog({ kind: "formatColor", formatId })} onCopy={(formatId) => setDialog({ kind: "copyFormat", formatId })} onLink={(formatId) => setDialog({ kind: "linkFormat", formatId })} onReviewUpdate={(formatId) => setDialog({ kind: "linkedFormatUpdate", formatId })} /></CollectionTabPanel>
+            <CollectionTabPanel tab="formats" active={collectionTab === "formats"}><CollectionFormatsSection collection={selected} language={language} entryCounts={formatCounts?.collectionId === selected.id ? formatCounts.counts : Object.fromEntries(selected.formats.map((format) => [format.id, entries.filter((entry) => entry.formatId === format.id).length]))} countPartial={formatCounts?.collectionId !== selected.id && (filtersActive || (totalCount ?? entries.length) > entries.length || loadingEntries)} onAdd={() => setDialog({ kind: "addFormat" })} onAddEntry={(formatId) => setDialog({ kind: "entry", formatId })} onEdit={(formatId) => setDialog({ kind: "editFormat", formatId })} onColor={(formatId) => setDialog({ kind: "formatColor", formatId })} onCopy={(formatId) => setDialog({ kind: "copyFormat", formatId })} onLink={(formatId) => setDialog({ kind: "linkFormat", formatId })} onReviewUpdate={(formatId) => setDialog({ kind: "linkedFormatUpdate", formatId })} /></CollectionTabPanel>
             <CollectionTabPanel tab="tools" active={collectionTab === "tools"}><CollectionToolsHub collection={selected} user={user} language={language} defaultOpen={returnTool !== null} onOpenSection={(section) => { rememberTool(section); setActiveSection(section); }} onOpenDialog={(kind) => setDialog({ kind })} /></CollectionTabPanel>
           </>}
         </div>

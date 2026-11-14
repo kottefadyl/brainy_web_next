@@ -30,3 +30,13 @@ export async function listenToChanges(userId: string, onChange: (signal: ChangeS
     }
   }, () => { /* the next load still shows the changes */ });
 }
+
+/** The list after a live update: a changed collection is replaced in place, a new one (just shared with me) comes first, and one missing from the answer (access ended, deleted) leaves. */
+export function mergeChangedCollections<T extends { id: string }>(current: T[], changedIds: Set<string>, fresh: T[]): T[] {
+  const byId = new Map(fresh.map((item) => [item.id, item]));
+  const known = new Set(current.map((item) => item.id));
+  return [
+    ...fresh.filter((item) => !known.has(item.id)),
+    ...current.flatMap((item) => !changedIds.has(item.id) ? [item] : byId.has(item.id) ? [byId.get(item.id)!] : []),
+  ];
+}

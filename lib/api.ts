@@ -1,4 +1,4 @@
-import type { Collection, CollectionUnit, Entry, EntryFilter, EntryPage, User, FieldKind, Language, ProfileInput, SharedObjectGrant, SavedView, EntryReminder, AnalysisInput, AnalysisResult, EntryLink, EntryRelation, StockPosition, StockMovement, StockMovementInput, StockPreview, ForecastInput, ForecastResult, CollectionRole, AuditLog, ClassificationCode, GeoPage, WorkflowDefinition, SensitivityLevel } from "./brainy";
+import type { Collection, CollectionUnit, Entry, EntryFilter, EntryPage, User, FieldKind, Language, ProfileInput, SharedObjectGrant, SavedView, EntryReminder, AnalysisInput, AnalysisResult, EntryLink, EntryRelation, StockPosition, StockMovement, StockMovementInput, StockPreview, ForecastInput, ForecastResult, CollectionRole, AuditLog, ClassificationCode, GeoPage, WorkflowDefinition, SensitivityLevel, ViewPreferences } from "./brainy";
 
 export type FormulaStaticType = { type: "NUMBER" | "TEXT" | "DATE" | "DATETIME" | "BOOLEAN"; unit?: string | null; dimension?: string | null; unitOpen: boolean };
 export type FormulaPreview = { entryId: string; entryLabel?: string | null; value?: string | null; unit?: string | null; dimension?: string | null; missing?: string | null };
@@ -63,7 +63,7 @@ export async function request<T>(query: string, variables: Record<string, unknow
   return body.data;
 }
 
-const collectionFields = "id ownerId name minAggregateSize templateId taskPlanner { formatId doneFieldId startFieldId endFieldId repeatFieldId intervalFieldId weekdaysFieldId completedFieldId } bookView { enabled bodyFont headingFont fontSize lineHeight paragraphSpacing firstLineIndent marginMm textAlign pageSize showRuler chapterOnNewPage roles { formatId role } } periodTotals { formatId dateFieldId amountFieldId } fields { id name kind sensitivity unit options codeListId targetObjectFormatId multiple variableName referenceMode sourceFieldId } formats { id name color version sensitivity objectModel appendOnly singleEntry parentFormatIds copiedFromFormatId linkedSource { sourceCollectionId sourceFormatId acceptedVersion targetVersion } workflow { stateFieldId initialState transitions { from to minimumRole } requirements { state fieldIds } } fields { id name kind sensitivity unit options codeListId targetObjectFormatId multiple variableName referenceMode sourceFieldId } } codeLists { id name version external codeCount levels codes { code labelEn labelFr parentCode active mergedInto } } units { id name symbol dimension baseUnitId factor objectFormatId version copiedFromUnitId } exchangeRates { id from to rate effectiveAt } sharedObjects { id sourceCollectionId sourceFormatId sourceFormatVersion objectId sourceName objectName propertyFieldIds sensitiveFieldIds mode snapshot { fieldId name kind value unitSnapshot { id version symbol dimension factor root objectFormatId } } createdAt revokedAt } savedViews { id name layout formatIds columnFieldIds search filterFieldId filterOperator filterValue sort manualOrderFieldIds groupByFormat taskDoneFieldId taskDueFieldId taskCompletedFieldId taskPriorityFieldId calendarStartFieldId calendarEndFieldId calendarTimeZone } formulas { id name formatId expression version dependencies } stockRules { id name formatId kind productFieldId quantityFieldId version } allowNegativeStock members { userId email name role addedAt sharedFieldIds sensitiveFieldIds } sharedBy { userId name }";
+const collectionFields = "id ownerId name minAggregateSize templateId taskPlanner { formatId doneFieldId startFieldId endFieldId repeatFieldId intervalFieldId weekdaysFieldId completedFieldId } bookView { enabled bodyFont headingFont fontSize lineHeight paragraphSpacing firstLineIndent marginMm textAlign pageSize showRuler chapterOnNewPage roles { formatId role } } periodTotals { formatId dateFieldId amountFieldId } fields { id name kind sensitivity unit options codeListId targetObjectFormatId multiple variableName referenceMode sourceFieldId required showInList } formats { id name color version sensitivity objectModel appendOnly singleEntry maxEntries parentFormatIds copiedFromFormatId linkedSource { sourceCollectionId sourceFormatId acceptedVersion targetVersion } workflow { stateFieldId initialState transitions { from to minimumRole } requirements { state fieldIds } } fields { id name kind sensitivity unit options codeListId targetObjectFormatId multiple variableName referenceMode sourceFieldId required showInList } } codeLists { id name version external codeCount levels codes { code labelEn labelFr parentCode active mergedInto } } units { id name symbol dimension baseUnitId factor objectFormatId version copiedFromUnitId } exchangeRates { id from to rate effectiveAt } sharedObjects { id sourceCollectionId sourceFormatId sourceFormatVersion objectId sourceName objectName propertyFieldIds sensitiveFieldIds mode snapshot { fieldId name kind value unitSnapshot { id version symbol dimension factor root objectFormatId } } createdAt revokedAt } savedViews { id name layout formatIds columnFieldIds search filterFieldId filterOperator filterValue sort manualOrderFieldIds groupByFormat taskDoneFieldId taskDueFieldId taskCompletedFieldId taskPriorityFieldId calendarStartFieldId calendarEndFieldId calendarTimeZone } formulas { id name formatId expression version dependencies } stockRules { id name formatId kind productFieldId quantityFieldId version } allowNegativeStock members { userId email name role addedAt sharedFieldIds sensitiveFieldIds } sharedBy { userId name }";
 export const entryFields = "id formatId correctionOf ledgerHash ledgerSequence sourceObjectId contributionLinkId contributionReceivedAt recurrence { startFieldId endFieldId timeZone frequency interval untilDate excludedDates } workflow { assigneeUserId dueAt reminderMinutesBefore history { kind from to actorUserId at assigneeUserId dueAt } } values { fieldId value attachmentSize attachmentMimeType largeFileId largeFileSha256 objectIds personIds personNames objectSnapshots { objectId capturedAt properties { fieldId name kind value unitSnapshot { id version symbol dimension factor root objectFormatId } } } unitSnapshot { id version symbol dimension factor root objectFormatId } measureValue { status uncertainty uncertaintyType quality instrument observedAt recordedAt revisedAt revisionNote } } createdAt updatedAt createdBy { userId name hasPhoto } updatedBy { userId name hasPhoto }";
 
 export type LedgerIntegrity = { valid: boolean; checked: number; headHash: string; redactionHash: string; problem?: string | null };
@@ -121,7 +121,7 @@ export const sensitivityApi = {
     return (await request<{ setMinimumAggregateSize: Collection }>(`mutation($collectionId:String!,$minimum:Int!){setMinimumAggregateSize(collectionId:$collectionId,minimum:$minimum){${collectionFields}}}`, { collectionId, minimum })).setMinimumAggregateSize;
   },
 };
-const userFields = "id name email profession job fieldOfStudy interests hobbies profileCompleted hasProfilePhoto onboardingCompleted";
+const userFields = "id name email profession job fieldOfStudy interests hobbies profileCompleted hasProfilePhoto onboardingCompleted viewPreferences { lastCollectionId pageSize views { collectionId viewId } }";
 
 export const api = {
   async setWorkflow(collectionId: string, formatId: string, input: WorkflowDefinition & { expectedVersion: number }): Promise<Collection> {
@@ -268,6 +268,15 @@ export const api = {
   async duplicateLinks(collectionId: string, formatId: string, fieldId: string, url: string, excludeEntryId?: string): Promise<Entry[]> {
     return (await request<{ collectionDuplicateLinks: Entry[] }>(`query($collectionId:String!,$formatId:String!,$fieldId:String!,$url:String!,$excludeEntryId:String) { collectionDuplicateLinks(collectionId:$collectionId,formatId:$formatId,fieldId:$fieldId,url:$url,excludeEntryId:$excludeEntryId) { ${entryFields} } }`, { collectionId, formatId, fieldId, url, excludeEntryId })).collectionDuplicateLinks;
   },
+  /** Where the person left Brainy (last collection, view per collection, page size), saved on the account. */
+  async saveViewPreferences(input: ViewPreferences): Promise<void> {
+    await request<{ saveViewPreferences: { id: string } }>(`mutation SaveViewPreferences($input: ViewPreferencesInput!) { saveViewPreferences(input: $input) { id } }`, { input: { lastCollectionId: input.lastCollectionId ?? null, pageSize: input.pageSize ?? null, views: input.views } });
+  },
+  /** Entries per data format, counted over all pages. */
+  async formatEntryCounts(collectionId: string): Promise<Record<string, number>> {
+    const rows = (await request<{ formatEntryCounts: { formatId: string; count: number }[] }>(`query FormatEntryCounts($collectionId: String!) { formatEntryCounts(collectionId: $collectionId) { formatId count } }`, { collectionId })).formatEntryCounts;
+    return Object.fromEntries(rows.map((row) => [row.formatId, row.count]));
+  },
   async me(): Promise<User> {
     return (await request<{ me: User }>(`query Me { me { ${userFields} } }`)).me;
   },
@@ -313,10 +322,14 @@ export const api = {
   async collections(): Promise<Collection[]> {
     return (await request<{ collectionsList: Collection[] }>(`query { collectionsList { ${collectionFields} } }`)).collectionsList;
   },
-  async createCollection(name: string, fields: { name: string; kind: FieldKind; unit?: string; options?: string[] }[], formatName: string, color: string, objectModel = false): Promise<Collection> {
+  /** Only these collections: a live update reloads what changed, not the whole list. An id I can no longer open is missing from the answer. */
+  async collectionsById(ids: string[]): Promise<Collection[]> {
+    return (await request<{ collectionsList: Collection[] }>(`query Changed($ids: [String!]) { collectionsList(ids: $ids) { ${collectionFields} } }`, { ids })).collectionsList;
+  },
+  async createCollection(name: string, fields: { name: string; kind: FieldKind; unit?: string; options?: string[]; required?: boolean; showInList?: boolean }[], formatName: string, color: string, objectModel = false, maxEntries?: number): Promise<Collection> {
     return (await request<{ createCollection: Collection }>(
       `mutation Create($input: CreateCollectionInput!) { createCollection(input: $input) { ${collectionFields} } }`,
-      { input: { name, formats: [{ name: formatName, color, fields, objectModel }] } },
+      { input: { name, formats: [{ name: formatName, color, fields, objectModel, ...(maxEntries ? { maxEntries } : {}) }] } },
     )).createCollection;
   },
   async createCollectionWithFormats(name: string, formats: { name: string; color: string; sensitivity?: SensitivityLevel; objectModel?: boolean; fields: { name: string; kind: FieldKind; sensitivity?: SensitivityLevel; unit?: string; options?: string[]; codeListId?: string }[] }[], units: CollectionUnit[] = [], exchangeRates: Collection["exchangeRates"] = [], codeLists: Collection["codeLists"] = []): Promise<Collection> {
@@ -325,10 +338,10 @@ export const api = {
       { input: { name, formats, codeLists: codeLists.map(({ id, name, codes }) => ({ id, name, codes: codes.map(({ code, labelEn, labelFr, parentCode, active, mergedInto }) => ({ code, labelEn, labelFr, parentCode, active, mergedInto })) })), units: units.map(({ id, name, symbol, dimension, baseUnitId, factor, objectFormatId }) => ({ id, name, symbol, dimension, baseUnitId, factor, objectFormatId })), exchangeRates: exchangeRates.map(({ from, to, rate, effectiveAt }) => ({ from, to, rate, effectiveAt })) } },
     )).createCollection;
   },
-  async addFormat(collectionId: string, name: string, color: string, fields: { name: string; kind: FieldKind; unit?: string; options?: string[]; codeListId?: string }[], objectModel = false): Promise<Collection> {
+  async addFormat(collectionId: string, name: string, color: string, fields: { name: string; kind: FieldKind; unit?: string; options?: string[]; codeListId?: string; required?: boolean; showInList?: boolean }[], objectModel = false, maxEntries?: number): Promise<Collection> {
     return (await request<{ addCollectionFormat: Collection }>(
       `mutation AddFormat($id: String!, $input: CollectionFormatInput!) { addCollectionFormat(collectionId: $id, input: $input) { ${collectionFields} } }`,
-      { id: collectionId, input: { name, color, fields, objectModel } },
+      { id: collectionId, input: { name, color, fields, objectModel, ...(maxEntries ? { maxEntries } : {}) } },
     )).addCollectionFormat;
   },
   async objectTemplates(language: Language): Promise<{ id: string; name: string; description: string; fields: { id: string; name: string; kind: FieldKind; unit?: string }[] }[]> {
@@ -346,11 +359,11 @@ export const api = {
       { collectionId, formatId },
     )).collectionFormatImpact;
   },
-  /** T47/4: at most one entry for this data format; keeps the allowed parents unchanged. */
-  async setFormatEntryRules(collectionId: string, formatId: string, singleEntry: boolean, parentFormatIds: string[]): Promise<Collection> {
-    return (await request<{ setFormatEntryRules: Collection }>(`mutation($collectionId:String!,$formatId:String!,$singleEntry:Boolean!,$parentFormatIds:[String!]!){setFormatEntryRules(collectionId:$collectionId,formatId:$formatId,singleEntry:$singleEntry,parentFormatIds:$parentFormatIds){${collectionFields}}}`, { collectionId, formatId, singleEntry, parentFormatIds })).setFormatEntryRules;
+  /** Most entries for this data format (1 or more; null = no limit); keeps the allowed parents unchanged. */
+  async setFormatEntryRules(collectionId: string, formatId: string, maxEntries: number | null, parentFormatIds: string[]): Promise<Collection> {
+    return (await request<{ setFormatEntryRules: Collection }>(`mutation($collectionId:String!,$formatId:String!,$singleEntry:Boolean!,$maxEntries:Int,$parentFormatIds:[String!]!){setFormatEntryRules(collectionId:$collectionId,formatId:$formatId,singleEntry:$singleEntry,maxEntries:$maxEntries,parentFormatIds:$parentFormatIds){${collectionFields}}}`, { collectionId, formatId, singleEntry: maxEntries === 1, maxEntries, parentFormatIds })).setFormatEntryRules;
   },
-  async updateFormat(collectionId: string, formatId: string, name: string, expectedVersion: number, fields: { id?: string; name: string; kind: FieldKind; unit?: string; options?: string[]; codeListId?: string }[]): Promise<Collection> {
+  async updateFormat(collectionId: string, formatId: string, name: string, expectedVersion: number, fields: { id?: string; name: string; kind: FieldKind; unit?: string; options?: string[]; codeListId?: string; required?: boolean; showInList?: boolean }[]): Promise<Collection> {
     return (await request<{ updateCollectionFormat: Collection }>(
       `mutation UpdateFormat($collectionId: String!, $formatId: String!, $input: UpdateCollectionFormatInput!) { updateCollectionFormat(collectionId: $collectionId, formatId: $formatId, input: $input) { ${collectionFields} } }`,
       { collectionId, formatId, input: { name, fields, expectedVersion } },
@@ -389,9 +402,10 @@ export const api = {
       { entryId, asOfDate },
     )).collectionEntryAsOfDate;
   },
-  async entriesPage(collectionId: string, options: { after?: string; search?: string; formatId?: string; filters?: EntryFilter[]; viewId?: string; first?: number } = {}): Promise<EntryPage> {
+  /** A page of entries: follow `after`, or jump by position (`offset`) or to a day (`atDate`, YYYY-MM-DD); positioned pages carry `totalCount` and `offset`. */
+  async entriesPage(collectionId: string, options: { after?: string; search?: string; formatId?: string; filters?: EntryFilter[]; viewId?: string; first?: number; offset?: number; atDate?: string; timeZone?: string } = {}): Promise<EntryPage> {
     return (await request<{ collectionEntriesPage: EntryPage }>(
-      `query EntryPage($id: String!, $first: Int!, $after: String, $search: String, $formatId: String, $filters: [EntryFieldFilterInput!], $viewId: String) { collectionEntriesPage(collectionId: $id, first: $first, after: $after, search: $search, formatId: $formatId, filters: $filters, viewId: $viewId) { entries { ${entryFields} } nextCursor hasMore } }`,
+      `query EntryPage($id: String!, $first: Int!, $after: String, $search: String, $formatId: String, $filters: [EntryFieldFilterInput!], $viewId: String, $offset: Int, $atDate: String, $timeZone: String) { collectionEntriesPage(collectionId: $id, first: $first, after: $after, search: $search, formatId: $formatId, filters: $filters, viewId: $viewId, offset: $offset, atDate: $atDate, timeZone: $timeZone) { entries { ${entryFields} } nextCursor hasMore totalCount offset } }`,
       { id: collectionId, first: 30, ...options },
     )).collectionEntriesPage;
   },

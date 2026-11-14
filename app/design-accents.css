@@ -55,12 +55,6 @@ html[data-theme="dark"] .app-shell .workspace {
 
 /* ---------- Brand ---------- */
 html[data-theme] .app-shell .sidebar-top::after { width: 44px; background: var(--brand-gradient); background-size: 200% 100%; animation: ds-flow 8s linear infinite; }
-html[data-theme] .brand .brainy-logo circle { transform-box: fill-box; transform-origin: center; transition: transform .3s var(--ease); }
-html[data-theme] .brand:hover .brainy-logo circle { transform: scale(1.25); }
-html[data-theme] .brand:hover .brainy-logo circle:nth-of-type(2) { transition-delay: 40ms; }
-html[data-theme] .brand:hover .brainy-logo circle:nth-of-type(3) { transition-delay: 80ms; }
-html[data-theme] .brand:hover .brainy-logo circle:nth-of-type(4) { transition-delay: 120ms; }
-html[data-theme] .brand:hover .brainy-logo circle:nth-of-type(5) { transition-delay: 160ms; }
 
 /* ---------- Sidebar: coloured icon tile per collection (blue, green, red, black) ---------- */
 html[data-theme] .app-shell .collection-nav .nav-item > svg:first-child,

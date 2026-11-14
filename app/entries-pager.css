@@ -1,0 +1,77 @@
+/* Navigation through long entry lists (entries-pager.tsx). */
+.entries-pager {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 18px;
+  margin: 14px 0 6px; padding: 10px 12px;
+  border: 1px solid var(--c-line); border-radius: 14px; background: var(--c-surface); box-shadow: var(--shadow-xs);
+}
+.entries-pager[aria-busy] { opacity: .75; }
+.entries-pager-range { margin: 0; color: var(--c-muted); font-size: 13.5px; white-space: nowrap; }
+.entries-pager-range strong { color: var(--c-ink); font-weight: 650; font-variant-numeric: tabular-nums; }
+
+.entries-pager-steps { display: flex; align-items: center; gap: 4px; }
+.pager-step {
+  display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0;
+  border: 1px solid transparent; border-radius: 10px; background: transparent; color: var(--c-ink);
+  transition: background .12s var(--ease, ease), transform .12s var(--ease, ease);
+}
+.pager-step:hover:not(:disabled) { background: var(--c-hover); }
+.pager-step:active:not(:disabled) { transform: scale(.98); }
+.pager-step:disabled { color: var(--c-control); opacity: .45; }
+.pager-step:focus-visible, .pager-go:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 2px; }
+
+.pager-page { display: flex; align-items: center; gap: 6px; margin: 0 4px; color: var(--c-muted); font-size: 13.5px; }
+.pager-page label { display: flex; align-items: center; gap: 6px; }
+.pager-page input {
+  width: 72px; height: 40px; padding: 0 8px; text-align: center; font-variant-numeric: tabular-nums;
+  border: 1px solid var(--c-line-strong); border-radius: 9px; background: var(--c-surface); color: var(--c-ink);
+}
+.pager-page input::placeholder { color: var(--c-ink); opacity: 1; }
+.pager-page input:focus-visible { outline: 2px solid var(--c-focus); outline-offset: 1px; }
+.pager-page input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.pager-of { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pager-go {
+  height: 40px; padding: 0 12px; border: 1px solid var(--c-line-strong); border-radius: 9px;
+  background: var(--c-soft); color: var(--c-ink); font-weight: 600; font-size: 13.5px;
+}
+.pager-go:disabled { opacity: .5; }
+
+.entries-pager-options { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.pager-date { display: flex; align-items: center; gap: 8px; color: var(--c-muted); font-size: 13.5px; white-space: nowrap; }
+.pager-date > span { white-space: nowrap; }
+.pager-size .brainy-listbox { display: flex; align-items: center; gap: 8px; }
+.pager-size .brainy-listbox > :first-child { margin: 0; white-space: nowrap; color: var(--c-muted); font-size: 13.5px; font-weight: 500; }
+.pager-size { min-width: 120px; }
+.pager-size label, .pager-size > * { font-size: 13.5px; }
+
+@media (max-width: 720px) {
+  .entries-pager { flex-direction: column; align-items: stretch; }
+  .entries-pager-steps { justify-content: space-between; }
+  .entries-pager-options { justify-content: space-between; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pager-step { transition: none; }
+  .pager-step:active:not(:disabled) { transform: none; }
+}
+/* Phones: first/last give way to previous/next, nothing overflows at 320 px. */
+@media (max-width: 420px) {
+  .entries-pager { padding: 8px; }
+  .entries-pager-steps { gap: 0; }
+  .entries-pager-steps .pager-edge { display: none; }
+  .pager-page { margin: 0; gap: 4px; min-width: 0; }
+  .pager-page label > span { display: none; }
+  .pager-page input { width: 56px; }
+  .pager-go { padding: 0 10px; }
+  .entries-pager-options { flex-direction: column; align-items: stretch; }
+  .pager-date { justify-content: space-between; flex-wrap: wrap; }
+}
+/* Phones: the pager above the list is one line (range and arrows); date and page size stay below the list. */
+@media (max-width: 720px) {
+  .entries-pager[data-placement="top"] { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; padding: 4px 8px; }
+  .entries-pager[data-placement="top"] .entries-pager-options { display: none; }
+  .entries-pager[data-placement="top"] .pager-go { display: none; }
+}
+
+/* Entry search: an icon and a placeholder that names the "/" shortcut. */
+.entry-search-box { position: relative; display: block; }
+.entry-search-box > svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--c-muted); pointer-events: none; }
+html[data-theme] .app-shell .entry-tools .entry-search-box input[type="search"] { padding-left: 36px !important; }

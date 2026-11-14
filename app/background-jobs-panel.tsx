@@ -18,6 +18,8 @@ export default function BackgroundJobsPanel({ collections, language }: { collect
   const collection = collections.find((item) => item.id === collectionId) ?? collections[0];
   const chosenFormatId = collection?.formats.some((item) => item.id === formatId) ? formatId : collection?.formats[0]?.id ?? "";
 
+  // Polls only while a job is queued or running, and not while the tab is hidden: an idle panel uses no data.
+  const working = jobs.some((job) => job.state === "QUEUED" || job.state === "RUNNING");
   useEffect(() => {
     if (!open || !collection?.id) return;
     let active = true;
@@ -26,9 +28,10 @@ export default function BackgroundJobsPanel({ collections, language }: { collect
       catch (cause) { if (active) setError(String(cause)); }
     };
     void refresh();
-    const interval = window.setInterval(() => { void refresh(); }, 3000);
+    if (!working) return () => { active = false; };
+    const interval = window.setInterval(() => { if (!document.hidden) void refresh(); }, 3000);
     return () => { active = false; window.clearInterval(interval); };
-  }, [open, collection?.id]);
+  }, [open, collection?.id, working]);
 
   async function run(action: () => Promise<BackgroundJob>) {
     setBusy(true); setError("");

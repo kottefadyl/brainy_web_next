@@ -833,3 +833,18 @@ html[data-theme="dark"] .quick-dialog .quick-subtle { color: var(--tool-structur
 @media (max-width: 400px) {
   .app-shell .entries-heading .button { min-height: 44px; font-size: 12px; }
 }
+
+/* Small screens: the header actions wrap in a grid instead of overflowing the collection card. */
+@media (max-width: 480px) {
+  html[data-theme] .app-shell .collection-hero-actions {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 108px), 1fr)); gap: 8px; width: 100%; min-width: 0;
+  }
+  html[data-theme] .app-shell .collection-hero-actions .hero-add-entry { grid-column: 1 / -1; }
+  html[data-theme] .app-shell .collection-hero-actions > .button-secondary,
+  html[data-theme] .app-shell .collection-hero-more { min-width: 0; width: 100%; }
+  html[data-theme] .app-shell .collection-hero-actions .button,
+  html[data-theme] .app-shell .collection-hero-more summary { min-width: 0; padding-inline: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; justify-content: center; }
+  html[data-theme] .app-shell .collection-hero { overflow: hidden; }
+  html[data-theme] .app-shell .collection-hero:has(.collection-hero-more[open]) { overflow: visible; }
+  html[data-theme] .app-shell .collection-hero-main { min-width: 0; }
+}

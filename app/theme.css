@@ -164,11 +164,7 @@ textarea {
 
 .brand-mark {
   flex: none;
-  padding: 3px;
-  color: var(--brand-ink);
-  background: var(--brand-tile);
   box-shadow: none !important;
-  border-radius: 10px !important;
 }
 
 .brand-dot {
