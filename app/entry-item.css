@@ -76,11 +76,17 @@ html[data-theme] .app-shell .entry-row.entry-item .entry-details-action span { d
   .entry-item-meta { grid-column: 1; grid-row: 2; padding-bottom: 6px; gap: 4px 8px; flex-wrap: wrap; white-space: normal; }
   .entry-item-date, .entry-item-edited { white-space: nowrap; }
   html[data-theme] .app-shell .entry-row.entry-item { overflow: hidden; }
-  /* The ⋯ menu leaves the row: never clip it, and keep the open row above the following ones. */
-  html[data-theme] .app-shell .entry-row.entry-item:has(.entry-more[open]) { overflow: visible; position: relative; z-index: 22; }
   .entry-item-facts dd { max-width: 16ch; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   html[data-theme] .app-shell .entry-row.entry-item:hover { transform: none; }
+}
+
+/* ⋯ menu: a top-layer popover placed by entry-row-actions.tsx, above every row whatever their clipping. */
+html[data-theme] .app-shell .entry-more-trigger { width: 44px; height: 44px; min-width: 44px; padding: 0; justify-content: center; }
+html[data-theme] .app-shell .entry-more:has(:popover-open) .entry-more-trigger { background: var(--hover); color: var(--ink); }
+html[data-theme] .app-shell .entry-action-menu[popover] {
+  position: fixed; inset: auto; margin: 0;
+  max-width: min(300px, calc(100vw - 16px)); max-height: calc(100dvh - 12px); overflow-y: auto; color: var(--ink);
 }
