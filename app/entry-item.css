@@ -76,6 +76,8 @@ html[data-theme] .app-shell .entry-row.entry-item .entry-details-action span { d
   .entry-item-meta { grid-column: 1; grid-row: 2; padding-bottom: 6px; gap: 4px 8px; flex-wrap: wrap; white-space: normal; }
   .entry-item-date, .entry-item-edited { white-space: nowrap; }
   html[data-theme] .app-shell .entry-row.entry-item { overflow: hidden; }
+  /* The ⋯ menu leaves the row: never clip it, and keep the open row above the following ones. */
+  html[data-theme] .app-shell .entry-row.entry-item:has(.entry-more[open]) { overflow: visible; position: relative; z-index: 22; }
   .entry-item-facts dd { max-width: 16ch; }
 }
 

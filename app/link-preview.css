@@ -42,3 +42,7 @@ html[data-theme] .app-shell .link-preview.compact:hover { transform: none; box-s
 @media (max-width: 640px) {
   html[data-theme] .app-shell .link-preview.compact { flex: none; max-width: 100%; width: 100%; }
 }
+
+/* Entry details: full preview card above the address, as in a chat app. */
+.entry-detail-link { display: grid; justify-items: start; gap: 6px; white-space: normal; }
+html[data-theme] .app-shell .entry-detail-link .link-preview, .entry-detail-link .link-preview { width: 100%; max-width: 560px; margin: 0; }
