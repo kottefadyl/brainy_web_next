@@ -137,7 +137,7 @@ const messages = {
     formatColorHelp: "Every entry in this data format will use this soft background.",
     editFormat: "Edit data format",
     formatImpact: "Entries using this data format",
-    formatSafeEdit: "You can rename and reorder fields or add new ones. Fields with saved values keep their type, unit and choices.",
+    formatSafeEdit: "You can rename and reorder fields, add new ones and add choices. Fields with saved values keep their type and unit, and choices used by entries stay.",
     formatConflict: "This data format changed. Refresh and try again.",
     formatProtected: "A field with saved values cannot change type, unit or choices, or be removed.",
     options: "Choices (one per line)",
@@ -384,7 +384,7 @@ const messages = {
     formatColorHelp: "Chaque entrée de ce format de données aura ce fond très clair.",
     editFormat: "Modifier le format de données",
     formatImpact: "Entrées utilisant ce format de données",
-    formatSafeEdit: "Vous pouvez renommer, réorganiser ou ajouter des champs. Les champs déjà renseignés gardent leur type, unité et choix.",
+    formatSafeEdit: "Vous pouvez renommer, réorganiser ou ajouter des champs, et ajouter des choix. Les champs déjà renseignés gardent leur type et leur unité, et les choix utilisés par des entrées restent.",
     formatConflict: "Ce format de données a changé. Actualisez et réessayez.",
     formatProtected: "Un champ déjà renseigné ne peut être supprimé ni changer de type, d’unité ou de choix.",
     options: "Choix (un par ligne)",
@@ -707,6 +707,11 @@ export function translateError(error: unknown, language: Language): string {
   if (message.includes("can only have one entry")) return language === "fr" ? "Ce format de données n’accepte qu’une seule entrée. Modifiez celle qui existe." : "This data format accepts a single entry. Edit the existing one.";
   if (message.includes("can only be placed under")) return language === "fr" ? `Cette partie se place seulement sous : ${message.split(": ").pop()}.` : message;
   if (message.includes("already has several entries")) return language === "fr" ? "Ce format de données a déjà plusieurs entrées. N’en gardez qu’une avant d’activer cette règle." : message;
+  // The API names the field (and the choice): say exactly what blocks the change.
+  const usedChoice = /^Field (.+) has saved values using the choice (.+)\. Keep that choice/.exec(message);
+  if (usedChoice) return language === "fr" ? `Le champ « ${usedChoice[1]} » a des entrées qui utilisent le choix ${usedChoice[2].replace(/"([^"]*)"/g, "« $1 »")}. Gardez ce choix (vous pouvez en ajouter d’autres), ou modifiez d’abord ces entrées.` : `Field “${usedChoice[1]}” has entries that use the choice ${usedChoice[2].replace(/"([^"]*)"/g, "“$1”")}. Keep that choice (you can add others), or change those entries first.`;
+  const savedField = /^Field (.+) has saved values\./.exec(message);
+  if (savedField) return language === "fr" ? `Le champ « ${savedField[1]} » contient des valeurs enregistrées : son type et son unité ne peuvent pas changer et il ne peut pas être supprimé.` : `Field “${savedField[1]}” has saved values: its type and unit cannot change and it cannot be removed.`;
   if (message.includes("has saved values")) return t(language, "formatProtected");
   if (message.includes("Choice fields need")) return t(language, "choicesRule");
   if (message.includes("needs a duration")) return t(language, "invalidDuration");
