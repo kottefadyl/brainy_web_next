@@ -4,6 +4,7 @@ import { formatColorStyle } from "../lib/format-colors";
 import { formatDisplayName, formatFieldValue, formatForEntry, t, valuesByField, type Collection, type Entry, type Language } from "../lib/brainy";
 import { previewableUrl } from "../lib/link-preview";
 import LinkPreviewCard from "./link-preview-card";
+import { Avatar } from "./entry-authors";
 
 type Field = Collection["formats"][number]["fields"][number];
 
@@ -29,9 +30,14 @@ export default function EntryDetailsContent({ entry, collection, language, rende
   return <div className="entry-detail">
     <div className="entry-detail-meta">
       <span className="entry-detail-format" style={formatColorStyle(format.color)}>{formatDisplayName(format, language)}</span>
-      <span><CalendarDays size={14} aria-hidden="true" />{t(language, "created")} {date(entry.createdAt)}</span>
-      {edited && <span><Pencil size={14} aria-hidden="true" />{t(language, "edited")} {date(entry.updatedAt)}</span>}
+      {!entry.createdBy && <span><CalendarDays size={14} aria-hidden="true" />{t(language, "created")} {date(entry.createdAt)}</span>}
+      {!entry.createdBy && edited && <span><Pencil size={14} aria-hidden="true" />{t(language, "edited")} {date(entry.updatedAt)}</span>}
     </div>
+    {/* Who created the entry and, once it was changed, who changed it last, in every collection. */}
+    {entry.createdBy && <dl className="entry-detail-people">
+      <div><dt><CalendarDays size={14} aria-hidden="true" />{language === "fr" ? "Créée par" : "Created by"}</dt><dd><Avatar person={entry.createdBy} /><strong>{entry.createdBy.name}</strong><span>{date(entry.createdAt)}</span></dd></div>
+      {edited && entry.updatedBy && <div><dt><Pencil size={14} aria-hidden="true" />{language === "fr" ? "Dernière modification par" : "Last modified by"}</dt><dd><Avatar person={entry.updatedBy} /><strong>{entry.updatedBy.name}</strong><span>{date(entry.updatedAt)}</span></dd></div>}
+    </dl>}
     <dl className="entry-detail-fields">{fields.map((field) => <div key={field.id}>
       <dt>{field.name}</dt>
       <dd>{field.kind === "OBJECT_REF" ? renderReference(field) : field.kind === "LINK" ? renderLink(values[field.id]) : field.kind === "ATTACHMENT" ? <button type="button" className="attachment-download" onClick={() => onDownload(field)}>{values[field.id]}</button> : formatFieldValue(field, values[field.id], language, entry.values.find((item) => item.fieldId === field.id)?.unitSnapshot, collection)}</dd>
