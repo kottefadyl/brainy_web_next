@@ -543,6 +543,10 @@ export const api = {
       { collectionId, email, role, sharedFieldIds, sensitiveFieldIds },
     )).addCollectionMember;
   },
+  /** Checks or unchecks one yes/no field of an entry from the entry list. */
+  async setEntryCheckbox(entryId: string, fieldId: string, checked: boolean, expectedUpdatedAt?: string): Promise<Entry> {
+    return (await request<{ setEntryCheckbox: Entry }>(`mutation($entryId:String!,$fieldId:String!,$checked:Boolean!,$expectedUpdatedAt:String){setEntryCheckbox(entryId:$entryId,fieldId:$fieldId,checked:$checked,expectedUpdatedAt:$expectedUpdatedAt){ ${entryFields} }}`, { entryId, fieldId, checked, expectedUpdatedAt })).setEntryCheckbox;
+  },
   /** T52: share a collection with a collaborator (read only or read and write). */
   async shareWithCollaborator(collectionId: string, memberUserId: string, role: CollectionRole, sharedFieldIds?: string[], sensitiveFieldIds?: string[]): Promise<Collection> {
     return (await request<{ addCollectionMember: Collection }>(

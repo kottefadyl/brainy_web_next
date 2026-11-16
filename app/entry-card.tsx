@@ -8,6 +8,7 @@ import { previewableUrl } from "../lib/link-preview";
 import { EntryAuthors } from "./entry-authors";
 import "./entry-item.css";
 import { listFields } from "./format-entry-rules-inputs";
+import EntryCheckboxFact from "./entry-checkbox-fact";
 
 function dateTime(value: string, language: Language): string {
   return new Intl.DateTimeFormat(language, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
@@ -28,11 +29,13 @@ const FACTS_SHOWN = 3;
  * One entry in the list: a title, a few labelled values, the data format and the dates. A double-click
  * anywhere on the row (or the title, or Details) opens the details; the ⋯ menu holds the other actions.
  */
-export default function EntryCard({ entry, collection, language, selected, onDetails, onEdit, onDelete, onCopy, onReminder, onLinks }: { entry: Entry; collection: Collection; language: Language; selected?: boolean; onDetails: () => void; onEdit: () => void; onDelete: () => void; onCopy: () => void; onReminder?: () => void; onLinks?: () => void }) {
+export default function EntryCard({ entry, collection, language, selected, onDetails, onEdit, onDelete, onCopy, onReminder, onLinks, canWrite = false, onSaved, onError }: { entry: Entry; collection: Collection; language: Language; selected?: boolean; onDetails: () => void; onEdit: () => void; onDelete: () => void; onCopy: () => void; onReminder?: () => void; onLinks?: () => void; canWrite?: boolean; onSaved?: (entry: Entry) => void; onError?: (error: unknown) => void }) {
   const fr = language === "fr";
   const format = formatForEntry(collection, entry);
   const values = valuesByField(entry);
-  const visible = format.fields.filter((field) => values[field.id]?.trim());
+  // A yes/no field chosen for the list shows its checkbox even before it was ever ticked.
+  const chosenIds = new Set((listFields(format.fields) ?? []).map((field) => field.id));
+  const visible = format.fields.filter((field) => values[field.id]?.trim() || (field.kind === "BOOLEAN" && chosenIds.has(field.id)));
   const titleField = visible.find((field) => field.kind === "TITLE");
   const readable = visible.filter((field) => field.kind !== "OBJECT_REF");
   const display = (field: (typeof readable)[number]) => formatFieldValue(field, values[field.id], language, entry.values.find((item) => item.fieldId === field.id)?.unitSnapshot, collection);
@@ -46,11 +49,12 @@ export default function EntryCard({ entry, collection, language, selected, onDet
   // The fields chosen for the list in the data format (3 at most), otherwise the first filled ones.
   const chosen = listFields(format.fields);
   const factFields = (chosen ? readable.filter((field) => chosen.some((item) => item.id === field.id)) : readable).filter((field) => field.id !== headingField?.id && field.id !== linkField?.id);
-  const facts = factFields.slice(0, linkUrl ? 1 : FACTS_SHOWN).map((field) => ({ id: field.id, label: field.name, value: display(field) }));
+  const facts = factFields.slice(0, linkUrl ? 1 : FACTS_SHOWN).map((field) => ({ id: field.id, label: field.name, value: display(field), checkbox: field.kind === "BOOLEAN" }));
+  const writable = canWrite && !format.appendOnly && !entry.ledgerHash && !entry.offlinePending;
   const hiddenCount = factFields.length - facts.length;
   const edited = Math.abs(new Date(entry.updatedAt).getTime() - new Date(entry.createdAt).getTime()) > 2000;
   const openOnDoubleClick = (event: MouseEvent<HTMLElement>) => {
-    if ((event.target as HTMLElement).closest("button, a, summary, input, select, textarea, details")) return;
+    if ((event.target as HTMLElement).closest("button, a, summary, input, label, select, textarea, details")) return;
     window.getSelection()?.removeAllRanges();
     onDetails();
   };
@@ -70,7 +74,9 @@ export default function EntryCard({ entry, collection, language, selected, onDet
           {linkUrl && <LinkPreviewCard url={linkUrl} language={language} compact />}
           {facts.length > 0 && (
             <dl className="entry-item-facts">
-              {facts.map((fact) => <div key={fact.id}><dt>{fact.label}</dt><dd title={fact.value}>{fact.value}</dd></div>)}
+              {facts.map((fact) => fact.checkbox
+                ? <EntryCheckboxFact key={fact.id} entry={entry} fieldId={fact.id} label={fact.label} language={language} canWrite={writable} onSaved={onSaved} onError={onError} />
+                : <div key={fact.id}><dt>{fact.label}</dt><dd title={fact.value}>{fact.value}</dd></div>)}
               {hiddenCount > 0 && <div className="entry-item-more"><dd>+{hiddenCount}</dd></div>}
             </dl>
           )}

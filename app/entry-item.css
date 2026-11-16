@@ -90,3 +90,11 @@ html[data-theme] .app-shell .entry-action-menu[popover] {
   position: fixed; inset: auto; margin: 0;
   max-width: min(300px, calc(100vw - 16px)); max-height: calc(100dvh - 12px); overflow-y: auto; color: var(--ink);
 }
+
+/* A yes/no field: a real checkbox that changes the entry in one click. */
+.entry-item-facts .entry-item-check { align-items: center; }
+.entry-item-check label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; min-height: 20px; }
+.entry-item-check input { width: 18px; height: 18px; margin: 0; accent-color: var(--c-accent, #2563EB); cursor: pointer; }
+.entry-item-check input:disabled { cursor: default; }
+.entry-item-check input:disabled + span { opacity: .8; }
+.entry-item-check input:focus-visible { outline: 2px solid var(--c-focus, var(--c-accent)); outline-offset: 2px; }
