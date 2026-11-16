@@ -1,8 +1,9 @@
 // T49: Task list planner (Day and Calendar views). Dates are local days (YYYY-MM-DD).
-import { entryFields, request } from "./api";
+import { collectionFields, entryFields, request } from "./api";
+import type { Collection } from "./brainy";
 import type { Entry, Language } from "./brainy";
 
-export type TaskPlanner = { formatId: string; doneFieldId: string; startFieldId: string; endFieldId: string; repeatFieldId: string; intervalFieldId: string; weekdaysFieldId: string; completedFieldId?: string | null };
+export type TaskPlanner = { formatId: string; doneFieldId: string; startFieldId: string; endFieldId: string; repeatFieldId: string; intervalFieldId: string; weekdaysFieldId: string; completedFieldId?: string | null; estimateFieldId?: string | null; spentFieldId?: string | null };
 export type TaskOccurrence = { entryId: string; date: string; done: boolean; overdue: boolean; repeating: boolean };
 export type TaskAgenda = { occurrences: TaskOccurrence[]; entries: Entry[] };
 
@@ -11,6 +12,10 @@ export const localTimeZone = () => Intl.DateTimeFormat().resolvedOptions().timeZ
 export const taskPlannerApi = {
   async agenda(collectionId: string, from: string, to: string, today: string): Promise<TaskAgenda> {
     return (await request<{ taskAgenda: TaskAgenda }>(`query($id:String!,$from:String!,$to:String!,$today:String!,$tz:String!){taskAgenda(collectionId:$id,from:$from,to:$to,today:$today,timeZone:$tz){occurrences{entryId date done overdue repeating} entries{${entryFields} taskCompletions}}}`, { id: collectionId, from, to, today, tz: localTimeZone() })).taskAgenda;
+  },
+  /** Adds "Estimated duration" and "Time spent" to a task list made before they existed. */
+  async addDurationFields(collectionId: string, language: Language): Promise<Collection> {
+    return (await request<{ addTaskDurationFields: Collection }>(`mutation($id:String!,$language:String){addTaskDurationFields(collectionId:$id,language:$language){ ${collectionFields} }}`, { id: collectionId, language })).addTaskDurationFields;
   },
   async setDone(collectionId: string, entryId: string, date: string, done: boolean): Promise<void> {
     await request("mutation($id:String!,$entry:String!,$date:String!,$done:Boolean!,$tz:String!){setTaskDayDone(collectionId:$id,entryId:$entry,date:$date,done:$done,timeZone:$tz){id}}", { id: collectionId, entry: entryId, date, done, tz: localTimeZone() });

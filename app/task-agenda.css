@@ -64,3 +64,22 @@ html[data-theme="dark"] .task-info { color: var(--muted); }
   .task-nav .task-new { margin-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .task-skeleton span { animation: none; } .task-progress-bar span { transition: none; } }
+
+/* Durations: planned time and time spent, per task and per day. */
+.task-day-time { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; color: var(--muted); font-size: 14px; }
+.task-day-time svg { color: var(--c-accent, var(--primary)); }
+.task-day-time strong { color: var(--c-ink, var(--ink)); font-weight: 650; font-variant-numeric: tabular-nums; }
+.task-time { display: inline-flex; align-items: center; gap: 5px; padding: 1px 8px; border-radius: 999px; background: color-mix(in srgb, var(--c-accent, #2563EB) 12%, transparent); color: var(--c-ink, var(--ink)); font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.task-time svg { color: var(--c-accent, #2563EB); }
+.task-time-bar { width: 42px; height: 5px; border-radius: 999px; background: color-mix(in srgb, var(--c-ink, #000) 14%, transparent); overflow: hidden; }
+.task-time-bar span { display: block; height: 100%; border-radius: inherit; background: var(--success, #16A34A); }
+.task-time.is-over { background: color-mix(in srgb, #F59E0B 20%, transparent); }
+.task-time.is-over svg { color: #B45309; }
+.task-time.is-over .task-time-bar span { background: #F59E0B; }
+html[data-theme="dark"] .task-time.is-over svg { color: #FCD34D; }
+.task-item.is-done .task-time { opacity: .75; }
+.task-cell-time { display: block; font-size: 11.5px; font-weight: 600; color: var(--c-accent, var(--primary)); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.task-durations-offer { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 14px; border: 1px dashed var(--c-line, var(--line)); border-radius: 12px; color: var(--muted); }
+.task-durations-offer svg { color: var(--c-accent, var(--primary)); flex: none; }
+.task-durations-offer p { margin: 0; flex: 1 1 260px; line-height: 1.5; }
+.task-durations-offer .form-error { flex-basis: 100%; }

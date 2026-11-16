@@ -1,3 +1,4 @@
+import { displayDuration, parseDuration } from "./duration";
 // Spreadsheet mode (T46): pure helpers shared by the editable table. They apply the same
 // rules as the entry editor, so a cell can never store what the full form would refuse.
 import type { CollectionFormat, Entry, Field, FieldKind, Language, MessageKey } from "./brainy";
@@ -30,6 +31,7 @@ const pad = (value: number) => String(value).padStart(2, "0");
 export function toEditable(field: Field, stored: string, language: Language): string {
   if (!stored) return "";
   if (field.kind === "NUMBER") return language === "fr" ? stored.replace(".", ",") : stored;
+  if (field.kind === "DURATION") return displayDuration(stored, field.unit, language);
   if (field.kind === "DATETIME") {
     const date = new Date(stored);
     if (Number.isNaN(date.getTime())) return stored;
@@ -57,7 +59,7 @@ export function toStored(field: Field, raw: string): StoredResult {
       const date = new Date(value);
       return Number.isNaN(date.getTime()) ? { ok: false, error: "invalidDateTime" } : { ok: true, value: date.toISOString() };
     }
-    case "DURATION": return /^\d{1,6}:[0-5]\d$/.test(value) ? { ok: true, value } : { ok: false, error: "invalidDuration" };
+    case "DURATION": return parseDuration(value, field.unit) !== null ? { ok: true, value } : { ok: false, error: "invalidDuration" };
     case "CHARACTER": return [...value].length === 1 ? { ok: true, value } : { ok: false, error: "oneCharacter" };
     case "LINK":
       try { const url = new URL(value); return ["http:", "https:"].includes(url.protocol) ? { ok: true, value } : { ok: false, error: "invalidLink" }; }

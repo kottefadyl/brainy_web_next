@@ -1,3 +1,4 @@
+import { displayDuration } from "./duration";
 import { entryAttachmentLimit } from "./platform";
 import type { BookViewSettings } from "./book";
 import type { TaskPlanner } from "./task-planner";
@@ -146,7 +147,7 @@ const messages = {
     yes: "Yes",
     no: "No",
     selectChoices: "Select choices",
-    invalidDuration: "Enter a duration as hours:minutes, for example 1:30.",
+    invalidDuration: "Enter a duration such as 45, 1:30, 2 h 30 or 1 d 4 h (months are not accepted: their length varies).",
     invalidDateTime: "Choose a date and time.",
     attachment: "Attachment",
     objectReference: "Object reference",
@@ -393,7 +394,7 @@ const messages = {
     yes: "Oui",
     no: "Non",
     selectChoices: "Choisissez des options",
-    invalidDuration: "Saisissez une durée en heures:minutes, par exemple 1:30.",
+    invalidDuration: "Saisissez une durée comme 45, 1:30, 2 h 30 ou 1 j 4 h (les mois ne sont pas acceptés : leur longueur varie).",
     invalidDateTime: "Choisissez une date et une heure.",
     attachment: "Pièce jointe",
     objectReference: "Référence d’objet",
@@ -642,6 +643,7 @@ export function formatFieldValue(field: Field, value: string, language: Language
     }
     return formatNumber(value, field.unit, language);
   }
+  if (field.kind === "DURATION") return displayDuration(value, field.unit, language);
   if (field.kind === "BOOLEAN") return t(language, value === "true" ? "yes" : "no");
   if (field.kind === "MULTI_SELECT") { try { return (JSON.parse(value) as string[]).join(", "); } catch { return value; } }
   if (field.kind === "OBJECT_REF") { try { const ids = JSON.parse(value) as string[]; return `${ids.length} ${language === "fr" ? "objet(s)" : "object(s)"}`; } catch { return value; } }

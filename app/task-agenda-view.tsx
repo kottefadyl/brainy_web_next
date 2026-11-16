@@ -10,14 +10,16 @@ import { todayLocalIso } from "../lib/date-input";
 import { Button } from "./components/ui/Button";
 import "./task-agenda.css";
 import { EntryAuthors } from "./entry-authors";
+import { AddTaskDurations, DayTime, TaskTime, taskDurations } from "./task-durations";
+import { formatDuration } from "../lib/duration";
 
 const capital = (text: string) => text.charAt(0).toLocaleUpperCase() + text.slice(1);
 const dayLabel = (...args: Parameters<typeof rawDayLabel>) => capital(rawDayLabel(...args));
 const monthLabel = (...args: Parameters<typeof rawMonthLabel>) => capital(rawMonthLabel(...args));
 
-type Props = { collection: Collection; mode: "TASK_DAY" | "TASK_CALENDAR"; language: Language; changeSignal: unknown; onEdit: (entry: Entry) => void; onNewTask: () => void };
+type Props = { collection: Collection; mode: "TASK_DAY" | "TASK_CALENDAR"; language: Language; changeSignal: unknown; onEdit: (entry: Entry) => void; onNewTask: () => void; onCollectionChanged?: (collection: Collection) => void };
 
-export default function TaskAgendaView({ collection, mode, language, changeSignal, onEdit, onNewTask }: Props) {
+export default function TaskAgendaView({ collection, mode, language, changeSignal, onEdit, onNewTask, onCollectionChanged }: Props) {
   const fr = language === "fr";
   const today = todayLocalIso();
   const [day, setDay] = useState(today);
@@ -49,6 +51,13 @@ export default function TaskAgendaView({ collection, mode, language, changeSigna
   const planner = collection.taskPlanner!;
   const format = collection.formats.find((item) => item.id === planner.formatId);
   const entryById = new Map((agenda?.entries ?? []).map((entry) => [entry.id, entry]));
+  const durations = taskDurations(collection);
+  // Time of a day: estimates of its tasks (all, then those not done yet) and time spent on them.
+  const dayTime = (items: TaskOccurrence[]) => items.reduce((total, item) => {
+    const entry = entryById.get(item.entryId);
+    const estimate = durations.estimate(entry) ?? 0;
+    return { planned: total.planned + estimate, remaining: total.remaining + (item.done ? 0 : estimate), spent: total.spent + (item.repeating ? 0 : durations.spent(entry) ?? 0) };
+  }, { planned: 0, remaining: 0, spent: 0 });
   const value = (entry: Entry | undefined, fieldId: string) => entry?.values.find((item) => item.fieldId === fieldId)?.value ?? "";
   const title = (entry: Entry | undefined) => value(entry, format?.fields.find((field) => field.kind === "TITLE")?.id ?? "") || (fr ? "Tâche sans titre" : "Untitled task");
   const detail = (item: TaskOccurrence, entry: Entry | undefined) => {
@@ -68,6 +77,7 @@ export default function TaskAgendaView({ collection, mode, language, changeSigna
     ];
     const done = items.filter((item) => item.done).length;
     return <section className="task-day" aria-label={dayLabel(date, language)}>
+      {items.length > 0 && <DayTime {...dayTime(items)} language={language} />}
       {items.length > 0 && <div className="task-progress" role="status"><span>{fr ? `Faites : ${done} sur ${items.length}` : `Done: ${done} of ${items.length}`}</span><span className="task-progress-bar"><span style={{ width: `${Math.round(done / items.length * 100)}%` }} /></span></div>}
       {!items.length && <div className="task-empty"><CalendarDays size={28} aria-hidden="true" /><p>{fr ? "Rien de prévu ce jour." : "Nothing planned this day."}</p><Button onClick={onNewTask}><Plus size={16} />{fr ? "Nouvelle tâche" : "New task"}</Button></div>}
       {groups.filter(([, list]) => list.length).map(([label, list]) => <div key={label} className="task-group">
@@ -77,7 +87,7 @@ export default function TaskAgendaView({ collection, mode, language, changeSigna
           const name = title(entry);
           const info = detail(item, entry);
           return <li key={`${item.entryId}-${item.date}`} className={`task-item ${item.done ? "is-done" : ""} ${item.overdue ? "is-overdue" : ""}`} style={formatColorStyle(format?.color ?? "#FFF5EB")}>
-            {entry && <EntryAuthors entry={entry} collection={collection} language={language} compact />}<label className="task-check"><input type="checkbox" checked={item.done} disabled={busy === `${item.entryId}-${item.date}`} onChange={() => void toggle(item)} /><span className="task-text"><span className="task-name">{name}</span>{info && <span className="task-info">{item.repeating && <Repeat size={13} aria-hidden="true" />}{info}</span>}</span></label>
+            {entry && <EntryAuthors entry={entry} collection={collection} language={language} compact />}<label className="task-check"><input type="checkbox" checked={item.done} disabled={busy === `${item.entryId}-${item.date}`} onChange={() => void toggle(item)} /><span className="task-text"><span className="task-name">{name}</span>{info && <span className="task-info">{item.repeating && <Repeat size={13} aria-hidden="true" />}{info}</span>}<TaskTime estimate={durations.estimate(entry)} spent={item.repeating ? null : durations.spent(entry)} language={language} /></span></label>
             {entry && <button type="button" className="task-edit" onClick={() => onEdit(entry)} aria-label={`${fr ? "Modifier" : "Edit"} : ${name}`}><PenLine size={16} /></button>}
           </li>;
         })}</ul>
@@ -104,6 +114,7 @@ export default function TaskAgendaView({ collection, mode, language, changeSigna
 
   return <div className="task-agenda">
     {header}
+    <AddTaskDurations collection={collection} language={language} onCollectionChanged={onCollectionChanged} />
     {error && <p className="form-error" role="alert">{error} <button type="button" onClick={() => { setError(""); void fetchAgenda().then(setAgenda).catch(() => undefined); }}>{fr ? "Réessayer" : "Retry"}</button></p>}
     {!agenda && !error && <div className="task-skeleton" aria-busy="true"><span /><span /><span /></div>}
     {agenda && mode === "TASK_DAY" && dayList(day)}
@@ -118,6 +129,7 @@ export default function TaskAgendaView({ collection, mode, language, changeSigna
           return <button key={date} type="button" role="gridcell" aria-selected={date === day} className={`task-cell ${outside ? "is-outside" : ""} ${date === today ? "is-today" : ""} ${date === day ? "is-selected" : ""}`} onClick={() => setDay(date)}
             aria-label={`${dayLabel(date, language)} : ${items.length ? (fr ? `${done} sur ${items.length} faites` : `${done} of ${items.length} done`) : (fr ? "aucune tâche" : "no task")}`}>
             <span className="task-cell-day">{Number(date.slice(8, 10))}</span>
+            {dayTime(items).planned > 0 && <span className="task-cell-time" title={fr ? "Temps prévu" : "Planned time"}>{formatDuration(dayTime(items).planned, language, true)}</span>}
             {items.length > 0 && <span className={`task-cell-count ${done === items.length ? "is-complete" : items.some((item) => item.overdue) ? "is-late" : ""}`}>{done}/{items.length}</span>}
             <span className="task-cell-items">{items.slice(0, 3).map((item) => <span key={item.entryId} className={item.done ? "is-done" : ""}>{title(entryById.get(item.entryId))}</span>)}{items.length > 3 && <span className="task-cell-more">+{items.length - 3}</span>}</span>
           </button>;
