@@ -77,6 +77,8 @@ html[data-theme] .app-shell .entry-row.entry-item .entry-details-action span { d
   .entry-item-date, .entry-item-edited { white-space: nowrap; }
   html[data-theme] .app-shell .entry-row.entry-item { overflow: hidden; }
   .entry-item-facts dd { max-width: 16ch; }
+  /* In this column layout a 0 basis would squash the values line to nothing: keep its own 20 px. */
+  .entry-item-facts { flex: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -91,10 +93,20 @@ html[data-theme] .app-shell .entry-action-menu[popover] {
   max-width: min(300px, calc(100vw - 16px)); max-height: calc(100dvh - 12px); overflow-y: auto; color: var(--ink);
 }
 
-/* A yes/no field: a real checkbox that changes the entry in one click. */
-.entry-item-facts .entry-item-check { align-items: center; }
-.entry-item-check label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; min-height: 20px; }
-.entry-item-check input { width: 18px; height: 18px; margin: 0; accent-color: var(--c-accent, #2563EB); cursor: pointer; }
-.entry-item-check input:disabled { cursor: default; }
-.entry-item-check input:disabled + span { opacity: .8; }
-.entry-item-check input:focus-visible { outline: 2px solid var(--c-focus, var(--c-accent)); outline-offset: 2px; }
+/* A yes/no field: a real checkbox that changes the entry in one click. It keeps the 20 px line of the
+   values: the general rule giving checkbox labels a 44 px height would push it out of the clipped line. */
+.entry-item-facts > .entry-item-check { align-items: center; flex: none; }
+.entry-item-facts > .entry-item-check dd { display: flex; align-items: center; overflow: visible; max-width: none; }
+html[data-theme] .app-shell .entry-item-check label { display: inline-flex; align-items: center; gap: 6px; min-height: 0; height: 20px; margin: 0; padding: 0; cursor: pointer; color: var(--c-ink); font-size: 13px; line-height: 20px; white-space: nowrap; }
+html[data-theme] .app-shell .entry-item-check input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none; flex: none; display: inline-grid; place-items: center;
+  width: 16px; height: 16px; min-width: 0; min-height: 0; margin: 0; padding: 0;
+  border: 1.5px solid var(--control-border, var(--c-muted)); border-radius: 4px; background: var(--c-surface); cursor: pointer;
+}
+html[data-theme] .app-shell .entry-item-check input[type="checkbox"]:checked { border-color: var(--primary, #2563EB); background: var(--primary, #2563EB); }
+html[data-theme] .app-shell .entry-item-check input[type="checkbox"]:checked::after {
+  content: ""; width: 4px; height: 8px; margin-top: -2px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
+}
+html[data-theme] .app-shell .entry-item-check input[type="checkbox"]:hover:not(:disabled) { border-color: var(--primary, #2563EB); }
+html[data-theme] .app-shell .entry-item-check input[type="checkbox"]:disabled { cursor: default; opacity: .65; }
+html[data-theme] .app-shell .entry-item-check input[type="checkbox"]:focus-visible { outline: 2px solid var(--c-focus, var(--c-accent)) !important; outline-offset: 2px !important; }
