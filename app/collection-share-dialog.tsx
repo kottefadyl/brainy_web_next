@@ -9,12 +9,15 @@ import { collaboratorsApi, type Collaborator } from "../lib/collaborators";
 import { Button } from "./components/ui/Button";
 import Modal from "./components/ui/Modal";
 import { CollaboratorSearch, filterCollaborators, MAX_SHOWN_COLLABORATORS } from "./collaborator-search";
+import CollectionMembersPanel from "./collection-members-panel";
+import { Tabs } from "./components/ui/Tabs";
 import "./collaborators.css";
 
 type Access = "NONE" | "READER" | "EDITOR";
-type Props = { collection: Collection; language: Language; onClose: () => void; onChanged: (collection: Collection) => void; onOpenCollaborators: () => void };
+type Tab = "people" | "add";
+type Props = { collection: Collection; language: Language; onClose: () => void; onChanged: (collection: Collection) => void; onOpenCollaborators: () => void; initialTab?: Tab };
 
-export default function CollectionShareDialog({ collection, language, onClose, onChanged, onOpenCollaborators }: Props) {
+export default function CollectionShareDialog({ collection, language, onClose, onChanged, onOpenCollaborators, initialTab }: Props) {
   const fr = language === "fr";
   const L = (en: string, frText: string) => fr ? frText : en;
   const [people, setPeople] = useState<Collaborator[] | null>(null);
@@ -23,6 +26,10 @@ export default function CollectionShareDialog({ collection, language, onClose, o
   const [error, setError] = useState("");
   const [saved, setSaved] = useState("");
   const [query, setQuery] = useState("");
+  // Opens on the people who already have access once the collection is shared.
+  const [tab, setTab] = useState<Tab>(initialTab ?? ((collection.memberCount ?? collection.members?.length ?? 0) > 0 ? "people" : "add"));
+  const memberCount = current.memberCount ?? current.members?.length ?? 0;
+  const update = (updated: Collection) => { setCurrent(updated); onChanged(updated); };
   // People who already have access come first, in the order of the opening (rows never jump when access changes).
   const [firstMembers] = useState(() => new Set((collection.members ?? []).map((member) => member.userId)));
 
@@ -36,7 +43,7 @@ export default function CollectionShareDialog({ collection, language, onClose, o
       const updated = access === "NONE"
         ? await api.removeCollectionMember(current.id, person.userId)
         : await api.shareWithCollaborator(current.id, person.userId, access as CollectionRole, member?.sharedFieldIds ?? undefined, member?.sensitiveFieldIds ?? undefined);
-      setCurrent(updated); onChanged(updated);
+      update(updated);
       setSaved(person.userId);
     } catch (cause) { setError(translateError(cause, language)); } finally { setSavingId(""); }
   }
@@ -48,6 +55,9 @@ export default function CollectionShareDialog({ collection, language, onClose, o
   ];
   return <Modal title={L(`Share “${collection.name}”`, `Partager « ${collection.name} »`)} closeLabel={L("Close", "Fermer")} onClose={onClose}>
     <div className="collab-share">
+      <Tabs label={L("Sharing", "Partage")} idPrefix="collab-share" value={tab} onChange={(id) => setTab(id as Tab)} items={[{ id: "people", label: L(`People with access (${memberCount})`, `Personnes ayant accès (${memberCount})`) }, { id: "add", label: L("Add people", "Ajouter des personnes") }]} />
+      {tab === "people" && <div role="tabpanel" id="collab-share-people" aria-labelledby="collab-share-tab-people"><CollectionMembersPanel collection={current} language={language} onChanged={update} onAddPeople={() => setTab("add")} /></div>}
+      {tab === "add" && <div role="tabpanel" id="collab-share-add" aria-labelledby="collab-share-tab-add" className="collab-share">
       <p className="collab-help"><ShieldCheck size={16} aria-hidden="true" />{L("Read only: they see the entries. Read and write: they can also add, edit and delete entries. Data formats, the collection name and sharing stay yours.", "Lecture seule : la personne voit les entrées. Lecture et écriture : elle peut aussi ajouter, modifier et supprimer des entrées. Les formats de données, le nom de la collection et le partage restent à vous.")}</p>
       {error && <p className="form-error" role="alert">{error}</p>}
       {people === null && !error && <p className="collab-help" role="status">{L("Loading…", "Chargement…")}</p>}
@@ -65,6 +75,7 @@ export default function CollectionShareDialog({ collection, language, onClose, o
         </li>)}
       </ul>}
       {!!people?.length && <button type="button" className="collab-text-button" onClick={onOpenCollaborators}><Users size={15} aria-hidden="true" />{L("Manage my collaborators", "Gérer mes collaborateurs")}</button>}
+      </div>}
     </div>
   </Modal>;
 }

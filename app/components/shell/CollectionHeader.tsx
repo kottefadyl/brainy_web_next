@@ -1,4 +1,4 @@
-import { FileText, FolderHeart, FolderInput } from "lucide-react";
+import { FileText, FolderHeart, FolderInput, Users } from "lucide-react";
 import { t, type Collection, type Language } from "../../../lib/brainy";
 import CollectionHeroActions from "../../collection-hero-actions";
 
@@ -18,10 +18,20 @@ export function CollectionHeader({ collection, entryCount, language, onNewEntry,
           <span className="collection-meta-separator" aria-hidden="true">·</span>
           <span>{collection.formats.length} {t(language, collection.formats.length === 1 ? "format" : "formats").toLocaleLowerCase(language)}</span>
         </div>
+        {owner && !!collection.memberCount && <SharedWith count={collection.memberCount} language={language} onOpen={onShare} />}
       </div>
     </div>
     <CollectionHeroActions language={language} onNewEntry={onNewEntry} onInsights={onInsights} onRename={onRename} onDelete={onDelete} onPackages={onPackages} onShare={onShare} owner={owner} />
   </section>;
+}
+
+/** Tells the owner that a collection is shared and opens the list of people with access. */
+function SharedWith({ count, language, onOpen }: { count: number; language: Language; onOpen?: () => void }) {
+  const fr = language === "fr";
+  const label = fr ? `Partagée avec ${count.toLocaleString("fr")} personne${count > 1 ? "s" : ""}` : `Shared with ${count.toLocaleString("en")} ${count > 1 ? "people" : "person"}`;
+  return onOpen
+    ? <button type="button" className="collection-shared-pill" onClick={onOpen} title={fr ? "Voir les personnes ayant accès" : "See who has access"}><Users size={15} aria-hidden="true" />{label}</button>
+    : <span className="collection-shared-pill"><Users size={15} aria-hidden="true" />{label}</span>;
 }
 
 /** T52: reminds a collaborator what they can do in a collection shared with them. */

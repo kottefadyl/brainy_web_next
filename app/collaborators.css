@@ -40,9 +40,23 @@ html[data-theme="dark"] .collab-help svg { color: #5EEAD4; }
 .collab-end { min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
 .collab-access select { min-height: 44px; min-width: 168px; margin: 0; }
 .collab-share { display: grid; gap: 14px; }
+/* People with access (paged on the server) */
+.collab-members { display: grid; gap: 10px; }
+.collab-avatar-wrap .author-avatar { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; overflow: hidden; background: var(--c-accent-soft); color: var(--c-accent); font-weight: 650; font-size: 1rem; }
+.collab-avatar-wrap .author-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.collab-member-actions { display: flex; align-items: center; gap: 6px; }
+.collab-remove { width: 44px; height: 44px; flex: none; display: grid; place-items: center; border: 1px solid var(--c-line); border-radius: 10px; background: var(--c-surface); color: var(--c-muted); cursor: pointer; }
+.collab-remove:hover:not(:disabled) { color: var(--danger-fill, #C9303C); border-color: currentColor; }
+.collab-remove:focus-visible, .collection-shared-pill:focus-visible { outline: 2px solid var(--c-focus, var(--c-accent)); outline-offset: 2px; }
+.collab-pager { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-top: 4px; font-size: .875rem; color: var(--c-muted); }
+.collab-pager .button { min-height: 44px; }
+.nav-item .nav-shared { flex: none; display: inline-grid; place-items: center; color: var(--c-accent); }
+.collection-shared-pill { margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border: 1px solid var(--c-line); border-radius: 999px; background: var(--c-accent-soft); color: var(--c-accent); font: inherit; font-size: .8125rem; font-weight: 600; cursor: pointer; }
+span.collection-shared-pill { cursor: default; }
 @media (max-width: 560px) {
   .collab-list > li { grid-template-columns: auto 1fr; }
-  .collab-list > li > .collab-access, .collab-list > li > .collab-end { grid-column: 1 / -1; justify-self: stretch; }
+  .collab-list > li > .collab-access, .collab-list > li > .collab-end, .collab-list > li > .collab-member-actions { grid-column: 1 / -1; justify-self: stretch; }
+  .collab-member-actions .collab-access { flex: 1; }
   .collab-access select { width: 100%; }
   .collab-hero { padding: 18px; flex-direction: column; }
 }
