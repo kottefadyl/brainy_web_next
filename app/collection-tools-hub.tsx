@@ -18,7 +18,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import type { Collection, Language, User } from "../lib/brainy";
-import { t } from "../lib/brainy";
+import { t, hasCalculations } from "../lib/brainy";
 import { isFrozen, usePlatform } from "../lib/platform";
 
 export default function CollectionToolsHub({
@@ -53,7 +53,9 @@ export default function CollectionToolsHub({
   const isOwner = collection.ownerId === user.id;
   const canSend = isOwner || collection.members?.some((member) => member.userId === user.id && member.role !== "READER");
   const fr = language === "fr";
-  const count = (isOwner ? 10 : 9) + (canSend ? 1 : 0);
+  // Without calculations, insights, stock and measures are never offered (simple collection).
+  const calc = hasCalculations(collection);
+  const count = (isOwner ? 10 : 9) + (canSend ? 1 : 0) - (calc ? 0 : 3);
 
   return (
     <section
@@ -74,9 +76,9 @@ export default function CollectionToolsHub({
           <span className="tools-toggle-text">
             <strong>{fr ? "Outils & options avancées" : "Advanced collection tools"}</strong>
             <small>
-              {fr
-                ? "Statistiques, stocks, cartes, nomenclatures, flux et registre"
-                : "Analytics, stocks, maps, code lists, workflows, and ledger"}
+              {calc
+                ? fr ? "Statistiques, stocks, cartes, nomenclatures, flux et registre" : "Analytics, stocks, maps, code lists, workflows, and ledger"
+                : fr ? "Cartes, nomenclatures, flux et registre" : "Maps, code lists, workflows, and ledger"}
             </small>
           </span>
         </span>
@@ -91,9 +93,10 @@ export default function CollectionToolsHub({
           {/* Groupe 1 : Analyse & Métier */}
           <div className="collection-tools-group">
             <h4 className="collection-tools-group-heading">
-              {fr ? "Analyse & Métier" : "Analytics & Operations"}
+              {calc ? (fr ? "Analyse & Métier" : "Analytics & Operations") : (fr ? "Lieux" : "Places")}
             </h4>
             <div className="collection-tools-group-grid">
+              {calc && <>
               <button
                 type="button"
                 className="collection-hub-card collection-hub-featured"
@@ -130,6 +133,8 @@ export default function CollectionToolsHub({
                 <ArrowRight className="collection-hub-arrow" size={17} />
               </button>
 
+              </>}
+
               <button
                 type="button"
                 className="collection-hub-card"
@@ -154,6 +159,7 @@ export default function CollectionToolsHub({
               {fr ? "Structure & Modèles" : "Structure & Models"}
             </h4>
             <div className="collection-tools-group-grid">
+              {calc && (
               <button
                 type="button"
                 className="collection-hub-card"
@@ -168,6 +174,7 @@ export default function CollectionToolsHub({
                 </span>
                 <ArrowRight className="collection-hub-arrow" size={17} />
               </button>
+              )}
 
               <button
                 type="button"

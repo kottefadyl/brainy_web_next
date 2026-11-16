@@ -1,10 +1,10 @@
 import { FileText, FolderHeart, FolderInput, Users } from "lucide-react";
-import { t, type Collection, type Language } from "../../../lib/brainy";
+import { hasCalculations, t, type Collection, type Language } from "../../../lib/brainy";
 import CollectionHeroActions from "../../collection-hero-actions";
 
-type Props = { collection: Collection; entryCount: number; language: Language; onNewEntry: () => void; onInsights: () => void; onRename: () => void; onDelete: () => void; onPackages?: () => void; onShare?: () => void; role?: "OWNER" | "EDITOR" | "READER" };
+type Props = { collection: Collection; entryCount: number; language: Language; onNewEntry: () => void; onInsights: () => void; onRename: () => void; onDelete: () => void; onPackages?: () => void; onShare?: () => void; role?: "OWNER" | "EDITOR" | "READER"; onCalculations?: (enabled: boolean) => void };
 
-export function CollectionHeader({ collection, entryCount, language, onNewEntry, onInsights, onRename, onDelete, onPackages, onShare, role = "OWNER" }: Props) {
+export function CollectionHeader({ collection, entryCount, language, onNewEntry, onInsights, onRename, onDelete, onPackages, onShare, role = "OWNER", onCalculations }: Props) {
   const fr = language === "fr";
   const owner = role === "OWNER";
   return <section className="collection-hero" aria-label={t(language, "collection")}>
@@ -21,7 +21,7 @@ export function CollectionHeader({ collection, entryCount, language, onNewEntry,
         {owner && !!collection.memberCount && <SharedWith count={collection.memberCount} language={language} onOpen={onShare} />}
       </div>
     </div>
-    <CollectionHeroActions language={language} onNewEntry={onNewEntry} onInsights={onInsights} onRename={onRename} onDelete={onDelete} onPackages={onPackages} onShare={onShare} owner={owner} />
+    <CollectionHeroActions language={language} onNewEntry={onNewEntry} onInsights={hasCalculations(collection) ? onInsights : undefined} onRename={onRename} onDelete={onDelete} onPackages={onPackages} onShare={onShare} owner={owner} calculations={hasCalculations(collection)} onCalculations={owner ? onCalculations : undefined} />
   </section>;
 }
 

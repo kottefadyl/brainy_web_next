@@ -1,0 +1,16 @@
+/* Calculations and statistics: chosen when a collection is created (also used in the manual creation form). */
+.calculations-choice { display: grid; grid-template-columns: auto auto 1fr; align-items: start; gap: 10px; padding: 12px 14px; border: 1px solid var(--c-line, var(--line)); border-radius: 12px; background: var(--c-surface, var(--surface)); cursor: pointer; }
+.calculations-choice input[type="checkbox"] { width: 20px; height: 20px; margin: 2px 0 0; cursor: pointer; }
+.calculations-choice-icon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; background: var(--c-accent-soft, #EAF1FF); color: var(--c-accent, var(--primary)); }
+.calculations-choice-text { display: grid; gap: 2px; min-width: 0; }
+.calculations-choice-text strong { font-size: 14px; }
+.calculations-choice-text small { color: var(--c-muted, var(--muted)); font-size: 13px; line-height: 1.45; }
+.calculations-choice:has(input:focus-visible) { outline: 2px solid var(--c-focus, var(--c-accent)); outline-offset: 2px; }
+/* The general rule for checkbox labels (44 px tall, stretched box) must not apply here. */
+html[data-theme] .calculations-choice { min-height: 0; align-items: start; }
+html[data-theme] .calculations-choice input[type="checkbox"] { width: 20px; height: 20px; min-width: 20px; min-height: 0; padding: 0; margin: 6px 0 0; align-self: start; }
+
+/* Manage menu: calculations shown as an on/off switch. */
+.collection-hero-menu-toggle { white-space: nowrap; }
+.menu-switch { margin-left: auto; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; background: var(--c-line, #E5E7EB); color: var(--c-muted, #6B7280); }
+.menu-switch.on { background: color-mix(in srgb, var(--success, #16A34A) 18%, transparent); color: var(--ink-green, #15803D); }

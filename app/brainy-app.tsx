@@ -35,6 +35,7 @@ import { MobileCollectionDrawer } from "./components/shell/MobileCollectionDrawe
 import { CollectionHeader, SharedCollectionBanner } from "./components/shell/CollectionHeader";
 import CollaboratorsPage from "./collaborators-page";
 import CollectionShareDialog from "./collection-share-dialog";
+import { CalculationsChoice } from "./calculations-choice";
 import { DurationFieldInput, DurationUnitSelect } from "./duration-field-input";
 import { durationUnitLabel, isDurationUnit, parseDuration } from "../lib/duration";
 import { PENDING_INVITE_KEY } from "../lib/collaborators";
@@ -78,6 +79,7 @@ import {
   t, translateError, unitCategories, unitLabel,
   type Collection, type CollectionUnit, type Entry, type EntryFilter, type EntryPage, type FieldKind, type Language, type SavedView, type EntryReminder, type User,
   fileTooLargeText,
+  hasCalculations,
 } from "../lib/brainy";
 import { currentPlatform, isFrozen, usePlatform } from "../lib/platform";
 
@@ -260,6 +262,8 @@ function CollectionEditor({ language, collection, editingFormat, onClose, onSave
   const [color, setColor] = useState("");
   const [fields, setFields] = useState<DraftField[]>(editingFormat ? editingFormat.fields.map((field, index) => ({ key: index + 1, id: field.id, name: field.name, kind: field.kind, unit: field.unit ?? "", optionsText: field.options?.join("\n") ?? "", codeListId: field.codeListId ?? "", custom: !!field.unit && !field.unit.startsWith("local:") && !numberUnits.some((unit) => unit.code === field.unit), targetObjectFormatId: field.targetObjectFormatId ?? "", multiple: field.multiple ?? false, variableName: field.variableName ?? "", referenceMode: field.referenceMode ?? "SNAPSHOT", required: field.required ?? false, showInList: field.showInList ?? false })) : [{ key: 1, name: t(language, "title"), kind: "TITLE", unit: "", optionsText: "" }]);
   const [objectModel, setObjectModel] = useState(editingFormat?.objectModel ?? false);
+  // A collection created by hand starts simple; the person can ask for calculations right away.
+  const [calculations, setCalculations] = useState(false);
   const savedLimit = editingFormat?.maxEntries ?? (editingFormat?.singleEntry ? 1 : null);
   const [maxEntriesText, setMaxEntriesText] = useState(savedLimit ? String(savedLimit) : "");
   const [nextKey, setNextKey] = useState((editingFormat?.fields.length ?? 1) + 1);
@@ -299,7 +303,7 @@ function CollectionEditor({ language, collection, editingFormat, onClose, onSave
     if (fields.some((field) => field.kind === "OBJECT_REF" && !field.targetObjectFormatId)) return setError(language === "fr" ? "Choisissez un modèle d’objets de cette collection." : "Choose an object model in this collection.");
     if (fields.some((field) => field.kind === "CODE" && !field.codeListId)) return setError(language === "fr" ? "Choisissez une liste de codes de cette collection." : "Choose a code list in this collection.");
     setBusy(true);
-    try { onSaved(editingFormat && collection ? await api.updateFormat(collection.id, editingFormat.id, formatName.trim(), editingFormat.version ?? 1, cleanFields).then((saved) => maxEntries === savedLimit || editingFormat.appendOnly ? saved : api.setFormatEntryRules(collection.id, editingFormat.id, maxEntries, editingFormat.parentFormatIds ?? [])) : collection ? await api.addFormat(collection.id, formatName.trim(), color, cleanFields, objectModel, maxEntries ?? undefined) : await api.createCollection(cleanName, cleanFields, formatName.trim(), color, objectModel, maxEntries ?? undefined)); }
+    try { onSaved(editingFormat && collection ? await api.updateFormat(collection.id, editingFormat.id, formatName.trim(), editingFormat.version ?? 1, cleanFields).then((saved) => maxEntries === savedLimit || editingFormat.appendOnly ? saved : api.setFormatEntryRules(collection.id, editingFormat.id, maxEntries, editingFormat.parentFormatIds ?? [])) : collection ? await api.addFormat(collection.id, formatName.trim(), color, cleanFields, objectModel, maxEntries ?? undefined) : await api.createCollection(cleanName, cleanFields, formatName.trim(), color, objectModel, maxEntries ?? undefined, calculations)); }
     catch (error) { setError(errorMessage(error, language)); }
     finally { setBusy(false); }
   }
@@ -313,6 +317,7 @@ function CollectionEditor({ language, collection, editingFormat, onClose, onSave
         <label className="input-label">{t(language, "formatName")}<input autoFocus={!!collection} value={formatName} onChange={(event) => setFormatName(event.target.value)} maxLength={80} required /></label>
         {!editingFormat && <FormatColorPicker language={language} value={color} unavailable={collection?.formats.map((format) => format.color) ?? []} onChange={setColor} help={t(language, "formatColorHelp")} />}
         {!editingFormat?.appendOnly && <MaxEntriesInput language={language} value={maxEntriesText} onChange={setMaxEntriesText} />}
+        {!collection && <CalculationsChoice checked={calculations} language={language} onChange={setCalculations} />}
         {!editingFormat && <label className="object-choice"><input type="checkbox" checked={objectModel} onChange={(event) => setObjectModel(event.target.checked)} />{language === "fr" ? "Utiliser ce format de données pour des objets" : "Use this data format for objects"}</label>}
         <div className="form-section-title"><div><h3>{t(language, "collectionFormat")}</h3><p>{t(language, "formatHelp")}</p></div><span className="count-chip">{fields.length} {t(language, fields.length === 1 ? "field" : "fields")}</span></div>
         <div className="field-list">
@@ -1249,11 +1254,11 @@ export default function BrainyApp() {
           {activeSection === "collection" && !selected && <div className="workspace-greeting"><span className="eyebrow blue"><Sparkles size={15} /> {t(language, "workspace")}</span><h1>{t(language, "workspace")}<span className="heading-sparkle">✳</span></h1><p>{t(language, "collectionSubtitle")}</p></div>}
           {selected && activeSection === "collection" && <button type="button" className="quick-mobile-action" onClick={() => { setSharedContent(undefined); setQuickCapture(true); }}>{language === "fr" ? "Capture rapide" : "Quick capture"}</button>}
           {!!loadError && <div className="load-error" role="alert"><span>{errorMessage(loadError, language)}</span><Button variant="secondary" onClick={refresh}>{t(language, "retry")}</Button></div>}
-          {selected && activeSection === "insights" && <section className="analysis-page" aria-label={language === "fr" ? "Calculs et graphiques" : "Calculations and charts"}>
+          {selected && activeSection === "insights" && hasCalculations(selected) && <section className="analysis-page" aria-label={language === "fr" ? "Calculs et graphiques" : "Calculations and charts"}>
             <header className="analysis-page-head"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{language === "fr" ? "Collection" : "Collection"}</button><div className="analysis-page-title"><span className="analysis-page-icon"><ChartNoAxesCombined size={26} /></span><div><span className="section-overline">{selected.name}</span><h1>{language === "fr" ? "Calculs et graphiques" : "Calculations and charts"}</h1><p>{language === "fr" ? "Explorez vos données, comparez les valeurs et retrouvez les entrées sources." : "Explore your data, compare values, and return to the source entries."}</p></div></div></header>
             <InsightsDialog key={selected.id} collection={selected} language={language} onClose={() => setActiveSection("collection")} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} onOpenEntry={async (id) => { try { const entry = entries.find((item) => item.id === id) ?? await api.entry(selected.id, id); setDialog({ kind: "entry", entry }); } catch (cause) { setDialogError(String(cause)); } }} />
           </section>}
-          {selected && activeSection === "stock" && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{language === "fr" ? "Collection" : "Collection"}</button><StockPanel key={selected.id} collection={selected} language={language} userId={user.id} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} /></section>}
+          {selected && activeSection === "stock" && hasCalculations(selected) && <section className="analysis-page"><button type="button" className="analysis-back" onClick={() => setActiveSection("collection")}><ArrowLeft size={18} />{language === "fr" ? "Collection" : "Collection"}</button><StockPanel key={selected.id} collection={selected} language={language} userId={user.id} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} /></section>}
           {selected && activeSection === "workflow" && <WorkflowPanel key={selected.id} collection={selected} user={user} language={language} onClose={() => setActiveSection("collection")} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} onEntriesChanged={() => { void refresh(); }} />}
           {selected && activeSection === "dataSources" && <DataSourcesPanel key={selected.id} collection={selected} user={user} language={language} onClose={() => setActiveSection("collection")} onEntriesChanged={() => { void refresh(); }} />}
           {selected && activeSection === "book" && selected.bookView?.enabled && <BookView key={selected.id} collection={selected} language={language} changeSignal={entries} onClose={() => setActiveSection("collection")} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} onOpenEntry={(entry) => setDialog({ kind: "entry", entry })} />}
@@ -1268,10 +1273,10 @@ export default function BrainyApp() {
             <OfflineSyncPanel userId={user.id} collections={collections} language={language} onSynced={() => { void refresh(); }} />
 
 
-            <CollectionHeader collection={selected} entryCount={entries.length} language={language} onNewEntry={() => setDialog({ kind: "entry" })} onInsights={() => setActiveSection("insights")} onRename={() => { setRename(selected.name); setDialogError(""); setDialog({ kind: "rename" }); }} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteCollection" }); }} onPackages={() => setDialog({ kind: "packages" })} role={selectedRole} onShare={() => setShareOpen(true)} />
+            <CollectionHeader collection={selected} entryCount={entries.length} language={language} onNewEntry={() => setDialog({ kind: "entry" })} onInsights={() => setActiveSection("insights")} onRename={() => { setRename(selected.name); setDialogError(""); setDialog({ kind: "rename" }); }} onDelete={() => { setDialogError(""); setDialog({ kind: "deleteCollection" }); }} onPackages={() => setDialog({ kind: "packages" })} role={selectedRole} onShare={() => setShareOpen(true)} onCalculations={(enabled) => { void api.setCollectionCalculations(selected.id, enabled).then((updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))).catch(setLoadError); }} />
             {selectedRole !== "OWNER" && <SharedCollectionBanner collection={selected} role={selectedRole} language={language} />}
             <BookViewLauncher collection={selected} language={language} onOpen={() => setActiveSection("book")} onCollectionChanged={(updated) => setCollections((current) => current.map((item) => item.id === updated.id ? updated : item))} />
-            {selected.periodTotals && <PeriodTotalsPanel key={selected.id} collection={selected} entries={entries} language={language} onSaved={(entry) => setEntries((current) => [entry, ...current])} />}
+            {selected.periodTotals && hasCalculations(selected) && <PeriodTotalsPanel key={selected.id} collection={selected} entries={entries} language={language} onSaved={(entry) => setEntries((current) => [entry, ...current])} />}
             <CollectionTabs language={language} showFormats={selectedRole === "OWNER"} value={collectionTab} onChange={(tab) => setTabSelection({ collectionId: selectedId, tab })} />
             <CollectionTabPanel tab="entries" active={collectionTab === "entries"}>
             <div id="collection-entries" className="entries-heading"><div><span className="section-overline">{t(language, "savedEntries")}</span><h2>{t(language, "entries")} <span>{new Intl.NumberFormat(language).format(totalCount ?? entries.length)} {language === "fr" ? (totalCount ?? entries.length) === 1 ? "entrée" : "entrées" : (totalCount ?? entries.length) === 1 ? "entry" : "entries"}</span></h2></div><Button variant="secondary" onClick={() => setQuickEntry(true)}>{language === "fr" ? "Saisie rapide" : "Quick entry"}</Button></div>

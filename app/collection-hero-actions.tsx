@@ -1,22 +1,27 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import "./calculations-choice.css";
 import { ChartNoAxesCombined, Package, Pencil, Plus, Trash2, UserPlus } from "lucide-react";
 import { t, type Language } from "../lib/brainy";
 
 type Props = {
   language: Language;
   onNewEntry: () => void;
-  onInsights: () => void;
+  /** Absent when the collection has no calculations and statistics: the button is not shown. */
+  onInsights?: () => void;
   onRename: () => void;
   onDelete: () => void;
   onPackages?: () => void;
   /** T52: only the owner shares, renames and deletes; false for a collection shared with me. */
   onShare?: () => void;
   owner?: boolean;
+  /** Owner's switch for calculations and statistics, in the Manage menu. */
+  calculations?: boolean;
+  onCalculations?: (enabled: boolean) => void;
 };
 
-export default function CollectionHeroActions({ language, onNewEntry, onInsights, onRename, onDelete, onPackages, onShare, owner = true }: Props) {
+export default function CollectionHeroActions({ language, onNewEntry, onInsights, onRename, onDelete, onPackages, onShare, owner = true, calculations, onCalculations }: Props) {
   const menuRef = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
     const closeOnOutside = (event: PointerEvent) => {
@@ -39,9 +44,9 @@ export default function CollectionHeroActions({ language, onNewEntry, onInsights
       <button type="button" className="button button-primary hero-add-entry" onClick={onNewEntry}>
         <Plus size={18} /> {t(language, "newEntry")}
       </button>
-      <button type="button" className="button button-secondary" onClick={onInsights}>
+      {onInsights && <button type="button" className="button button-secondary" onClick={onInsights}>
         <ChartNoAxesCombined size={16} /> {language === "fr" ? "Calculs" : "Insights"}
-      </button>
+      </button>}
       {owner && onShare && <button type="button" className="button button-secondary" onClick={onShare}>
         <UserPlus size={16} /> {language === "fr" ? "Partager" : "Share"}
       </button>}
@@ -55,6 +60,7 @@ export default function CollectionHeroActions({ language, onNewEntry, onInsights
         <summary className="button button-secondary"> {language === "fr" ? "Gérer" : "Manage"}</summary>
         <div className="collection-hero-menu">
           <button type="button" onClick={() => runMenuAction(onRename)}><Pencil size={16} /> {t(language, "rename")}</button>
+          {onCalculations && <button type="button" role="menuitemcheckbox" aria-checked={!!calculations} className="collection-hero-menu-toggle" onClick={() => runMenuAction(() => onCalculations(!calculations))}><ChartNoAxesCombined size={16} /> {language === "fr" ? "Calculs" : "Calculations"}<span className={`menu-switch${calculations ? " on" : ""}`} aria-hidden="true">{calculations ? (language === "fr" ? "Oui" : "On") : (language === "fr" ? "Non" : "Off")}</span></button>}
           {onPackages && <button type="button" onClick={() => runMenuAction(onPackages)}><Package size={16} /> {language === "fr" ? "Paquets de domaine" : "Domain packages"}</button>}
           <button type="button" className="collection-hero-menu-danger" onClick={() => runMenuAction(onDelete)}><Trash2 size={16} /> {t(language, "delete")}</button>
         </div>
