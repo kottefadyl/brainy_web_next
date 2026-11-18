@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import "./calculations-choice.css";
-import { ChartNoAxesCombined, Package, Pencil, Plus, Trash2, UserPlus } from "lucide-react";
+import { ChartNoAxesCombined, Package, Pencil, Plus, Settings2, Trash2, UserPlus } from "lucide-react";
 import { t, type Language } from "../lib/brainy";
 
 type Props = {
@@ -57,7 +57,7 @@ export default function CollectionHeroActions({ language, onNewEntry, onInsights
           event.currentTarget.querySelector("summary")?.focus();
         }
       }}>
-        <summary className="button button-secondary"> {language === "fr" ? "Gérer" : "Manage"}</summary>
+        <summary className="button button-secondary"><Settings2 size={16} aria-hidden="true" /> {language === "fr" ? "Gérer" : "Manage"}</summary>
         <div className="collection-hero-menu">
           <button type="button" onClick={() => runMenuAction(onRename)}><Pencil size={16} /> {t(language, "rename")}</button>
           {onCalculations && <button type="button" role="menuitemcheckbox" aria-checked={!!calculations} className="collection-hero-menu-toggle" onClick={() => runMenuAction(() => onCalculations(!calculations))}><ChartNoAxesCombined size={16} /> {language === "fr" ? "Calculs" : "Calculations"}<span className={`menu-switch${calculations ? " on" : ""}`} aria-hidden="true">{calculations ? (language === "fr" ? "Oui" : "On") : (language === "fr" ? "Non" : "Off")}</span></button>}

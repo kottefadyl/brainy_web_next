@@ -1,4 +1,5 @@
-import { FileText, FolderHeart, FolderInput, Users } from "lucide-react";
+import { FileText, FolderInput, Shapes, Users } from "lucide-react";
+import { CollectionGlyph, collectionTint } from "../../../lib/collection-identity";
 import { hasCalculations, t, type Collection, type Language } from "../../../lib/brainy";
 import CollectionHeroActions from "../../collection-hero-actions";
 
@@ -7,16 +8,16 @@ type Props = { collection: Collection; entryCount: number; language: Language; o
 export function CollectionHeader({ collection, entryCount, language, onNewEntry, onInsights, onRename, onDelete, onPackages, onShare, role = "OWNER", onCalculations }: Props) {
   const fr = language === "fr";
   const owner = role === "OWNER";
-  return <section className="collection-hero" aria-label={t(language, "collection")}>
+  return <section className="collection-hero" aria-label={t(language, "collection")} style={collectionTint(collection)}>
     <div className="collection-hero-main">
-      <div className="collection-icon" aria-hidden="true">{owner ? <FolderHeart size={27} /> : <FolderInput size={27} />}</div>
+      <CollectionGlyph collection={collection} size={24} className="collection-icon" />
       <div className="collection-hero-copy">
-        <span className="eyebrow">{owner ? t(language, "collection") : fr ? `Partagée par ${collection.sharedBy?.name ?? ""}` : `Shared by ${collection.sharedBy?.name ?? ""}`}</span>
+        {!owner && <span className="eyebrow">{fr ? `Partagée par ${collection.sharedBy?.name ?? ""}` : `Shared by ${collection.sharedBy?.name ?? ""}`}</span>}
         <h1 title={collection.name}>{collection.name}</h1>
         <div className="collection-meta">
           <span><FileText size={15} aria-hidden="true" /> {entryCount} {t(language, entryCount === 1 ? "entry" : "entries").toLocaleLowerCase(language)}</span>
           <span className="collection-meta-separator" aria-hidden="true">·</span>
-          <span>{collection.formats.length} {t(language, collection.formats.length === 1 ? "format" : "formats").toLocaleLowerCase(language)}</span>
+          <span><Shapes size={15} aria-hidden="true" /> {collection.formats.length} {t(language, collection.formats.length === 1 ? "format" : "formats").toLocaleLowerCase(language)}</span>
         </div>
         {owner && !!collection.memberCount && <SharedWith count={collection.memberCount} language={language} onOpen={onShare} />}
       </div>

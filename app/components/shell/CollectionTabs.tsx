@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Rows3, Shapes, Wrench } from "lucide-react";
 import { Tabs } from "../ui/Tabs";
 import { t, type Language } from "../../../lib/brainy";
 
@@ -6,9 +7,9 @@ export type CollectionTab = "entries" | "formats" | "tools";
 
 export function CollectionTabs({ language, value, onChange, showFormats = true }: { language: Language; value: CollectionTab; onChange: (tab: CollectionTab) => void; showFormats?: boolean }) {
   const all = [
-    { id: "entries", label: t(language, "entries") },
-    { id: "formats", label: t(language, "formats") },
-    { id: "tools", label: language === "fr" ? "Outils" : "Tools" },
+    { id: "entries", label: t(language, "entries"), icon: <Rows3 size={16} aria-hidden="true" /> },
+    { id: "formats", label: t(language, "formats"), icon: <Shapes size={16} aria-hidden="true" /> },
+    { id: "tools", label: language === "fr" ? "Outils" : "Tools", icon: <Wrench size={16} aria-hidden="true" /> },
   ] as const;
   const items = all.filter((item) => showFormats || item.id !== "formats");
   return <Tabs label={language === "fr" ? "Sections de la collection" : "Collection sections"} items={items} value={value} onChange={(id) => onChange(id as CollectionTab)} idPrefix="collection" className="collection-section-nav" />;

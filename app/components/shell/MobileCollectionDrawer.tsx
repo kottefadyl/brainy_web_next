@@ -1,5 +1,6 @@
 "use client";
 
+import { CollectionGlyph } from "../../../lib/collection-identity";
 import { focusableWithin } from "../ui/use-dialog-focus";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { GraduationCap, LogOut, Pencil, Plus, Search, Settings2, SlidersHorizontal, Users, X } from "lucide-react";
@@ -70,8 +71,8 @@ export function MobileCollectionDrawer({ open, collections, selectedId, language
       {sharedTotal > 0 && <CollectionScopeTabs language={language} value={scope} mineCount={mine.length} sharedCount={shared.length} listId="drawer-collections" onChange={setScopeChoice} />}
       <nav id="drawer-collections" className="mobile-drawer-list" {...(sharedTotal > 0 ? { role: "tabpanel", "aria-labelledby": `drawer-collections-tab-${scope}` } : { "aria-label": t(language, "collections") })}>
         {visible.map((item) => item.sharedBy
-          ? <button key={item.id} type="button" title={item.name} aria-label={`${item.name} · ${fr ? "partagée par" : "shared by"} ${item.sharedBy.name}`} aria-current={selectedId === item.id ? "page" : undefined} onClick={() => run(() => onSelect(item.id))}><span className="mobile-drawer-name">{item.name}</span><span className="mobile-drawer-count" aria-hidden="true">{item.sharedBy.name.split(" ")[0]}</span></button>
-          : <button key={item.id} type="button" title={item.name} aria-label={item.name} aria-current={selectedId === item.id ? "page" : undefined} onClick={() => run(() => onSelect(item.id))}><span className="mobile-drawer-name">{item.name}</span><span className="mobile-drawer-count" aria-hidden="true">{item.formats.length}</span></button>)}
+          ? <button key={item.id} type="button" title={item.name} aria-label={`${item.name} · ${fr ? "partagée par" : "shared by"} ${item.sharedBy.name}`} aria-current={selectedId === item.id ? "page" : undefined} onClick={() => run(() => onSelect(item.id))}><CollectionGlyph collection={item} size={16} /><span className="mobile-drawer-name">{item.name}</span><span className="mobile-drawer-count" aria-hidden="true">{item.sharedBy.name.split(" ")[0]}</span></button>
+          : <button key={item.id} type="button" title={item.name} aria-label={item.name} aria-current={selectedId === item.id ? "page" : undefined} onClick={() => run(() => onSelect(item.id))}><CollectionGlyph collection={item} size={16} /><span className="mobile-drawer-name">{item.name}</span><span className="mobile-drawer-count" aria-hidden="true">{item.formats.length}</span></button>)}
         {query && visible.length === 0 && <p>{fr ? "Aucune collection trouvée ici" : "No matching collections here"}</p>}
       </nav>
       <div className="mobile-drawer-actions">

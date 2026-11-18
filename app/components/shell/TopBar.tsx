@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode, Ref } from "react";
-import { LoaderCircle, Menu, RefreshCw } from "lucide-react";
+import { LoaderCircle, Menu, RefreshCw, Zap } from "lucide-react";
 import { t, type Language } from "../../../lib/brainy";
 
 type Props = {
@@ -28,7 +28,7 @@ export function TopBar({ brand, selectedName, language, themeControl, languageCo
       {selectedName && <><span className="slash" aria-hidden="true">/</span><span className="topbar-current" aria-current="page" title={selectedName}>{selectedName}</span></>}
     </nav>
     <div className="topbar-right">
-      <button type="button" className="quick-topbar" onClick={onCapture}>{language === "fr" ? "Capturer" : "Capture"}</button>
+      <button type="button" className="quick-topbar" onClick={onCapture}><Zap size={16} aria-hidden="true" /><span className="quick-topbar-label">{language === "fr" ? "Capturer" : "Capture"}</span></button>
       {themeControl}{languageControl}
       <button type="button" className="icon-button refresh-button" onClick={onRefresh} disabled={refreshBusy} aria-label={refreshBusy ? refreshing : t(language, "refresh")} title={refreshBusy ? refreshing : t(language, "refresh")} aria-busy={refreshBusy}>
         {refreshBusy ? <LoaderCircle size={18} aria-hidden="true" /> : <RefreshCw size={18} aria-hidden="true" />}

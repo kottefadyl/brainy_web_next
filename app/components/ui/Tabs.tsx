@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
-export type TabItem = { id: string; label: string; disabled?: boolean };
+export type TabItem = { id: string; label: string; disabled?: boolean; icon?: ReactNode };
 type Props = { label: string; items: readonly TabItem[]; value: string; onChange: (id: string) => void; className?: string; idPrefix?: string };
 
 export function Tabs({ label, items, value, onChange, className = "", idPrefix }: Props) {
@@ -38,7 +38,7 @@ export function Tabs({ label, items, value, onChange, className = "", idPrefix }
       if (event.key === "ArrowLeft") { event.preventDefault(); move(index, -1); }
       if (event.key === "Home") { event.preventDefault(); edge(false); }
       if (event.key === "End") { event.preventDefault(); edge(true); }
-    }}>{item.label}</button>)}
+    }}>{item.icon}{item.label}</button>)}
     <span className="ui-tabs-indicator" aria-hidden="true" />
   </div>;
 }

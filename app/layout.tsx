@@ -19,10 +19,10 @@ import "./date-input.css";
 import "./analysis-chart.css";
 import "./osm-map.css";
 import "./code-picker.css";
-import "./blue-light-shell.css";
 import "./topbar-compact.css";
 import "./sidebar-room.css";
 import "./mobile-fit.css";
+import "./polish.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const display = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-display", weight: ["500", "600", "700", "800"], display: "swap" });
