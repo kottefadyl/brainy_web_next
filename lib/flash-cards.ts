@@ -62,16 +62,4 @@ export const speechLanguages = [
   ["nl-NL", "Dutch", "Néerlandais"], ["ar-SA", "Arabic", "Arabe"], ["zh-CN", "Chinese", "Chinois"], ["ja-JP", "Japanese", "Japonais"], ["ko-KR", "Korean", "Coréen"], ["ru-RU", "Russian", "Russe"],
 ] as const;
 
-/** Reads a text aloud with the device's own voice (nothing is sent or stored). */
-export function speak(text: string, language?: string | null): boolean {
-  if (typeof window === "undefined" || !("speechSynthesis" in window) || !text.trim()) return false;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  if (language) {
-    utterance.lang = language;
-    const voice = window.speechSynthesis.getVoices().find((item) => item.lang.replace("_", "-").toLowerCase().startsWith(language.toLowerCase().slice(0, 2)));
-    if (voice) utterance.voice = voice;
-  }
-  window.speechSynthesis.speak(utterance);
-  return true;
-}
+export { speak } from "./card-voices";

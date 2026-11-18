@@ -9,6 +9,7 @@ import { formatDisplayName, formatFieldValue, translateError, type Collection, t
 import LinkMediaView from "./link-media";
 import { faceOf, flashCardsApi, intervalLabel, speak, speechLanguages, type CardDeck, type CardGrade, type CardOrder, type ReviewCard } from "../lib/flash-cards";
 import { Button } from "./components/ui/Button";
+import CardVoiceSettings from "./card-voice-settings";
 import CardProgressPanel, { CardGoalLine, useCardStats } from "./card-progress";
 import "./card-review.css";
 
@@ -120,6 +121,7 @@ export default function CardReview({ collection, language, owner, onClose, onCol
         <option value="">{fr ? "Langue de l’appareil" : "Device language"}</option>
         {speechLanguages.map(([code, en, frLabel]) => <option key={code} value={code}>{fr ? frLabel : en}</option>)}
       </select></label>
+      <CardVoiceSettings language={format?.speechLanguage} uiLanguage={language} />
       <p className="card-setup-count" role="status">{deck ? (fr ? `${deck.due} à revoir aujourd’hui · ${deck.fresh} nouvelle(s) · ${deck.total} au total` : `${deck.due} due today · ${deck.fresh} new · ${deck.total} in all`) : (fr ? "Chargement…" : "Loading…")}</p>
       <div className="card-setup-actions"><Button variant="primary" disabled={busy || !available} onClick={start}><Layers size={16} />{available ? (fr ? `Commencer (${Math.min(count, available)})` : `Start (${Math.min(count, available)})`) : (fr ? "Rien à revoir pour l’instant" : "Nothing to review right now")}</Button></div>
     </div>}

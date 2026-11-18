@@ -45,3 +45,9 @@ html[data-theme="dark"] .card-bar:hover > span, html[data-theme="dark"] .card-ba
 .card-goal-saved { margin: 0; color: #047857; font-size: 13px; }
 html[data-theme="dark"] .card-goal-saved { color: #6EE7B7; }
 @media (prefers-reduced-motion: reduce) { .card-goal-meter span { transition: none; } }
+
+/* T57: read-aloud voice on this device. */
+.card-voice-settings { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto; align-items: end; gap: 10px; }
+@media (max-width: 560px) { .card-voice-settings { grid-template-columns: 1fr 1fr; } .card-voice-settings > :first-child { grid-column: 1 / -1; } }
+.card-voice-missing { display: grid; gap: 4px; margin: 0; padding: 10px 12px; border-radius: 12px; border: 1px solid color-mix(in srgb, #D97706 45%, var(--c-line)); background: color-mix(in srgb, #F59E0B 10%, var(--c-surface)); color: var(--c-ink); font-size: 13.5px; }
+.card-voice-missing span { color: var(--c-muted); }
