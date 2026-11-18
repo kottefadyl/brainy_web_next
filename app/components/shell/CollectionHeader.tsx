@@ -1,5 +1,5 @@
 import { FileText, FolderInput, Shapes, Users } from "lucide-react";
-import { CollectionGlyph, collectionTint } from "../../../lib/collection-identity";
+import { CollectionGlyph } from "../../../lib/collection-identity";
 import { hasCalculations, t, type Collection, type Language } from "../../../lib/brainy";
 import CollectionHeroActions from "../../collection-hero-actions";
 
@@ -8,11 +8,11 @@ type Props = { collection: Collection; entryCount: number; language: Language; o
 export function CollectionHeader({ collection, entryCount, language, onNewEntry, onInsights, onRename, onDelete, onPackages, onShare, role = "OWNER", onCalculations }: Props) {
   const fr = language === "fr";
   const owner = role === "OWNER";
-  return <section className="collection-hero" aria-label={t(language, "collection")} style={collectionTint(collection)}>
+  return <section className="collection-hero" aria-label={t(language, "collection")}>
     <div className="collection-hero-main">
-      <CollectionGlyph collection={collection} size={24} className="collection-icon" />
+      <CollectionGlyph collection={collection} size={27} className="collection-icon" />
       <div className="collection-hero-copy">
-        {!owner && <span className="eyebrow">{fr ? `Partagée par ${collection.sharedBy?.name ?? ""}` : `Shared by ${collection.sharedBy?.name ?? ""}`}</span>}
+        <span className="eyebrow">{owner ? t(language, "collection") : fr ? `Partagée par ${collection.sharedBy?.name ?? ""}` : `Shared by ${collection.sharedBy?.name ?? ""}`}</span>
         <h1 title={collection.name}>{collection.name}</h1>
         <div className="collection-meta">
           <span><FileText size={15} aria-hidden="true" /> {entryCount} {t(language, entryCount === 1 ? "entry" : "entries").toLocaleLowerCase(language)}</span>

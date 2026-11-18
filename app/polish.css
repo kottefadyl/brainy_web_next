@@ -1,6 +1,6 @@
-/* Polish pass (18 Nov 2026): calmer navigation, a shorter collection header tinted with the collection's own
-   color, an icon for each kind of collection, icons on tabs and fields, gentle motion.
-   Loaded last; replaces the saturated blue light-theme shell (blue-light-shell.css is no longer imported). */
+/* Polish pass (18 Nov 2026): an icon for each kind of collection, icons on tabs and fields, gentle motion.
+   Loaded last. The sidebar and the collection header keep their former colors and sizes (blue-light-shell.css),
+   at the user's request. */
 
 /* ---------- Collection glyph: an icon for the kind of collection on a tile of its color ---------- */
 .collection-glyph {
@@ -15,69 +15,15 @@ html[data-theme="dark"] .collection-glyph {
   border-color: color-mix(in srgb, var(--format-marker-dark, #A6C9FF) 22%, transparent);
 }
 
-/* ---------- Sidebar (light): soft blue-tinted surface instead of solid blue ---------- */
-html[data-theme="light"] .app-shell .sidebar {
-  background: linear-gradient(180deg, #F6F8FE 0%, #EFF3FC 100%);
-  border-right: 1px solid #E1E7F3;
-  color: var(--c-ink);
-}
-html[data-theme="light"] .app-shell .sidebar-top::after { background: linear-gradient(90deg, #2454E6, #34D399, #FFB547, #FF7A85); background-size: 200% 100%; }
-html[data-theme="light"] .app-shell .sidebar .sidebar-search { background: #FFFFFF; border-color: #DCE3F1; }
-html[data-theme="light"] .app-shell .sidebar-total { background: #E4ECFF; color: #1D46C2; }
-
-html[data-theme] .app-shell .sidebar .nav-item { display: flex; align-items: center; gap: 10px; border-radius: 12px; border-left-width: 0; transition: background 140ms ease, box-shadow 140ms ease, color 140ms ease; }
+/* ---------- Sidebar and drawer: glyph layout only (colors and sizes stay those of the former style) ---------- */
+html[data-theme] .app-shell .sidebar .nav-item { display: flex; align-items: center; gap: 10px; }
 html[data-theme] .app-shell .sidebar .nav-item > span:not(.collection-glyph):not(.nav-count):not(.nav-shared):not(.nav-owner) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 html[data-theme] .app-shell .sidebar .nav-item:hover .collection-glyph { transform: rotate(-6deg) scale(1.06); }
-html[data-theme="light"] .app-shell .sidebar .nav-item { color: #3B4456; }
-html[data-theme="light"] .app-shell .sidebar .nav-item:not(.active):hover { background: rgba(36, 84, 230, .07); color: #0E1116; }
-html[data-theme="light"] .app-shell .sidebar .nav-item.active {
-  background: #FFFFFF; color: #0E1116;
-  box-shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 6px 16px -10px rgba(36, 84, 230, .45);
-}
-html[data-theme="dark"] .app-shell .sidebar .nav-item.active { background: color-mix(in srgb, #4C7DF5 14%, var(--c-surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, #4C7DF5 30%, transparent); }
-html[data-theme] .app-shell .sidebar .nav-item.active .nav-count { background: var(--c-accent, #2454E6); color: #FFFFFF; border-radius: 999px; min-width: 22px; padding: 1px 7px; text-align: center; }
-html[data-theme] .app-shell .collection-nav[data-active-visible="true"]::before { display: none; }
-
-html[data-theme="light"] .app-shell .sidebar .sidebar-new-collection { background: #2454E6; border-color: #2454E6; color: #FFFFFF; box-shadow: 0 6px 16px -8px rgba(36, 84, 230, .7); }
-html[data-theme="light"] .app-shell .sidebar .sidebar-new-collection:hover { background: #1D46C2; border-color: #1D46C2; }
-html[data-theme="light"] .app-shell .sidebar .sidebar-more > summary { background: #FFFFFF; border-color: #DCE3F1; color: #0E1116; }
-html[data-theme="light"] .app-shell .sidebar .profile-avatar { background: linear-gradient(135deg, #FFD166, #FF9AA0); color: #3A2400; }
-
-/* ---------- Mobile drawer: same glyphs ---------- */
 .mobile-drawer-list button { display: flex; align-items: center; gap: 10px; }
 .mobile-drawer-list .mobile-drawer-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-html[data-theme="light"] .mobile-drawer-panel { background: linear-gradient(180deg, #F6F8FE 0%, #EFF3FC 100%); color: #0E1116; }
-html[data-theme="light"] .mobile-drawer-panel .mobile-drawer-list button[aria-current="page"] { background: #FFFFFF; color: #0E1116; box-shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 6px 16px -10px rgba(36, 84, 230, .45); }
 
-/* ---------- Collection header: shorter, tinted with the collection's first data format color ---------- */
-html[data-theme] .app-shell .collection-hero {
-  padding: 18px 22px; min-height: 0;
-  background:
-    radial-gradient(80% 170% at 0% 0%, color-mix(in srgb, var(--format-surface-light, #EEF5FF) 95%, transparent), transparent 62%),
-    radial-gradient(60% 140% at 100% 100%, rgba(36, 84, 230, .07), transparent 60%),
-    var(--c-surface);
-  background-size: auto; animation: ds-rise .32s var(--ease) both;
-  border-color: color-mix(in srgb, var(--format-marker-light, #24344A) 14%, var(--c-line));
-  box-shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 12px 28px -22px rgba(16, 24, 40, .35);
-}
-html[data-theme="dark"] .app-shell .collection-hero {
-  background:
-    radial-gradient(80% 170% at 0% 0%, color-mix(in srgb, var(--format-surface-dark, #24344A) 90%, transparent), transparent 62%),
-    radial-gradient(60% 140% at 100% 100%, rgba(76, 125, 245, .10), transparent 60%),
-    var(--c-surface);
-  border-color: color-mix(in srgb, var(--format-marker-dark, #A6C9FF) 18%, var(--c-line));
-}
-html[data-theme] .app-shell .collection-hero::after { display: none; }
-html[data-theme] .app-shell .collection-hero::before { height: 3px !important; }
-html[data-theme] .app-shell .collection-hero h1 { font-size: clamp(1.35rem, 2.3vw, 1.8rem); margin: 0; }
-html[data-theme] .app-shell .collection-hero .collection-icon.collection-glyph {
-  width: 48px; height: 48px; border-radius: 14px;
-  background: var(--format-surface-light, #EEF5FF); color: var(--format-marker-light, #24344A);
-  box-shadow: 0 8px 18px -12px color-mix(in srgb, var(--format-marker-light, #24344A) 80%, transparent);
-}
-html[data-theme="dark"] .app-shell .collection-hero .collection-icon.collection-glyph { background: var(--format-surface-dark, #24344A); color: var(--format-marker-dark, #A6C9FF); }
-html[data-theme] .app-shell .collection-meta > span:not(.collection-meta-separator) { min-height: 26px; background: color-mix(in srgb, var(--c-surface) 70%, transparent); border: 1px solid var(--c-line); color: var(--c-muted); }
-html[data-theme] .app-shell .collection-meta-separator { display: none; }
+/* ---------- Collection header: former colors and size; the kind icon sits in the former tile ---------- */
+html[data-theme] .app-shell .collection-hero .collection-icon.collection-glyph { border: 0; }
 
 /* ---------- Tabs and toolbar: icons, tighter rhythm ---------- */
 html[data-theme] .app-shell .collection-section-nav .ui-tab { display: inline-flex; align-items: center; gap: 8px; }
@@ -119,11 +65,6 @@ html[data-theme] .app-shell .collection-tab-panel.first-reveal .entry-item:nth-c
   /* Icon only: the name stays readable by screen readers. */
   html[data-theme] .app-shell .topbar .quick-topbar { padding-inline: 10px; min-width: 44px; justify-content: center; }
   html[data-theme] .app-shell .topbar .quick-topbar-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-}
-@media (max-width: 760px) {
-  html[data-theme] .app-shell .collection-hero { padding: 14px 16px; gap: 12px; }
-  html[data-theme] .app-shell .collection-hero-actions { margin-top: 0; }
-  html[data-theme] .app-shell .collection-hero .collection-icon.collection-glyph { width: 40px; height: 40px; border-radius: 12px; }
 }
 
 .entry-form-context { display: flex; align-items: center; gap: 8px; }

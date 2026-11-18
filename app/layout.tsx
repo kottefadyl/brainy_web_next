@@ -19,6 +19,7 @@ import "./date-input.css";
 import "./analysis-chart.css";
 import "./osm-map.css";
 import "./code-picker.css";
+import "./blue-light-shell.css";
 import "./topbar-compact.css";
 import "./sidebar-room.css";
 import "./mobile-fit.css";
