@@ -63,6 +63,7 @@ import { todayLocalIso } from "../lib/date-input";
 import { GeoFieldInput } from "./geo-fields";
 import "./geo-classification.css";
 import StarterDialog from "./starter-dialog";
+import FormatChoiceCards from "./format-choice-cards";
 import DomainPackagesDialog from "./domain-packages-dialog";
 import EntryLinksDialog from "./entry-links-dialog";
 import OfflineSyncPanel from "./offline-sync-panel";
@@ -495,7 +496,7 @@ function EntryEditor({ collection, entry, initialFormatId, language, userId, use
     <Modal title={format.objectModel ? (language === "fr" ? entry ? "Modifier l’objet" : "Créer un objet" : entry ? "Edit object" : "Create object") : t(language, entry ? "editEntry" : "newEntry")} closeLabel={t(language, "close")} onClose={onClose} size="wide">
       <form onSubmit={submit} className="modal-form entry-form">
         <div className="entry-form-context"><FolderHeart size={18} /> {collection.name}</div>
-        {entry || initialFormatId ? <div className="selected-format" style={{ "--format-color": format.color } as CSSProperties}>{formatDisplayName(format, language)}</div> : <label className="input-label">{t(language, "chooseFormat")}<select value={formatId} onChange={(event) => setFormatId(event.target.value)}>{collection.formats.map((item) => <option key={item.id} value={item.id}>{formatDisplayName(item, language)}</option>)}</select></label>}
+        {entry || initialFormatId ? <div className="selected-format" style={{ "--format-color": format.color } as CSSProperties}>{formatDisplayName(format, language)}</div> : <FormatChoiceCards formats={collection.formats} value={formatId} language={language} label={t(language, "chooseFormat")} onChange={setFormatId} />}
         {format.fields.some((field) => field.required) && <RequiredFieldsNote language={language} />}
         <div className="entry-format-fields" style={{ "--format-color": format.color } as CSSProperties}>
         {format.fields.filter((field) => !hiddenTaskFields(collection.taskPlanner, format.id, values).has(field.id)).map(withRequiredMark).map((field, index) => field.kind === "ATTACHMENT" ? <AttachmentFieldInput key={field.id} field={field} language={language} collectionId={collection.id} entry={entry} value={values[field.id] ?? ""} smallFile={files[field.id]} largeFileId={largeFiles[field.id]}

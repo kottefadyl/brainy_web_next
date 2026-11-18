@@ -1,0 +1,8 @@
+.link-media { display: block; max-width: 100%; border-radius: 12px; }
+.link-media-image { max-height: 260px; object-fit: contain; justify-self: center; margin-inline: auto; background: var(--c-surface); }
+audio.link-media { width: 100%; }
+.link-media-video { width: 100%; max-height: 320px; background: #000; }
+.link-media-embed { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: #000; }
+.link-media-embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.link-media-with-address { display: grid; gap: 6px; }
+.link-media-with-address > a { font-size: 0.85em; color: var(--c-muted); overflow-wrap: anywhere; }

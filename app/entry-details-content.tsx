@@ -4,6 +4,8 @@ import { formatColorStyle } from "../lib/format-colors";
 import { formatDisplayName, formatFieldValue, formatForEntry, t, valuesByField, type Collection, type Entry, type Language } from "../lib/brainy";
 import { previewableUrl } from "../lib/link-preview";
 import LinkPreviewCard from "./link-preview-card";
+import LinkMediaView from "./link-media";
+import { linkMedia } from "../lib/link-media";
 import { Avatar } from "./entry-authors";
 
 type Field = Collection["formats"][number]["fields"][number];
@@ -25,6 +27,7 @@ export default function EntryDetailsContent({ entry, collection, language, rende
   const renderLink = (value: string) => {
     const url = previewableUrl(value);
     const address = <a href={value} target="_blank" rel="noopener noreferrer"><Link2 size={15} />{value}</a>;
+    if (linkMedia(value)?.kind !== "embed" && linkMedia(value)) return <div className="link-media-with-address"><LinkMediaView url={value} label={value} fallback={null} />{address}</div>;
     return url ? <div className="entry-detail-link"><LinkPreviewCard url={url} language={language} />{address}</div> : address;
   };
   return <div className="entry-detail">

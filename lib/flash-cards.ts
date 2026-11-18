@@ -41,13 +41,6 @@ export function faceOf(field: { kind: string; face?: "FRONT" | "BACK" | null }):
   return field.face ?? (field.kind === "TITLE" ? "FRONT" : "BACK");
 }
 
-const IMAGE = /\.(png|jpe?g|gif|webp|avif|svg|bmp)(\?.*)?$/i;
-const AUDIO = /\.(mp3|ogg|oga|wav|m4a|aac|opus|flac|weba)(\?.*)?$/i;
-/** A web link shown as a picture or a sound on a card (nothing is stored: the file stays where it is). */
-export function mediaKind(url: string): "image" | "audio" | null {
-  try { const path = new URL(url).pathname; return IMAGE.test(path) ? "image" : AUDIO.test(path) ? "audio" : null; } catch { return null; }
-}
-
 export const speechLanguages = [
   ["en-GB", "English (UK)", "Anglais (Royaume-Uni)"], ["en-US", "English (US)", "Anglais (États-Unis)"], ["fr-FR", "French", "Français"], ["es-ES", "Spanish", "Espagnol"],
   ["de-DE", "German", "Allemand"], ["it-IT", "Italian", "Italien"], ["pt-PT", "Portuguese", "Portugais"], ["pt-BR", "Portuguese (Brazil)", "Portugais (Brésil)"],

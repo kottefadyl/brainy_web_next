@@ -6,7 +6,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Check, Layers, RotateCcw, Volume2 } from "lucide-react";
 import { formatColorStyle } from "../lib/format-colors";
 import { formatDisplayName, formatFieldValue, translateError, type Collection, type Entry, type Language } from "../lib/brainy";
-import { faceOf, flashCardsApi, intervalLabel, mediaKind, speak, speechLanguages, type CardDeck, type CardGrade, type CardOrder, type ReviewCard } from "../lib/flash-cards";
+import LinkMediaView from "./link-media";
+import { faceOf, flashCardsApi, intervalLabel, speak, speechLanguages, type CardDeck, type CardGrade, type CardOrder, type ReviewCard } from "../lib/flash-cards";
 import { Button } from "./components/ui/Button";
 import "./card-review.css";
 
@@ -152,12 +153,10 @@ function CardFace({ fields, entry, collection, language, speech, label }: { fiel
     {!filled.length && <p className="flash-card-empty">{fr ? "Rien sur cette face." : "Nothing on this side."}</p>}
     {filled.map((field) => {
       const value = values.get(field.id)!;
-      const media = field.kind === "LINK" ? mediaKind(value.value) : null;
+      const link = <a href={value.value} target="_blank" rel="noopener noreferrer">{value.value}</a>;
       return <div key={field.id} className={`flash-card-field kind-${field.kind.toLowerCase()}`}>
         {field.kind !== "TITLE" && <span className="flash-card-label">{field.name}</span>}
-        {media === "image" ? <CardPicture src={value.value} alt={field.name} />
-          : media === "audio" ? <audio controls preload="none" src={value.value}>{field.name}</audio>
-          : field.kind === "LINK" ? <a href={value.value} target="_blank" rel="noopener noreferrer">{value.value}</a>
+        {field.kind === "LINK" ? <LinkMediaView url={value.value} label={field.name} probe fallback={link} />
           : <span className="flash-card-value">{formatFieldValue(field, value.value, language, value.unitSnapshot, collection)}</span>}
       </div>;
     })}
@@ -170,10 +169,4 @@ export function CardFaceToggle({ value, language, onChange }: { value: "FRONT" |
   return <span className="card-face-toggle" role="radiogroup" aria-label={fr ? "Face de la carte" : "Card side"}>
     {(["FRONT", "BACK"] as const).map((face) => <button key={face} type="button" role="radio" aria-checked={value === face} className={value === face ? "is-on" : ""} onClick={() => onChange(face)}>{face === "FRONT" ? (fr ? "Recto" : "Front") : (fr ? "Verso" : "Back")}</button>)}
   </span>;
-}
-
-/** A picture shown from its own site (never stored by Brainy). */
-function CardPicture({ src, alt }: { src: string; alt: string }) {
-  // eslint-disable-next-line @next/next/no-img-element -- remote picture from any site, not optimised by Next
-  return <img src={src} alt={alt} loading="lazy" referrerPolicy="no-referrer" />;
 }
