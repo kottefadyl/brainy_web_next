@@ -1,6 +1,6 @@
 .format-choice { display: grid; gap: 8px; }
 .format-choice .input-label-text { font-weight: 650; font-size: 0.92rem; }
-.format-choice-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; max-height: 236px; overflow-y: auto; padding: 2px; }
+.format-choice-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; padding: 2px; }
 .format-choice-card {
   position: relative; display: grid; gap: 3px; align-content: start; min-height: 74px; padding: 10px 30px 10px 12px;
   text-align: left; border-radius: 12px; cursor: pointer; color: #20242C;
@@ -17,5 +17,7 @@
 html[data-theme="dark"] .format-choice-card { color: #F2F3F5; background: var(--format-surface-dark); border-left-color: var(--format-marker-dark); }
 html[data-theme="dark"] .format-choice-card.is-selected { border-color: var(--format-marker-dark); box-shadow: 0 0 0 2px var(--format-marker-dark); }
 html[data-theme="dark"] .format-choice-check { background: var(--format-marker-dark); color: var(--format-surface-dark); }
-@media (max-width: 520px) { .format-choice-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 200px; } }
+@media (max-width: 520px) { .format-choice-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (prefers-reduced-motion: reduce) { .format-choice-card { transition: none; } .format-choice-card:hover { transform: none; } }
+.format-choice-more { display: grid; gap: 4px; font-size: 0.85rem; color: var(--c-muted); }
+.format-choice-more select { color: var(--c-ink); }
