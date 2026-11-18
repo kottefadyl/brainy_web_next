@@ -82,7 +82,7 @@ export default function EntryCard({ entry, collection, language, selected, onDet
           )}
         </div>
         <div className="entry-item-meta">
-          <span className="entry-format-label">{formatDisplayName(format, language)}</span>
+          <span className="entry-format-label" title={formatDisplayName(format, language)}><span className="entry-format-name">{formatDisplayName(format, language)}</span></span>
           <span className="entry-item-date" title={`${t(language, "created")} ${dateTime(entry.createdAt, language)}`}>
             <CalendarDays size={14} aria-hidden="true" />
             <span className="entry-item-label">{t(language, "created")}</span>

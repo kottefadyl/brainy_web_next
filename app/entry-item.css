@@ -49,6 +49,8 @@ html[data-theme] .app-shell .entry-row.entry-item .entry-format-label {
   border-radius: 999px; font-size: 12.5px; font-weight: 600; line-height: 1.3;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+/* The chip is a flex box, where text-overflow has no effect: the name sits in its own span to get its "…". */
+.entry-format-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 html[data-theme] .app-shell .entry-row.entry-item .entry-format-label::before {
   content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--data-marker);
 }
@@ -95,9 +97,13 @@ html[data-theme] .app-shell .entry-action-menu[popover] {
 
 /* A yes/no field: a real checkbox that changes the entry in one click. It keeps the 20 px line of the
    values: the general rule giving checkbox labels a 44 px height would push it out of the clipped line. */
-.entry-item-facts > .entry-item-check { align-items: center; flex: none; }
-.entry-item-facts > .entry-item-check dd { display: flex; align-items: center; overflow: visible; max-width: none; }
-html[data-theme] .app-shell .entry-item-check label { display: inline-flex; align-items: center; gap: 6px; min-height: 0; height: 20px; margin: 0; padding: 0; cursor: pointer; color: var(--c-ink); font-size: 13px; line-height: 20px; white-space: nowrap; }
+.entry-item-facts > .entry-item-check { align-items: center; flex: none; height: 20px; }
+.entry-item-facts > .entry-item-check dd { display: flex; align-items: center; height: 20px; overflow: visible; max-width: none; }
+/* `:has(> input)` matches the global phase-two.css rule (label:has(> input[type="checkbox"]) { min-height: 44px })
+   with a higher specificity: without it the label grew to 44 px and the checkbox dropped below the clipped
+   20 px line (cut on wide screens, invisible on phones). */
+html[data-theme] .app-shell .entry-item-check label,
+html[data-theme] .app-shell .entry-item-check label:has(> input[type="checkbox"]) { display: inline-flex; align-items: center; gap: 6px; min-height: 0; height: 20px; margin: 0; padding: 0; cursor: pointer; color: var(--c-ink); font-size: 13px; line-height: 20px; white-space: nowrap; }
 html[data-theme] .app-shell .entry-item-check input[type="checkbox"] {
   appearance: none; -webkit-appearance: none; flex: none; display: inline-grid; place-items: center;
   width: 16px; height: 16px; min-width: 0; min-height: 0; margin: 0; padding: 0;
@@ -105,7 +111,7 @@ html[data-theme] .app-shell .entry-item-check input[type="checkbox"] {
 }
 html[data-theme] .app-shell .entry-item-check input[type="checkbox"]:checked { border-color: var(--primary, #2563EB); background: var(--primary, #2563EB); }
 html[data-theme] .app-shell .entry-item-check input[type="checkbox"]:checked::after {
-  content: ""; width: 4px; height: 8px; margin-top: -2px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
+  content: ""; position: static; left: auto; top: auto; width: 4px; height: 8px; margin-top: -2px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
 }
 html[data-theme] .app-shell .entry-item-check input[type="checkbox"]:hover:not(:disabled) { border-color: var(--primary, #2563EB); }
 html[data-theme] .app-shell .entry-item-check input[type="checkbox"]:disabled { cursor: default; opacity: .65; }
