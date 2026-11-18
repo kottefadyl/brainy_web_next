@@ -2,7 +2,7 @@
 
 // T56: review of two-sided cards. The front is shown, the person turns the card, then answers how well they knew it;
 // Brainy schedules when the card comes back (spaced repetition, per person). Only in Two-sided cards collections.
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import { ArrowLeft, Check, Layers, RotateCcw, Volume2 } from "lucide-react";
 import { formatColorStyle } from "../lib/format-colors";
 import { formatDisplayName, formatFieldValue, translateError, type Collection, type Entry, type Language } from "../lib/brainy";
@@ -120,10 +120,9 @@ export default function CardReview({ collection, language, owner, onClose, onCol
 
     {phase === "review" && current && format && <div className="card-session">
       <div className="card-progress" role="status"><span>{fr ? `Carte ${index + 1} sur ${queue.length}` : `Card ${index + 1} of ${queue.length}`}</span><span className="card-progress-bar" aria-hidden="true"><span style={{ width: `${Math.round(index / queue.length * 100)}%` }} /></span></div>
-      <article className={`flash-card${turned ? " is-turned" : ""}`} style={formatColorStyle(format.color)} aria-live="polite">
-        <CardFace fields={front} entry={current.entry} collection={collection} language={language} speech={format.speechLanguage} label={fr ? "Recto" : "Front"} />
-        {turned && <><hr className="flash-card-fold" /><CardFace fields={back} entry={current.entry} collection={collection} language={language} speech={format.speechLanguage} label={fr ? "Verso" : "Back"} /></>}
-      </article>
+      <FlipCard key={`${index}-${current.entry.id}`} turned={turned} onTurn={() => setTurned(true)} language={language} style={formatColorStyle(format.color)}
+        front={<CardFace fields={front} entry={current.entry} collection={collection} language={language} speech={format.speechLanguage} label={fr ? "Recto" : "Front"} />}
+        back={<CardFace fields={back} entry={current.entry} collection={collection} language={language} speech={format.speechLanguage} label={fr ? "Verso" : "Back"} />} />
       {!turned
         ? <div className="card-turn"><Button variant="primary" onClick={() => setTurned(true)}><RotateCcw size={16} />{fr ? "Retourner la carte" : "Turn the card"}</Button><small>{fr ? "ou touche Espace" : "or press Space"}</small></div>
         : <div className="card-grades" role="group" aria-label={fr ? "Comment vous en êtes-vous souvenu ?" : "How well did you remember it?"}>
@@ -141,6 +140,23 @@ export default function CardReview({ collection, language, owner, onClose, onCol
       <div className="card-setup-actions"><Button variant="secondary" onClick={() => setPhase("setup")}>{fr ? "Nouvelle révision" : "New review"}</Button><Button variant="primary" onClick={onClose}>{fr ? "Terminer" : "Finish"}</Button></div>
     </div>}
   </section>;
+}
+
+/** A card that really turns over: front and back are the two sides of one card. Once turned, a click turns it again to look at either side. */
+function FlipCard({ turned, onTurn, front, back, language, style }: { turned: boolean; onTurn: () => void; front: ReactNode; back: ReactNode; language: Language; style: CSSProperties }) {
+  const fr = language === "fr";
+  const [peekFront, setPeekFront] = useState(false);
+  const showsBack = turned && !peekFront;
+  function onClick(event: MouseEvent<HTMLDivElement>) {
+    if ((event.target as HTMLElement).closest("a, button, audio, video, iframe, input, select, textarea")) return;
+    if (!turned) onTurn(); else setPeekFront((value) => !value);
+  }
+  return <div className="flash-card-scene" style={style}>
+    <div className={`flash-card-flipper${showsBack ? " is-flipped" : ""}`} onClick={onClick} title={turned ? (fr ? "Cliquer pour retourner" : "Click to turn over") : undefined}>
+      <article className="flash-card flash-card-side is-front" aria-hidden={showsBack} inert={showsBack}>{front}</article>
+      <article className="flash-card flash-card-side is-back" aria-hidden={!showsBack} inert={!showsBack} aria-live="polite">{back}</article>
+    </div>
+  </div>;
 }
 
 function CardFace({ fields, entry, collection, language, speech, label }: { fields: Field[]; entry: Entry; collection: Collection; language: Language; speech?: string | null; label: string }) {
