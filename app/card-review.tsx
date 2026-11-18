@@ -9,6 +9,7 @@ import { formatDisplayName, formatFieldValue, translateError, type Collection, t
 import LinkMediaView from "./link-media";
 import { faceOf, flashCardsApi, intervalLabel, speak, speechLanguages, type CardDeck, type CardGrade, type CardOrder, type ReviewCard } from "../lib/flash-cards";
 import { Button } from "./components/ui/Button";
+import CardProgressPanel, { CardGoalLine, useCardStats } from "./card-progress";
 import "./card-review.css";
 
 type Field = Collection["formats"][number]["fields"][number];
@@ -21,11 +22,13 @@ export function CardReviewBanner({ collection, language, onStart }: { collection
   const total = decks?.reduce((sum, deck) => sum + deck.total, 0) ?? 0;
   const due = decks?.reduce((sum, deck) => sum + deck.due, 0) ?? 0;
   const fresh = decks?.reduce((sum, deck) => sum + deck.fresh, 0) ?? 0;
+  const { stats } = useCardStats(collection.id, null, collection);
   return <section className="card-banner" aria-label={fr ? "Révision des cartes" : "Card review"}>
     <span className="card-banner-icon" aria-hidden="true"><Layers size={22} /></span>
     <div className="card-banner-text">
       <strong>{fr ? "Révision" : "Review"}</strong>
       <span>{decks === null ? (fr ? "Chargement…" : "Loading…") : total === 0 ? (fr ? "Ajoutez des cartes pour commencer à réviser." : "Add cards to start reviewing.") : fr ? `${due} à revoir aujourd’hui · ${fresh} nouvelle(s) · ${total} au total` : `${due} due today · ${fresh} new · ${total} in all`}</span>
+      {stats && total > 0 && <CardGoalLine stats={stats} language={language} />}
     </div>
     <Button variant="primary" disabled={!total} onClick={onStart}><Layers size={16} />{fr ? "Réviser" : "Review"}</Button>
   </section>;
@@ -49,7 +52,10 @@ export default function CardReview({ collection, language, owner, onClose, onCol
   const [error, setError] = useState("");
   const format = collection.formats.find((item) => item.id === formatId) ?? collection.formats[0];
   const deck = decks?.find((item) => item.formatId === format?.id);
-  const available = !deck ? 0 : order === "DUE" ? deck.due + deck.fresh : deck.total;
+  // T57: the daily limit of new cards (my goal) caps the new cards of a "due then new" review.
+  const { stats: progress } = useCardStats(collection.id, null, phase);
+  const newLeft = progress?.today.newLimit == null ? Infinity : Math.max(0, progress.today.newLimit - progress.today.newCards);
+  const available = !deck ? 0 : order === "DUE" ? deck.due + Math.min(deck.fresh, newLeft) : deck.total;
   const front = useMemo(() => format?.fields.filter((field) => faceOf(field) === "FRONT") ?? [], [format]);
   const back = useMemo(() => format?.fields.filter((field) => faceOf(field) === "BACK") ?? [], [format]);
   const current = queue[index];
@@ -139,6 +145,7 @@ export default function CardReview({ collection, language, owner, onClose, onCol
       <p className="card-done-note">{fr ? "Chaque carte reviendra au bon moment : plus vous la connaissez, plus elle revient tard." : "Each card comes back at the right time: the better you know it, the later it returns."}</p>
       <div className="card-setup-actions"><Button variant="secondary" onClick={() => setPhase("setup")}>{fr ? "Nouvelle révision" : "New review"}</Button><Button variant="primary" onClick={onClose}>{fr ? "Terminer" : "Finish"}</Button></div>
     </div>}
+    {phase !== "review" && format && <CardProgressPanel collectionId={collection.id} formatId={collection.formats.length > 1 ? format.id : null} formatName={collection.formats.length > 1 ? formatDisplayName(format, language) : undefined} language={language} refresh={phase} />}
   </section>;
 }
 

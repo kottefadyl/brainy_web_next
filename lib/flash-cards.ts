@@ -8,6 +8,14 @@ export type CardOrder = "DUE" | "OLDEST" | "NEWEST" | "RANDOM";
 export type CardDeck = { formatId: string; total: number; due: number; fresh: number };
 export type ReviewCard = { entry: Entry; state: { intervalDays: number; reps: number; lapses: number; due: string } | null; preview: { again: number; hard: number; good: number; easy: number } };
 
+export type CardStats = {
+  total: number; fresh: number; learning: number; mature: number; reviewed7: number; reviewed30: number; successRate30: number | null;
+  days: { day: string; answers: number; remembered: number }[]; forecast: number[]; hardest: { entryId: string; title: string; forgotten: number }[];
+  today: { reviewed: number; newCards: number; goal: number | null; newLimit: number | null; streak: number };
+};
+/** Minutes east of UTC: days, goals and streaks follow the person's own clock. */
+const utcOffset = () => -new Date().getTimezoneOffset();
+
 export const isFlashCards = (collection?: Pick<Collection, "templateId"> | null) => collection?.templateId === FLASH_CARDS_TEMPLATE;
 
 export const flashCardsApi = {
@@ -15,10 +23,17 @@ export const flashCardsApi = {
     return (await request<{ cardDecks: CardDeck[] }>("query($c:String!){cardDecks(collectionId:$c){formatId total due fresh}}", { c: collectionId })).cardDecks;
   },
   async session(collectionId: string, formatId: string, count: number, order: CardOrder): Promise<ReviewCard[]> {
-    return (await request<{ cardReviewSession: ReviewCard[] }>(`query($c:String!,$f:String!,$n:Int!,$o:CardReviewOrder!){cardReviewSession(collectionId:$c,formatId:$f,count:$n,order:$o){entry{ ${entryFields} } state{intervalDays reps lapses due} preview{again hard good easy}}}`, { c: collectionId, f: formatId, n: count, o: order })).cardReviewSession;
+    return (await request<{ cardReviewSession: ReviewCard[] }>(`query($c:String!,$f:String!,$n:Int!,$o:CardReviewOrder!,$z:Int){cardReviewSession(collectionId:$c,formatId:$f,count:$n,order:$o,utcOffsetMinutes:$z){entry{ ${entryFields} } state{intervalDays reps lapses due} preview{again hard good easy}}}`, { c: collectionId, f: formatId, n: count, o: order, z: utcOffset() })).cardReviewSession;
   },
   async grade(collectionId: string, entryId: string, grade: CardGrade): Promise<void> {
-    await request("mutation($c:String!,$e:String!,$g:CardGrade!){gradeCard(collectionId:$c,entryId:$e,grade:$g){entryId}}", { c: collectionId, e: entryId, g: grade });
+    await request("mutation($c:String!,$e:String!,$g:CardGrade!,$z:Int){gradeCard(collectionId:$c,entryId:$e,grade:$g,utcOffsetMinutes:$z){entryId}}", { c: collectionId, e: entryId, g: grade, z: utcOffset() });
+  },
+  /** T57: my learning progress (whole collection, or one data format). */
+  async stats(collectionId: string, formatId?: string | null): Promise<CardStats> {
+    return (await request<{ cardStats: CardStats }>("query($c:String!,$f:String,$z:Int){cardStats(collectionId:$c,formatId:$f,utcOffsetMinutes:$z){total fresh learning mature reviewed7 reviewed30 successRate30 days{day answers remembered} forecast hardest{entryId title forgotten} today{reviewed newCards goal newLimit streak}}}", { c: collectionId, f: formatId ?? null, z: utcOffset() })).cardStats;
+  },
+  async setGoal(collectionId: string, reviewsPerDay: number | null, newPerDay: number | null): Promise<void> {
+    await request("mutation($c:String!,$r:Int,$n:Int){setCardGoal(collectionId:$c,reviewsPerDay:$r,newPerDay:$n){reviewsPerDay}}", { c: collectionId, r: reviewsPerDay, n: newPerDay });
   },
   async setSpeechLanguage(collectionId: string, formatId: string, language: string | null): Promise<Collection> {
     return (await request<{ setCardSpeechLanguage: Collection }>(`mutation($c:String!,$f:String!,$l:String){setCardSpeechLanguage(collectionId:$c,formatId:$f,language:$l){ ${collectionFields} }}`, { c: collectionId, f: formatId, l: language })).setCardSpeechLanguage;
