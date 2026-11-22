@@ -19,6 +19,9 @@ html[data-theme="dark"] .collection-glyph {
 html[data-theme] .app-shell .sidebar .nav-item { display: flex; align-items: center; gap: 10px; }
 html[data-theme] .app-shell .sidebar .nav-item > span:not(.collection-glyph):not(.nav-count):not(.nav-shared):not(.nav-owner) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 html[data-theme] .app-shell .sidebar .nav-item:hover .collection-glyph { transform: rotate(-6deg) scale(1.06); }
+/* The active item tints its icons with the accent, which is white on the blue light sidebar:
+   the collection glyph keeps the color of its own tile so it stays visible. */
+html[data-theme] .app-shell .sidebar .nav-item.active .collection-glyph svg { color: inherit; }
 .mobile-drawer-list button { display: flex; align-items: center; gap: 10px; }
 .mobile-drawer-list .mobile-drawer-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
