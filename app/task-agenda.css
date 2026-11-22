@@ -17,13 +17,16 @@ html[data-theme="dark"] .task-item { background: var(--format-surface-dark); bor
 .task-item.is-overdue { border-color: var(--danger); }
 .task-check { display: flex; align-items: center; gap: 12px; min-height: 44px; cursor: pointer; min-width: 0; flex: 1; }
 .task-item > .task-edit { margin-left: auto; }
-.task-text { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; min-width: 0; flex: 1; }
+.task-text { display: flex; align-items: baseline; gap: 2px 12px; min-width: 0; flex: 1; }
+.task-text > :not(.task-name) { flex: none; }
 .task-text .task-info { margin-left: auto; }
-.task-calendar-day .task-text { flex-direction: column; align-items: flex-start; }
+.task-calendar-day .task-text { flex-direction: column; align-items: stretch; }
+.task-calendar-day .task-text > :not(.task-name) { align-self: flex-start; }
 .task-calendar-day .task-text .task-info { margin-left: 0; }
 html[data-theme] .task-check input { min-height: 0; padding: 0; }
 .task-check input { width: 22px; height: 22px; margin: 0; flex: none; accent-color: var(--success); cursor: pointer; }
-.task-name { font-weight: 600; overflow-wrap: anywhere; }
+/* One line per task, whatever the name's length: the rest is cut with "…" (full name in the tooltip and the editor). */
+.task-name { font-weight: 600; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .task-item.is-done .task-name { text-decoration: line-through; opacity: .7; }
 .task-info { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--muted); }
 html[data-theme="dark"] .task-info { color: var(--muted); }
@@ -67,7 +70,8 @@ html[data-theme="dark"] .task-info { color: var(--muted); }
   .task-nav { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; }
   .task-nav h3 { justify-content: center; flex-wrap: wrap; text-align: center; font-size: 16px; }
   .task-nav > :not(.icon-button):not(h3) { grid-column: 1 / -1; justify-content: center; }
-  .task-text { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .task-text { flex-direction: column; align-items: stretch; gap: 2px; }
+  .task-text > :not(.task-name) { align-self: flex-start; }
   .task-text .task-info { margin-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .task-skeleton span { animation: none; } .task-progress-bar span { transition: none; } }

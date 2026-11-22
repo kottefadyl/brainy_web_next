@@ -87,7 +87,7 @@ export default function TaskAgendaView({ collection, mode, language, changeSigna
           const name = title(entry);
           const info = detail(item, entry);
           return <li key={`${item.entryId}-${item.date}`} className={`task-item ${item.done ? "is-done" : ""} ${item.overdue ? "is-overdue" : ""}`} style={formatColorStyle(format?.color ?? "#FFF5EB")}>
-            <label className="task-check"><input type="checkbox" checked={item.done} disabled={busy === `${item.entryId}-${item.date}`} onChange={() => void toggle(item)} /><span className="task-text"><span className="task-name">{name}</span>{info && <span className="task-info">{item.repeating && <Repeat size={13} aria-hidden="true" />}{info}</span>}<TaskTime estimate={durations.estimate(entry)} spent={item.repeating ? null : durations.spent(entry)} language={language} /></span></label>
+            <label className="task-check"><input type="checkbox" checked={item.done} disabled={busy === `${item.entryId}-${item.date}`} onChange={() => void toggle(item)} /><span className="task-text"><span className="task-name" title={name}>{name}</span>{info && <span className="task-info">{item.repeating && <Repeat size={13} aria-hidden="true" />}{info}</span>}<TaskTime estimate={durations.estimate(entry)} spent={item.repeating ? null : durations.spent(entry)} language={language} /></span></label>
             {entry && <EntryAuthors entry={entry} collection={collection} language={language} compact />}
             {entry && <button type="button" className="task-edit" onClick={() => onEdit(entry)} aria-label={`${fr ? "Modifier" : "Edit"} : ${name}`}><PenLine size={16} /></button>}
           </li>;
