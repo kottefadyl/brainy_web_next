@@ -94,6 +94,23 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
     group: quickChartFormat.fields.find((field) => field.kind === "SELECT" || field.kind === "TEXT" || field.kind === "OBJECT_REF"),
   } : null;
 
+  // Field ids belong to one data format: switching formats must not keep the previous format's fields.
+  function changeFormat(value: string) {
+    const next = collection.formats.find((item) => item.id === value);
+    setFormatId(value);
+    setMeasure(next?.fields.find((field) => field.kind === "NUMBER")?.id ?? "");
+    setDateFieldId(next?.fields.find((field) => field.kind === "DATE" || field.kind === "DATETIME")?.id ?? "");
+    setGroupFieldId("");
+    setSecondaryGroupFieldId("");
+    setDenominatorFieldId("");
+    setWeightFieldId("");
+    setCounterResetFieldId("");
+    setFilterFieldId("");
+    setFilters([]);
+    setResult(null);
+    setForecastResult(null);
+  }
+
   function analysisInput(extra: Partial<AnalysisInput> = {}): AnalysisInput {
     const activeMeasure = measure || sources[0]?.id || "";
     const activeDate = dateFieldId || dateFields[0]?.id || undefined;
@@ -269,7 +286,7 @@ export default function InsightsDialog({ collection, language, onClose, onCollec
           </button>
         </div>
       )}
-      <AccessibleListbox label={fr ? "Format de données" : "Data format"} value={format?.id ?? ""} options={collection.formats.map((item) => ({ id: item.id, label: item.name, swatch: item.color }))} onChange={(value) => { setFormatId(value); setResult(null); setFilters([]); }} />
+      <AccessibleListbox label={fr ? "Format de données" : "Data format"} value={format?.id ?? ""} options={collection.formats.map((item) => ({ id: item.id, label: item.name, swatch: item.color }))} onChange={changeFormat} />
 
       <details className="insights-section insights-formulas">
         <summary>{fr ? "Formules enregistrées" : "Saved formulas"}</summary>
