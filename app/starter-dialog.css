@@ -5,3 +5,9 @@ html[data-theme] .starter-status .starter-retry { min-height: 44px; margin-inlin
 html[data-theme] .starter-dialog .starter-packages { width: 100%; max-width: 100%; height: auto; padding-block: 10px; justify-content: flex-start; text-align: start; white-space: normal; line-height: 1.35; }
 html[data-theme] .starter-dialog .starter-packages svg { flex: none; }
 
+
+/* T58: templates grouped by theme (Home, Family and friends, Household money…), each card with its icon. */
+.starter-group + .starter-group { margin-top: 16px; }
+html[data-theme] .starter-dialog .starter-group-title { margin: 0 0 8px; color: var(--muted, #5a6f8d); font-size: 12.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.starter-card-title { display: flex; align-items: center; gap: 8px; }
+.starter-card-title svg { flex: none; color: var(--c-accent, #3978d5); }
