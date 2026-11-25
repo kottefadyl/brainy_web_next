@@ -282,7 +282,10 @@ export const api = {
     return Object.fromEntries(rows.map((row) => [row.formatId, row.count]));
   },
   async me(): Promise<User> {
-    return (await request<{ me: User }>(`query Me { me { ${userFields} } }`)).me;
+    const ask = async () => (await request<{ me: User }>(`query Me { me { ${userFields} } }`)).me;
+    // A slow start of the API must not look like a signed-out session: try once more before giving up.
+    try { return await ask(); }
+    catch (error) { if (error instanceof ApiError && error.unauthenticated) throw error; return ask(); }
   },
   async login(email: string, password: string): Promise<User> {
     return (await request<{ login: { user: User } }>(
